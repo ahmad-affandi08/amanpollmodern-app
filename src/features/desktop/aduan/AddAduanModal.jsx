@@ -1,0 +1,233 @@
+import React, { useState, useEffect } from 'react';
+import Modal from '../../../components/Modal';
+import Input from '../../../components/Input';
+import SearchableSelect from '../../../components/SearchableSelect';
+import Button from '../../../components/Button';
+import MasterApi from '../../../api/MasterApi';
+import InventarisApi from '../../../api/InventarisApi';
+import AduanApi from '../../../api/AduanApi';
+import { useToast } from '../../../components/Alert/useToast';
+import useAuth from '../../../hooks/utils/useAuth';
+
+export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+
+  const [formData, setFormData] = useState({
+    ruangan_id: '',
+    inventaris_id: '',
+    divisi_id: '',
+    keluhan: '',
+    img_keluhan: null,
+    nama_pengadu: user?.nama_lengkap || '',
+
+    // Auto-filled
+    no_inventaris: '',
+    nama_alat_id: '', // Hidden ID
+    nama_alat_nama: '', // Display
+    divisi_nama: '', // Display
+    merk: ''
+  });
+
+  const [ruanganOptions, setRuanganOptions] = useState([]);
+  const [inventarisOptions, setInventarisOptions] = useState([]);
+  const [loadingInventaris, setLoadingInventaris] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadRuangan();
+      if (!formData.nama_pengadu) setFormData(prev => ({ ...prev, nama_pengadu: user?.nama_lengkap || '' }));
+    }
+  }, [isOpen]);
+
+  const loadRuangan = async () => {
+    try {
+      const res = await MasterApi.getAllRuangan();
+      if (res.data) setRuanganOptions(res.data.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan })));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRuanganChange = async (ruanganId) => {
+    setFormData(prev => ({ ...prev, ruangan_id: ruanganId, inventaris_id: '', no_inventaris: '', nama_alat_nama: '', divisi_id: '', divisi_nama: '', merk: '' }));
+    setInventarisOptions([]);
+
+    if (!ruanganId) return;
+
+    setLoadingInventaris(true);
+    try {
+      const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 500 });
+
+      if (res.data) {
+        setInventarisOptions(res.data.map(item => ({
+          label: `${item.no_inventaris} - ${item.nama_alat?.nama_nama_alat || 'Alat'}`,
+          value: item.id,
+          raw: item
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Gagal memuat daftar alat');
+    } finally {
+      setLoadingInventaris(false);
+    }
+  };
+
+  const handleInventarisChange = (invId) => {
+    const selected = inventarisOptions.find(opt => String(opt.value) === String(invId));
+
+    if (selected && selected.raw) {
+      const item = selected.raw;
+
+      setFormData(prev => ({
+        ...prev,
+        inventaris_id: invId,
+        no_inventaris: item.no_inventaris || '-',
+        nama_alat_id: item.nama_alat?.id || '',
+        nama_alat_nama: item.nama_alat?.nama_nama_alat || '-',
+        divisi_id: item.divisi?.id_divisi || item.nama_alat?.divisi?.id_divisi || '',
+        divisi_nama: item.divisi?.nama_divisi || item.nama_alat?.divisi?.nama_divisi || '-',
+        merk: item.merk || '-'
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, inventaris_id: invId }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, img_keluhan: file }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.ruangan_id || !formData.inventaris_id || !formData.keluhan) {
+      showToast('error', 'Mohon lengkapi data wajib (Ruangan, Inventaris, Keluhan).');
+      return;
+    }
+
+    setSubmitLoading(true);
+    try {
+      const payload = new FormData();
+      payload.append('ruangan_id', formData.ruangan_id);
+      payload.append('inventaris_id', formData.inventaris_id);
+      if (formData.divisi_id) payload.append('divisi_id', formData.divisi_id);
+      payload.append('keluhan', formData.keluhan);
+      payload.append('nama_pengadu', formData.nama_pengadu);
+      if (user?.id_user) payload.append('pengadu_id', user.id_user);
+
+      if (formData.no_inventaris) payload.append('no_inventaris', formData.no_inventaris);
+      if (formData.nama_alat_id) payload.append('nama_alat_id', formData.nama_alat_id);
+
+      if (formData.img_keluhan) {
+        payload.append('img_keluhan', formData.img_keluhan);
+      }
+
+      await AduanApi.create(payload);
+      showToast('success', 'Aduan berhasil dilaporkan');
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Submit error:', error);
+      showToast('error', error.response?.data?.message || 'Gagal mengirim aduan');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Buat Laporan Aduan">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <SearchableSelect
+          label="Lokasi / Ruangan"
+          name="ruangan_id"
+          options={ruanganOptions}
+          value={formData.ruangan_id}
+          onChange={(e) => handleRuanganChange(e.target.value)}
+          placeholder="-- Pilih Ruangan --"
+          searchPlaceholder="Cari ruangan..."
+          required
+        />
+
+        <SearchableSelect
+          label={loadingInventaris ? "Memuat Alat..." : "Pilih Alat / Inventaris"}
+          name="inventaris_id"
+          options={inventarisOptions}
+          value={formData.inventaris_id}
+          onChange={(e) => handleInventarisChange(e.target.value)}
+          placeholder="-- Pilih Inventaris --"
+          searchPlaceholder="Cari nomor inventaris atau nama alat..."
+          required
+          disabled={!formData.ruangan_id || loadingInventaris}
+        />
+
+        {/* Read Only Details */}
+        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <div>
+            <label className="text-xs text-gray-500 font-bold uppercase">Nama Alat</label>
+            <p className="font-semibold text-gray-800">{formData.nama_alat_nama || '-'}</p>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 font-bold uppercase">No Inventaris</label>
+            <p className="font-semibold text-gray-800">{formData.no_inventaris || '-'}</p>
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs text-gray-500 font-bold uppercase">Merk / Type</label>
+            <p className="font-semibold text-gray-800">{formData.merk || '-'}</p>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 font-bold uppercase">Divisi</label>
+            <p className="font-semibold text-gray-800">{formData.divisi_nama || '-'}</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Keluhan Kerusakan <span className="text-red-500">*</span></label>
+          <textarea
+            className="w-full px-4 py-3 bg-bg-light border border-gray-200 rounded-xl text-text-dark font-medium outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all min-h-[100px]"
+            value={formData.keluhan}
+            onChange={(e) => setFormData({ ...formData, keluhan: e.target.value })}
+            placeholder="Deskripsikan kerusakan alat..."
+            required
+          ></textarea>
+        </div>
+
+        <Input
+          label="Nama Pelapor"
+          value={formData.nama_pengadu}
+          onChange={(e) => setFormData({ ...formData, nama_pengadu: e.target.value })}
+          required
+        />
+
+        <div>
+          <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Foto Bukti (Opsional)</label>
+          <div className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 hover:border-brand-primary/50 transition-colors cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div className="text-gray-400">
+              {formData.img_keluhan ? (
+                <span className="text-brand-primary font-medium">{formData.img_keluhan.name}</span>
+              ) : (
+                <span>Klik untuk upload foto</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 flex justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>Batal</Button>
+          <Button type="submit" loading={submitLoading}>Kirim Laporan</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
