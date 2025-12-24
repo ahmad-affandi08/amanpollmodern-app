@@ -39,6 +39,11 @@ export default function VoiceInput({
     console.log('🎤 Microphone available:', isMicrophoneAvailable);
   }, [browserSupportsSpeechRecognition, isMicrophoneAvailable]);
 
+  // Debug: Log listening state changes
+  useEffect(() => {
+    console.log('🎤 Listening state changed:', listening);
+  }, [listening]);
+
   const handleStartListening = () => {
     console.log('▶️ Starting listening...');
     savedValueRef.current = value; // Save current value
