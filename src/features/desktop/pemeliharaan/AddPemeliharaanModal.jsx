@@ -219,9 +219,9 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="p-6 flex-1 custom-scrollbar" style={{ overflow: 'visible' }}>
           {/* Section 1: Selection */}
-          <div className="grid grid-cols-2 gap-4 mb-6 p-4 border rounded-xl border-gray-100 bg-white shadow-sm">
+          <div className="grid grid-cols-2 gap-4 mb-6 p-4 border rounded-xl border-gray-100 bg-white shadow-sm" style={{ overflow: 'visible' }}>
             <SearchableSelect
               label="Ruangan"
               name="ruangan_id"
@@ -240,7 +240,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
                 value: item.id_inventaris || item.id,
                 label: `${item.namaAlat?.nama_nama_alat || item.nama_alat?.nama_nama_alat || 'Unknown'} - ${item.no_inventaris}`
               }))}
-              placeholder={loading ? 'Memuat...' : '-- Pilih Ruangan Dulu --'}
+              placeholder={loading ? 'Memuat...' : '-- Pilih Inventaris --'}
               searchPlaceholder="Cari inventaris..."
               disabled={!selectedRuangan || loading}
             />

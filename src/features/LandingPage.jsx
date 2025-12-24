@@ -37,7 +37,6 @@ export default function LandingPage() {
               >
                 <LogIn size={20} />
                 <span>Masuk Sistem</span>
-                <ArrowRight size={18} className="opacity-70 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button

@@ -127,7 +127,7 @@ export default function PemeliharaanList() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'Belum Dikerjakan': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      'Belum Selesai': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
       'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-800' },
       'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
     };
@@ -391,6 +391,7 @@ export default function PemeliharaanList() {
 
       {confirmDialog.isOpen && (
         <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
           title={confirmDialog.title}
           message={confirmDialog.message}
           onConfirm={confirmDialog.onConfirm}

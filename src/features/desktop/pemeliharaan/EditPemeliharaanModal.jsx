@@ -7,27 +7,25 @@ import MasterApi from '../../../api/MasterApi';
 import PemeliharaanApi from '../../../api/PemeliharaanApi';
 import { useToast } from '../../../components/Alert/useToast';
 
-export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item }) {
+export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, pemeliharaan }) {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [teknisiOptions, setTeknisiOptions] = useState([]);
 
   const [formData, setFormData] = useState({
     jadwal_pemeliharaan: '',
-    teknisi_id: '',
-    status: 'Belum Dikerjakan'
+    teknisi_id: ''
   });
 
   useEffect(() => {
-    if (isOpen && item) {
+    if (isOpen && pemeliharaan) {
       setFormData({
-        jadwal_pemeliharaan: item.jadwal_pemeliharaan || '',
-        teknisi_id: item.teknisi_id || '',
-        status: item.status || 'Belum Dikerjakan'
+        jadwal_pemeliharaan: pemeliharaan.jadwal_pemeliharaan || '',
+        teknisi_id: pemeliharaan.teknisi_id || ''
       });
       loadTeknisi();
     }
-  }, [isOpen, item]);
+  }, [isOpen, pemeliharaan]);
 
   const loadTeknisi = async () => {
     try {
@@ -43,7 +41,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item
     setLoading(true);
 
     try {
-      await PemeliharaanApi.update(item.id_pemeliharaan || item.id, formData);
+      await PemeliharaanApi.update(pemeliharaan.id_pemeliharaan || pemeliharaan.id, formData);
       showToast('Jadwal berhasil diperbarui', 'success');
       onSuccess();
       onClose();
@@ -55,7 +53,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item
     }
   };
 
-  if (!isOpen || !item) return null;
+  if (!isOpen || !pemeliharaan) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -64,7 +62,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h3 className="text-xl font-bold text-text-dark">Edit Jadwal Pemeliharaan</h3>
-            <p className="text-gray-500 text-sm mt-1">{item.nama_alat_nama}</p>
+            <p className="text-gray-500 text-sm mt-1">{pemeliharaan.nama_alat_nama}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={20} className="text-gray-400" />
@@ -78,19 +76,19 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-gray-500">No. Inventaris:</span>
-                <p className="font-bold text-text-dark">{item.no_inventaris}</p>
+                <p className="font-bold text-text-dark">{pemeliharaan.no_inventaris}</p>
               </div>
               <div>
                 <span className="text-gray-500">Ruangan:</span>
-                <p className="font-bold text-text-dark">{item.ruangan_nama}</p>
+                <p className="font-bold text-text-dark">{pemeliharaan.ruangan_nama}</p>
               </div>
               <div>
                 <span className="text-gray-500">Merk:</span>
-                <p className="font-bold text-text-dark">{item.merk}</p>
+                <p className="font-bold text-text-dark">{pemeliharaan.merk}</p>
               </div>
               <div>
                 <span className="text-gray-500">Divisi:</span>
-                <p className="font-bold text-text-dark">{item.divisi_nama}</p>
+                <p className="font-bold text-text-dark">{pemeliharaan.divisi_nama}</p>
               </div>
             </div>
           </div>
@@ -110,16 +108,6 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, item
             onChange={(e) => setFormData({ ...formData, teknisi_id: e.target.value })}
             options={teknisiOptions.map(t => ({ value: t.id_user, label: t.nama_lengkap }))}
             placeholder="-- Pilih Teknisi --"
-          />
-
-          <Select
-            label="Status"
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            options={[
-              { value: 'Belum Dikerjakan', label: 'Belum Dikerjakan' },
-              { value: 'Selesai', label: 'Selesai' }
-            ]}
           />
         </form>
 

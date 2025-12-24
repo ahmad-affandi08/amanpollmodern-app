@@ -33,6 +33,7 @@ import noImage from '../../../assets/img/no_image.png';
 // Column Definitions
 const COLUMN_DEFS = [
   { key: 'no_pendaftaran', label: 'No.', defaultVisible: true },
+  { key: 'no_aduan', label: 'No. Aduan', defaultVisible: true },
   { key: 'tanggal', label: 'Tanggal Aduan', defaultVisible: true },
   { key: 'divisi_ruang', label: 'Divisi/Ruang', defaultVisible: true },
   { key: 'gedung', label: 'Gedung', defaultVisible: false },
@@ -263,6 +264,7 @@ export default function AduanList() {
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
                 {isVisible('no_pendaftaran') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">No</th>}
+                {isVisible('no_aduan') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">No. Aduan</th>}
                 {isVisible('tanggal') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Tanggal</th>}
                 {isVisible('divisi_ruang') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Divisi/Ruang</th>}
                 {isVisible('gedung') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Gedung</th>}
@@ -293,6 +295,13 @@ export default function AduanList() {
                     {isVisible('no_pendaftaran') && (
                       <td className="py-4 px-6 font-bold text-text-dark">
                         {(pagination.currentPage - 1) * pagination.perPage + index + 1}
+                      </td>
+                    )}
+                    {isVisible('no_aduan') && (
+                      <td className="py-4 px-6">
+                        <span className="px-2 py-1 text-xs font-bold rounded-md bg-brand-primary-50 text-brand-primary">
+                          {item.no_aduan || '-'}
+                        </span>
                       </td>
                     )}
                     {isVisible('tanggal') && (
@@ -379,15 +388,6 @@ export default function AduanList() {
                     {isVisible('actions') && (
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-3">
-                          {/* Detail Button */}
-                          <button
-                            onClick={() => detailModal.open(item)}
-                            className="p-3 bg-blue-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
-                            title="Detail"
-                          >
-                            <Eye size={20} />
-                          </button>
-
                           {/* Assign Teknisi Button */}
                           {!item.teknisi_id && (
                             <button
@@ -398,29 +398,6 @@ export default function AduanList() {
                               <Wrench size={20} />
                             </button>
                           )}
-
-                          {/* Inspection Button (For Teknisi) */}
-                          {(user?.kategori_user_id === 3 || user?.kategori_user_id === 1) &&
-                            (item.status_aduan === 'Sedang Dikerjakan' || item.status_aduan === 'Tindakan Lanjutan') &&
-                            (item.teknisi_id === user?.id_user || user?.kategori_user_id === 1) && ( // Allow Superadmin (1) to see it for testing
-                              <button
-                                onClick={() => inspectionModal.open(item)}
-                                className="p-3 bg-purple-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
-                                title="Pemeriksaan & Update Status"
-                              >
-                                <ClipboardCheck size={20} />
-                              </button>
-                            )}
-
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleDelete(item.id_aduan)}
-                            disabled={deleteMutation.isPending}
-                            className="p-3 bg-[#FF754C] text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                            title="Hapus"
-                          >
-                            <Trash2 size={20} />
-                          </button>
                         </div>
                       </td>
                     )}

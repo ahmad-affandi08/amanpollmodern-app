@@ -29,9 +29,6 @@ export default function InventarisCard({ item }) {
             alt={item.nama_alat?.nama_nama_alat || 'Alat'}
             className="w-20 h-20 rounded-lg object-cover border border-gray-200 bg-gray-100"
             loading="lazy"
-            onError={(e) => {
-              e.target.src = '/assets/img/no_image.png';
-            }}
           />
         </div>
 

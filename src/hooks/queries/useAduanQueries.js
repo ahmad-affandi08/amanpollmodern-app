@@ -130,7 +130,9 @@ export const useDeleteAduan = () => {
   return useMutation({
     mutationFn: (id) => AduanApi.delete(id),
     onSuccess: () => {
+      // Invalidate both aduan lists and report queries
       queryClient.invalidateQueries({ queryKey: queryKeys.aduan.lists() });
+      queryClient.invalidateQueries({ queryKey: ['reports', 'aduan'] });
     },
   });
 };

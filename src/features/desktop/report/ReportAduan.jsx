@@ -20,13 +20,14 @@ import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
-import { ConfirmDialog, Toast } from '../../../components/Alert/Alert';
+import { ConfirmDialog } from '../../../components/Alert/Alert';
 import noImage from '../../../assets/img/no_image.png';
 
 export default function ReportAduan() {
   usePageTitle('Laporan Aduan');
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
   const ROLE_PIMPINAN = 5; // Correct value from constants.js
@@ -34,7 +35,6 @@ export default function ReportAduan() {
   const isPimpinan = user?.kategori_user_id === ROLE_PIMPINAN;
   const userDivisiId = user?.divisi_id;
 
-  const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
 
   const pagination = usePagination(10);
@@ -105,10 +105,10 @@ export default function ReportAduan() {
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(id);
-          setToast({ type: 'success', message: 'Laporan berhasil dihapus' });
+          showToast('Laporan berhasil dihapus', 'success');
           setConfirmDialog({ isOpen: false, id: null });
         } catch (error) {
-          setToast({ type: 'error', message: 'Gagal menghapus laporan' });
+          showToast('Gagal menghapus laporan', 'error');
         }
       },
       onCancel: () => setConfirmDialog({ isOpen: false, id: null })
@@ -236,6 +236,7 @@ export default function ReportAduan() {
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
+                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Aduan</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tanggal Aduan</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Divisi</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Ruangan</th>
@@ -272,6 +273,11 @@ export default function ReportAduan() {
                     <td className="py-4 px-6 font-bold text-text-dark">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
                     </td>
+                    <td className="py-4 px-6">
+                      <span className="px-2 py-1 text-xs font-bold rounded-md bg-brand-primary-50 text-brand-primary">
+                        {item.no_aduan || '-'}
+                      </span>
+                    </td>
                     <td className="py-4 px-6 text-gray-600">
                       {item.create_date ? new Date(item.create_date).toLocaleString('id-ID', {
                         day: '2-digit', month: '2-digit', year: 'numeric',
@@ -291,7 +297,6 @@ export default function ReportAduan() {
                             src={item.img_keluhan}
                             alt="Foto"
                             className="w-full h-full object-cover"
-                            onError={(e) => { e.target.src = noImage; }}
                             onClick={() => window.open(item.img_keluhan, '_blank')}
                           />
                         </div >
@@ -319,8 +324,8 @@ export default function ReportAduan() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        {/* Detail Button - Show for Selesai, Tindakan Lanjutan, or Rusak Berat */}
-                        {(item.status_aduan === 'Selesai' || item.status_aduan === 'Tindakan Lanjutan' || item.kondisi_alat === 'Rusak Berat') && (
+                        {/* Detail Button - Show for Sedang Dikerjakan, Selesai, Tindakan Lanjutan, or Rusak Berat */}
+                        {(item.status_aduan === 'Sedang Dikerjakan' || item.status_aduan === 'Selesai' || item.status_aduan === 'Tindakan Lanjutan' || item.kondisi_alat === 'Rusak Berat') && (
                           <button
                             onClick={() => navigate(`/report/aduan/${item.id_aduan}`)}
                             className="p-3 bg-[#4FD1C5] text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
@@ -345,8 +350,8 @@ export default function ReportAduan() {
                             </button>
                           )}
 
-                        {/* Delete Button - Show for non-completed items and NOT Pimpinan */}
-                        {!isPimpinan && item.status_aduan !== 'Selesai' && item.status_aduan !== 'Tindakan Lanjutan' && (
+                        {/* Delete Button - Show only for unassigned aduan (no teknisi) and NOT Pimpinan */}
+                        {!isPimpinan && !item.teknisi_id && (
                           <button
                             onClick={() => handleDelete(item.id_aduan)}
                             disabled={deleteMutation.isPending}
@@ -378,21 +383,17 @@ export default function ReportAduan() {
         }
       </div >
 
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
+
 
       {
         confirmDialog.isOpen && (
           <ConfirmDialog
+            isOpen={confirmDialog.isOpen}
             title={confirmDialog.title}
             message={confirmDialog.message}
             onConfirm={confirmDialog.onConfirm}
             onCancel={confirmDialog.onCancel}
+            type="warning"
           />
         )
       }

@@ -116,7 +116,7 @@ export default function SearchableSelect({
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className={`absolute z-50 w-full mt-2 bg-white shadow-2xl overflow-hidden ${variant === 'thick'
+          <div className={`absolute z-[9999] w-full mt-2 bg-white shadow-2xl overflow-hidden ${variant === 'thick'
             ? 'border-[3px] border-indigo-100 rounded-[20px]'
             : 'border-2 border-gray-200 rounded-xl'
             }`}>
