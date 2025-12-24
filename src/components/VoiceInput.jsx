@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { Mic, MicOff } from 'lucide-react';
 
 export default function VoiceInput({
   value = '',
@@ -9,137 +10,92 @@ export default function VoiceInput({
   className = '',
   disabled = false,
 }) {
-  const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [accumulatedTranscript, setAccumulatedTranscript] = useState('');
-  const recognitionRef = useRef(null);
-  const textareaRef = useRef(null);
+  const {
+    transcript,
+    interimTranscript,
+    finalTranscript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable
+  } = useSpeechRecognition();
+
+  const savedValueRef = useRef('');
+
+  // Save final transcript when it changes
+  useEffect(() => {
+    if (finalTranscript && listening) {
+      console.log('✅ Final transcript:', finalTranscript);
+      // Append final transcript to the value that existed when we started listening
+      const newValue = savedValueRef.current + finalTranscript;
+      onChange(newValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalTranscript, listening]);
 
   // Check browser support
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setIsSupported(false);
-      return;
-    }
+    console.log('🎤 Browser supports speech recognition:', browserSupportsSpeechRecognition);
+    console.log('🎤 Microphone available:', isMicrophoneAvailable);
+  }, [browserSupportsSpeechRecognition, isMicrophoneAvailable]);
 
-    // Initialize Speech Recognition
-    const recognition = new SpeechRecognition();
-    recognition.lang = language;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+  const handleStartListening = () => {
+    console.log('▶️ Starting listening...');
+    savedValueRef.current = value; // Save current value
+    resetTranscript(); // Clear previous transcript
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: language,
+    });
+  };
 
-    recognition.onresult = (event) => {
-      let interim = '';
-      let final = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += transcript + ' ';
-        } else {
-          interim += transcript;
-        }
-      }
-
-      setInterimTranscript(interim);
-
-      if (final) {
-        // Accumulate final transcripts
-        setAccumulatedTranscript(prev => prev + final);
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-
-      if (event.error === 'not-allowed') {
-        alert('Izin mikrofon ditolak. Aktifkan di pengaturan browser.');
-      } else if (event.error === 'no-speech') {
-        // Silently restart if no speech detected
-        if (isListening) {
-          recognition.start();
-        }
-      } else if (event.error === 'network') {
-        alert('Koneksi internet diperlukan untuk voice input.');
-      }
-    };
-
-    recognition.onend = () => {
-      // Auto-restart if still listening
-      if (isListening && recognitionRef.current) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error('Failed to restart recognition:', e);
-          setIsListening(false);
-        }
-      }
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [language, isListening, value, onChange]);
+  const handleStopListening = () => {
+    console.log('� Stopping listening...');
+    SpeechRecognition.stopListening();
+    resetTranscript(); // Clear transcript after saving
+  };
 
   const toggleListening = () => {
-    if (!isSupported || disabled) return;
-
-    if (isListening) {
-      // Stop listening
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-
-      // Save accumulated transcript to value
-      if (accumulatedTranscript) {
-        onChange(value + accumulatedTranscript);
-      }
-
-      setIsListening(false);
-      setInterimTranscript('');
-      setAccumulatedTranscript('');
+    if (listening) {
+      handleStopListening();
     } else {
-      // Start listening
-      if (recognitionRef.current) {
-        try {
-          setAccumulatedTranscript(''); // Reset accumulator
-          recognitionRef.current.start();
-          setIsListening(true);
-        } catch (e) {
-          console.error('Failed to start recognition:', e);
-        }
-      }
+      handleStartListening();
     }
   };
 
-  const handleTextChange = (e) => {
-    onChange(e.target.value);
-  };
+  if (!browserSupportsSpeechRecognition) {
+    return (
+      <div className="relative">
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={4}
+          className={`${className} resize-none`}
+        />
+        <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-700">
+          ⚠️ Browser Anda tidak mendukung voice input. Silakan ketik manual.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       {/* Textarea */}
       <textarea
-        ref={textareaRef}
         value={value}
-        onChange={handleTextChange}
+        onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
         rows={4}
-        className={`${className} ${isListening ? 'ring-2 ring-red-400 border-red-400 pb-8' : ''
+        className={`${className} ${listening ? 'ring-2 ring-red-400 border-red-400 pb-8' : ''
           } resize-none transition-all`}
       />
 
-      {/* Interim Transcript Overlay */}
-      {interimTranscript && (
+      {/* Current Transcript Preview (while listening) */}
+      {listening && interimTranscript && (
         <div className="absolute bottom-8 left-3 right-12 text-sm text-gray-400 italic pointer-events-none">
           {interimTranscript}
         </div>
@@ -149,36 +105,36 @@ export default function VoiceInput({
       <button
         type="button"
         onClick={toggleListening}
-        disabled={!isSupported || disabled}
-        className={`absolute bottom-3 right-2 p-2 rounded-lg transition-all ${isListening
+        disabled={disabled || !isMicrophoneAvailable}
+        className={`absolute bottom-3 right-2 p-2 rounded-lg transition-all ${listening
           ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/50'
-          : isSupported && !disabled
+          : isMicrophoneAvailable && !disabled
             ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95'
             : 'bg-gray-100 text-gray-300 cursor-not-allowed'
           }`}
         title={
-          !isSupported
-            ? 'Browser tidak mendukung voice input'
-            : isListening
+          !isMicrophoneAvailable
+            ? 'Microphone tidak tersedia'
+            : listening
               ? 'Tap untuk stop recording'
               : 'Tap untuk mulai voice input'
         }
       >
-        {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+        {listening ? <Mic size={20} /> : <MicOff size={20} />}
       </button>
 
       {/* Recording Indicator - Inside textarea */}
-      {isListening && (
+      {listening && (
         <div className="absolute bottom-2 left-3 flex items-center gap-1.5 text-xs text-red-500 pointer-events-none">
           <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
           <span className="font-medium">Recording...</span>
         </div>
       )}
 
-      {/* Browser Not Supported Warning */}
-      {!isSupported && (
+      {/* Microphone Not Available Warning */}
+      {!isMicrophoneAvailable && (
         <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-700">
-          ⚠️ Browser Anda tidak mendukung voice input. Silakan ketik manual.
+          ⚠️ Microphone tidak tersedia. Pastikan izin microphone sudah diberikan.
         </div>
       )}
     </div>
