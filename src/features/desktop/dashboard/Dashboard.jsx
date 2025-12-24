@@ -179,49 +179,95 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Middle Section: Bar Chart & Activity Feed */}
+      {/* Middle Section: Charts & Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart (Bar) */}
-        <div className="lg:col-span-2 bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
-              <p className="text-xs text-gray-500">Performa penanganan kerusakan per bulan</p>
+        {/* Left Column: Both Charts Stacked */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Aduan Chart */}
+          <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
+                <p className="text-xs text-gray-500">Performa penanganan kerusakan per bulan</p>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand-primary"></span> Selesai
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFAF4E]"></span> Pending
+                </div>
+              </div>
             </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-brand-primary"></span> Selesai
-              </div>
-              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FFAF4E]"></span> Pending
-              </div>
+            <div className="h-[320px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {/* Direct usage of charts.aduan array from backend/hook */}
+                <AreaChart data={charts.aduan || []}>
+                  <defs>
+                    <linearGradient id="colorSelesai" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FFAF4E" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#FFAF4E" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} />
+                  <RechartsTooltip
+                    cursor={{ stroke: '#6C5DD3', strokeWidth: 1, strokeDasharray: '5 5' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  />
+                  <Area type="monotone" dataKey="Selesai" stroke="#6C5DD3" strokeWidth={3} fillOpacity={1} fill="url(#colorSelesai)" />
+                  <Area type="monotone" dataKey="Pending" stroke="#FFAF4E" strokeWidth={3} fillOpacity={1} fill="url(#colorPending)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              {/* Direct usage of charts.aduan array from backend/hook */}
-              <AreaChart data={charts.aduan || []}>
-                <defs>
-                  <linearGradient id="colorSelesai" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FFAF4E" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#FFAF4E" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} />
-                <RechartsTooltip
-                  cursor={{ stroke: '#6C5DD3', strokeWidth: 1, strokeDasharray: '5 5' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                />
-                <Area type="monotone" dataKey="Selesai" stroke="#6C5DD3" strokeWidth={3} fillOpacity={1} fill="url(#colorSelesai)" />
-                <Area type="monotone" dataKey="Pending" stroke="#FFAF4E" strokeWidth={3} fillOpacity={1} fill="url(#colorPending)" />
-              </AreaChart>
-            </ResponsiveContainer>
+
+          {/* Pemeliharaan Chart */}
+          <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-bold text-lg text-text-dark">Statistik Pemeliharaan</h3>
+                <p className="text-xs text-gray-500">Performa pemeliharaan alat per bulan</p>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span> Selesai
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Belum Selesai
+                </div>
+              </div>
+            </div>
+            <div className="h-[320px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={charts.pemeliharaan || []}>
+                  <defs>
+                    <linearGradient id="colorPemSelesai" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPemBelum" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} />
+                  <RechartsTooltip
+                    cursor={{ stroke: '#10B981', strokeWidth: 1, strokeDasharray: '5 5' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  />
+                  <Area type="monotone" dataKey="Selesai" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorPemSelesai)" />
+                  <Area type="monotone" dataKey="Belum Selesai" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorPemBelum)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
@@ -232,7 +278,7 @@ export default function Dashboard() {
             <button className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 space-y-6 max-h-[320px]">
+          <div className="flex-1 overflow-y-auto pr-2 space-y-6 max-h-full">
             {recent.length === 0 ? (
               <div className="text-center py-10 text-gray-400 text-sm">Belum ada aktivitas</div>
             ) : (
@@ -241,11 +287,11 @@ export default function Dashboard() {
                   <div className={`mt-1 min-w-[32px] h-[32px] rounded-full flex items-center justify-center ${getActivityColor(activity.type)} bg-opacity-10 text-current`}>
                     {getActivityIcon(activity.type)}
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start w-full">
                       <h4 className="text-sm font-bold text-text-dark line-clamp-1">{activity.title}</h4>
                       <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
-                        {new Date(activity.date).toLocaleDateString()}
+                        {new Date(activity.date).toLocaleDateString('id-ID')}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{activity.description}</p>

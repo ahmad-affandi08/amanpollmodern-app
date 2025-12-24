@@ -102,7 +102,6 @@ export default function PengaturanAnggaran() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-          <DollarSign size={28} />
           Pengaturan Anggaran
         </h1>
         <p className="text-text-gray text-sm mt-1">Kelola persentase RAB dan data inflasi tahunan</p>

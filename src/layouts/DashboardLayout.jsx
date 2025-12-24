@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
 import Logo from '../assets/img/logo2-amanpoll.png';
+import Logo3 from '../assets/img/logo3-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
+import { ConfirmDialog } from '../components/Alert/Alert';
 
 export default function DashboardLayout({ children }) {
   // Sidebar State
@@ -21,7 +23,14 @@ export default function DashboardLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
+  const [confirmLogout, setConfirmLogout] = useState({ isOpen: false });
+
+  const handleLogoutClick = () => {
+    setConfirmLogout({ isOpen: true });
+  };
+
+  const handleLogoutConfirm = async () => {
+    setConfirmLogout({ isOpen: false });
     await logout();
     navigate('/login');
   };
@@ -281,7 +290,7 @@ export default function DashboardLayout({ children }) {
       {/* Main Content Area */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ml-0 ${collapsed ? 'lg:ml-[90px]' : 'lg:ml-72'}`}>
         {/* Header */}
-        <header className="bg-bg-light/90 backdrop-blur-sm sticky top-0 z-30 px-8 py-6 transition-all duration-300">
+        <header className="bg-bg-light/90 backdrop-blur-sm sticky top-0 z-30 px-4 md:px-6 lg:px-8 py-4 md:py-5 lg:py-6 transition-all duration-300">
           <div className="flex items-center justify-between">
             {/* Title & Toggle */}
             <div className="flex items-center gap-4">
@@ -301,8 +310,13 @@ export default function DashboardLayout({ children }) {
                 <AlignLeft size={24} className={`transform transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
               </button>
 
+              {/* Mobile Logo */}
+              <div className="block md:hidden">
+                <img src={Logo3} alt="AmanPoll Logo" className="h-8 w-auto object-contain" />
+              </div>
+
               {/* Breadcrumbs Replaces Static Title */}
-              <nav className="flex items-center">
+              <nav className="hidden md:flex items-center">
                 {(() => {
                   const currentPath = location.pathname;
                   let crumbs = [];
@@ -341,7 +355,7 @@ export default function DashboardLayout({ children }) {
                   return crumbs.map((crumb, index) => (
                     <React.Fragment key={index}>
                       {index > 0 && <ChevronRight size={18} className="text-gray-400 mx-2" />}
-                      <span className={`${crumb.active ? 'text-text-dark font-bold text-2xl' : 'text-gray-500 text-lg font-medium'}`}>
+                      <span className={`${crumb.active ? 'text-text-dark font-bold text-lg md:text-xl lg:text-2xl' : 'text-gray-500 text-sm md:text-base lg:text-lg font-medium'}`}>
                         {crumb.label}
                       </span>
                     </React.Fragment>
@@ -359,15 +373,15 @@ export default function DashboardLayout({ children }) {
               </div>
 
               {/* Notifications */}
-              <NotificationBell />
+              <NotificationBell className="bg-white rounded-xl p-1 shadow-sm text-gray-600" />
 
               {/* User Dropdown */}
-              <div className="relative">
+              <div className="relative bg-white rounded-xl p-1 shadow-sm text-gray-600">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-white/50 transition-colors"
                 >
-                  <div className="text-right">
+                  <div className="text-right hidden md:block">
                     <p className="text-sm font-bold text-text-dark leading-tight">{user?.nama_lengkap || 'John Doe'}</p>
                     <p className="text-xs text-text-gray">{user?.role || 'Admin'}</p>
                   </div>
@@ -380,7 +394,7 @@ export default function DashboardLayout({ children }) {
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-4 w-48 bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2 z-50 animate-fade-in border border-gray-100">
                     <button
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-accent-orange font-semibold hover:bg-danger-500/5 transition-colors text-sm"
                     >
                       <LogOut size={16} />
@@ -400,6 +414,18 @@ export default function DashboardLayout({ children }) {
           </div>
         </main>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmLogout.isOpen}
+        title="Konfirmasi Logout"
+        message="Apakah Anda yakin ingin keluar dari aplikasi?"
+        confirmText="Ya, Logout"
+        cancelText="Batal"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setConfirmLogout({ isOpen: false })}
+        type="warning"
+      />
     </div>
   );
 }

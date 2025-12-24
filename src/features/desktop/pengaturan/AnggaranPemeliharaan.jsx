@@ -153,7 +153,6 @@ export default function AnggaranPemeliharaan() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-          <DollarSign size={28} />
           Anggaran Pemeliharaan (AIC)
         </h1>
         <p className="text-text-gray text-sm mt-1">Analisis biaya pemeliharaan tahunan berdasarkan inflasi dan usia pakai aset.</p>

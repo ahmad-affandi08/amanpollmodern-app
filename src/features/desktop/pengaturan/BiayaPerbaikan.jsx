@@ -138,7 +138,6 @@ export default function BiayaPerbaikan() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-          <Hammer size={28} />
           Biaya Perbaikan vs MMEL
         </h1>
         <p className="text-text-gray text-sm mt-1">

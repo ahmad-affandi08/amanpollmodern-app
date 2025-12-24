@@ -4,16 +4,18 @@ import QrScanner from 'qr-scanner';
 import { Camera, Flashlight, RefreshCw } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { ToastContext } from '../../../components/Alert/ToastProvider';
+import { useAuthContext } from '../../../context/AuthContext';
 
 export default function MobileScanner() {
   usePageTitle('Scan QR');
   const navigate = useNavigate();
   const { showToast } = useContext(ToastContext);
+  const { user } = useAuthContext();
   const videoRef = useRef(null);
   const [scanner, setScanner] = useState(null);
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
-  const [cameraFacingMode, setCameraFacingMode] = useState('environment'); // 'environment' or 'user'
+  const [cameraFacingMode, setCameraFacingMode] = useState('environment');
 
   // Initialize Scanner
   useEffect(() => {
@@ -57,7 +59,21 @@ export default function MobileScanner() {
         navigator.vibrate(200);
       }
       const scannedId = result.data;
-      navigate(`/mobile/inventaris/${scannedId}`);
+
+      // Show success toast
+      showToast('success', `✅ QR Scan Berhasil: ${scannedId}`);
+
+      // Redirect after brief delay
+      setTimeout(() => {
+        // Check if user is User Ruangan (kategori_user_id === 2)
+        if (user?.kategori_user_id === 2) {
+          navigate('/mobile/aduan', {
+            state: { scannedInventarisId: scannedId }
+          });
+        } else {
+          navigate(`/mobile/inventaris/${scannedId}`);
+        }
+      }, 1000); // Show toast for 1 second before redirect
     }
   };
 

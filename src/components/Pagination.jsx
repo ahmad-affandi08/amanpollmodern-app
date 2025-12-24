@@ -60,7 +60,7 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           title="First Page"
         >
           <ChevronsLeft size={18} />
@@ -79,26 +79,39 @@ export default function Pagination({
 
       {/* Page Numbers */}
       <div className="flex items-center gap-1">
-        {getPageNumbers().map((page, index) => (
-          <React.Fragment key={index}>
-            {page === '...' ? (
-              <span className="px-2 text-gray-400">...</span>
-            ) : (
-              <button
-                onClick={() => onPageChange(page)}
-                className={`
-                  min-w-[36px] h-9 px-3 rounded-lg text-sm font-bold transition-all
-                  ${currentPage === page
-                    ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
-                    : 'text-gray-600 hover:bg-gray-100'
-                  }
-                `}
-              >
-                {page}
-              </button>
-            )}
-          </React.Fragment>
-        ))}
+        {getPageNumbers().map((page, index) => {
+          // Responsive logic: On mobile (default), only show current page and neighbors (+/- 1) and ellipsis
+          // On sm/md, show all generated pages
+          const isVisibleOnMobile =
+            page === '...' ||
+            page === currentPage ||
+            page === currentPage - 1 ||
+            page === currentPage + 1 ||
+            page === 1 ||
+            page === totalPages;
+
+          return (
+            <React.Fragment key={index}>
+              {page === '...' ? (
+                <span className={`px-2 text-gray-400 ${!isVisibleOnMobile ? 'hidden sm:block' : ''}`}>...</span>
+              ) : (
+                <button
+                  onClick={() => onPageChange(page)}
+                  className={`
+                    min-w-[36px] h-9 px-3 rounded-lg text-sm font-bold transition-all
+                    ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
+                    ${currentPage === page
+                      ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
+                      : 'text-gray-600 hover:bg-gray-100'
+                    }
+                  `}
+                >
+                  {page}
+                </button>
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       {/* Next */}
@@ -116,7 +129,7 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           title="Last Page"
         >
           <ChevronsRight size={18} />

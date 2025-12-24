@@ -82,7 +82,7 @@ const NotificationCenter = () => {
           <button
             onClick={handleMarkAllAsRead}
             disabled={markAllAsReadMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white shadow-lg bg-brand-primary rounded-lg hover:-translate-y-1 transition-all disabled:opacity-50"
           >
             <CheckCheck className="w-4 h-4" />
             Tandai Semua Dibaca
@@ -90,7 +90,7 @@ const NotificationCenter = () => {
           <button
             onClick={handleDeleteAll}
             disabled={deleteAllMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white shadow-lg bg-danger-500 rounded-lg hover:-translate-y-1 transition-all disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
             Hapus Semua
@@ -124,7 +124,7 @@ const NotificationCenter = () => {
                 key={value}
                 onClick={() => setFilter(value)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === value
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
@@ -189,7 +189,7 @@ const NotificationCenter = () => {
                   <button
                     onClick={() => handleDelete(notif.id_notifikasi)}
                     disabled={deleteNotificationMutation.isPending}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                     title="Hapus"
                   >
                     <Trash2 className="w-4 h-4" />

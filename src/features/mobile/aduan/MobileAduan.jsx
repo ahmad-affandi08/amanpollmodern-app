@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { useAuthContext } from '../../../context/AuthContext';
@@ -8,6 +9,8 @@ import MobileAduanListTeknisi from './MobileAduanListTeknisi';
 export default function MobileAduan() {
   usePageTitle('Aduan');
   const { user } = useAuthContext();
+  const location = useLocation();
+  const scannedInventarisId = location.state?.scannedInventarisId;
 
   // Dummy loading state (you might want to pass real prop or context)
   const isLoading = false;
@@ -61,7 +64,7 @@ export default function MobileAduan() {
 
       {/* Form Card */}
       <div className="bg-white rounded-[20px] p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50">
-        <AduanForm />
+        <AduanForm scannedInventarisId={scannedInventarisId} />
       </div>
 
       {/* Info Card */}

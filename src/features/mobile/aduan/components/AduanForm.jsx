@@ -1,17 +1,22 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateAduan } from '../../../../hooks/queries/useAduanQueries';
+import { useInventarisDetail } from '../../../../hooks/queries/useInventarisQueries';
 import { useAuthContext } from '../../../../context/AuthContext';
 import { ToastContext } from '../../../../components/Alert/ToastProvider';
 import ImageUploadPreview from './ImageUploadPreview';
 import InventarisSelect from './InventarisSelect';
-import DivisiSelect from './DivisiSelect';
+import VoiceInput from '../../../../components/VoiceInput';
 
-export default function AduanForm() {
+
+export default function AduanForm({ scannedInventarisId }) {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { showToast } = useContext(ToastContext);
   const createAduan = useCreateAduan();
+
+  // Fetch inventaris details if scanned from QR code
+  const { data: scannedInventaris, isLoading: isLoadingScanned } = useInventarisDetail(scannedInventarisId);
 
   const [formData, setFormData] = useState({
     ruangan_id: user?.ruangan_id || '',
@@ -20,7 +25,7 @@ export default function AduanForm() {
     nama_alat_id: '',
     no_inventaris: '',
     keluhan: '',
-    nama_pengadu: '',
+    nama_pengadu: user?.nama_lengkap || '', // Auto-fill with user's full name
     pengadu_id: user?.id_user || '',
   });
 
@@ -57,6 +62,27 @@ export default function AduanForm() {
       setNamaDivisi('');
     }
   }, []);
+
+  // Auto-populate form when scanned inventaris data arrives
+  useEffect(() => {
+    const inventarisData = scannedInventaris;
+
+    if (inventarisData && inventarisData.id) {
+      // Prepare data in the format expected by handleInventarisChange
+      const formattedData = {
+        id_inventaris: inventarisData.id,
+        id_nama_alat: inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
+        no_inventaris: inventarisData.no_inventaris,
+        divisi_id: inventarisData.divisi?.id_divisi || inventarisData.nama_alat?.divisi?.id_divisi || inventarisData.divisi_id,
+        nama_alat: inventarisData.nama_alat?.nama_nama_alat || '',
+        merk: inventarisData.merk || '',
+        nama_divisi: inventarisData.divisi?.nama_divisi || inventarisData.nama_alat?.divisi?.nama_divisi || '',
+      };
+
+      // Auto-fill the form
+      handleInventarisChange(formattedData);
+    }
+  }, [scannedInventaris, handleInventarisChange]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -206,20 +232,20 @@ export default function AduanForm() {
         )}
       </div>
 
-      {/* Keluhan */}
+      {/* Keluhan - With Voice Input */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
           Keluhan Kerusakan <span className="text-red-500">*</span>
         </label>
-        <textarea
+        <VoiceInput
           value={formData.keluhan}
-          onChange={(e) => handleChange('keluhan', e.target.value)}
-          rows={4}
-          className={`w-full px-3 py-2.5 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none ${errors.keluhan
-            ? 'border-red-300 focus:ring-red-200'
-            : 'border-gray-200 focus:ring-purple-200 focus:border-purple-400'
+          onChange={(text) => handleChange('keluhan', text)}
+          placeholder="Jelaskan keluhan atau masalah yang terjadi... (Ketik atau gunakan voice input)"
+          language="id-ID"
+          className={`w-full px-3 py-2.5 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all ${errors.keluhan
+              ? 'border-red-300 focus:ring-red-200'
+              : 'border-gray-200 focus:ring-purple-200 focus:border-purple-400'
             }`}
-          placeholder="Masukkan keluhan kerusakan..."
         />
         {errors.keluhan && (
           <p className="text-xs text-red-500">{errors.keluhan}</p>

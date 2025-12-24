@@ -214,12 +214,12 @@ export default function InventarisList() {
           <h1 className="text-2xl font-bold text-text-dark">Daftar Inventaris</h1>
           <p className="text-[#808191] text-sm mt-1">Kelola inventaris alat medis</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 md:flex gap-3 md:gap-2 w-full md:w-auto">
           {/* Print All Labels Button */}
-          <div className="relative">
+          <div className="relative w-full md:w-auto">
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full md:w-auto"
             >
               <Printer className="w-4 h-4" />
               Print Semua Label
@@ -244,7 +244,7 @@ export default function InventarisList() {
           <Button
             variant="outline"
             onClick={handleExportExcel}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full md:w-auto"
           >
             <Download className="w-4 h-4" />
             Export Excel
@@ -252,7 +252,7 @@ export default function InventarisList() {
 
           <Button
             onClick={() => navigate('/inventaris/baru')}
-            className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
+            className="flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 w-full md:w-auto"
           >
             <Plus className="w-4 h-4" />
             Tambah Inventaris
