@@ -39,12 +39,12 @@ export default function MobileAduanDetailTeknisi() {
 
     // Validate signatures
     if (ttdTeknisiRef.current?.isEmpty()) {
-      showToast('error', 'Tanda tangan teknisi harus diisi!');
+      showToast('Tanda tangan teknisi harus diisi!', 'error');
       return;
     }
 
     if (ttdKepalaRuangRef.current?.isEmpty()) {
-      showToast('error', 'Tanda tangan pengadu harus diisi!');
+      showToast('Tanda tangan pengadu harus diisi!', 'error');
       return;
     }
 
@@ -60,10 +60,10 @@ export default function MobileAduanDetailTeknisi() {
         data: inspectionData,
       });
 
-      showToast('success', 'Pemeriksaan berhasil disimpan!');
+      showToast('Pemeriksaan berhasil disimpan!', 'success');
       navigate('/mobile/aduan');
     } catch (error) {
-      showToast('error', error.response?.data?.message || 'Gagal menyimpan pemeriksaan');
+      showToast(error.response?.data?.message || 'Gagal menyimpan pemeriksaan', 'error');
     }
   };
 

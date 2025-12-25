@@ -1,4 +1,4 @@
-import React, { useState, useRef,  } from 'react';
+import React, { useState, useRef, } from 'react';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
 import Select from '../../../components/Select';
@@ -32,18 +32,18 @@ export default function InspectionModal({ isOpen, onClose, aduan, onSuccess }) {
   const handleSubmit = async () => {
     // Validate signatures if status requires them or generally always
     if (ttdTeknisiRef.current?.isEmpty()) {
-      showToast('error', 'Tanda tangan teknisi harus diisi!');
+      showToast('Tanda tangan teknisi harus diisi!', 'error');
       return;
     }
 
     if (ttdKepalaRuangRef.current?.isEmpty()) {
-      showToast('error', 'Tanda tangan pengadu/kepala ruang harus diisi!');
+      showToast('Tanda tangan pengadu/kepala ruang harus diisi!', 'error');
       return;
     }
 
     // Check required fields
     if (!formData.status_aduan || !formData.kondisi_alat) {
-      showToast('error', 'Status dan Kondisi Alat harus diisi!');
+      showToast('Status dan Kondisi Alat harus diisi!', 'error');
       return;
     }
 
@@ -59,12 +59,12 @@ export default function InspectionModal({ isOpen, onClose, aduan, onSuccess }) {
         data: inspectionData,
       });
 
-      showToast('success', 'Pemeriksaan berhasil disimpan!');
+      showToast('Pemeriksaan berhasil disimpan!', 'success');
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
-      showToast('error', error.response?.data?.message || 'Gagal menyimpan pemeriksaan');
+      showToast(error.response?.data?.message || 'Gagal menyimpan pemeriksaan', 'error');
     }
   };
 

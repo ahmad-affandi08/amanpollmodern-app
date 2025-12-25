@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, CheckSquare } from 'lucide-react';
 import Button from '../../../components/Button';
-import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import RuanganApi from '../../../api/RuanganApi';

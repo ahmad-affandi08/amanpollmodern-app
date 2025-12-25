@@ -33,7 +33,7 @@ export default function Scanner() {
           videoRef.current,
           (result) => {
             if (typeof result?.data === 'string') {
-              showToast('success', 'QR Code Valid!');
+              showToast('QR Code Valid!', 'success');
 
               if (qrScanner) {
                 qrScanner.stop();
@@ -84,8 +84,54 @@ export default function Scanner() {
     };
   }, [currentCamera, navigate, showToast]);
 
-  const toggleCamera = () => {
-    window.location.reload();
+  const toggleCamera = async () => {
+    if (scannerRef.current) {
+      try {
+        setLoading(true);
+
+        // Stop and destroy current scanner
+        await scannerRef.current.stop();
+        scannerRef.current.destroy();
+
+        // Toggle camera mode
+        const newMode = currentCamera === 'environment' ? 'user' : 'environment';
+        setCurrentCamera(newMode);
+
+        // Create new scanner with new camera
+        const qrScanner = new QrScanner(
+          videoRef.current,
+          (result) => {
+            if (typeof result?.data === 'string') {
+              showToast('QR Code Valid!', 'success');
+
+              if (qrScanner) {
+                qrScanner.stop();
+              }
+
+              setTimeout(() => {
+                navigate(`/inventaris/detail/${result.data}`);
+              }, 500);
+            }
+          },
+          {
+            maxScansPerSecond: 1,
+            preferredCamera: newMode,
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+          }
+        );
+
+        scannerRef.current = qrScanner;
+
+        // Start new scanner
+        await qrScanner.start();
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to switch camera:', err);
+        setError('Gagal mengganti kamera: ' + err.message);
+        setLoading(false);
+      }
+    }
   };
 
   return (

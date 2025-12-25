@@ -4,7 +4,7 @@ import AnggaranApi from '../../../api/AnggaranApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
-import { ConfirmDialog } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
 import TableSkeleton from '../../../components/TableSkeleton';
 
 export default function PengaturanAnggaran() {

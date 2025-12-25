@@ -1,53 +1,15 @@
 import React from 'react'
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
+
+// Common Styles for Consistency
+const DIALOG_OVERLAY = "fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in"
+const DIALOG_CARD = "bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-in"
+const ICON_CONTAINER = "w-12 h-12 rounded-full flex items-center justify-center mb-4"
 
 /**
- * Alert Component - Modern Theme
- * Types: success, error, warning, info
+ * Confirmation Dialog
  */
-export default function Alert({ type = 'info', message, onClose, className = '' }) {
-  const typeStyles = {
-    success: 'bg-green-50 text-green-700 border border-green-200',
-    error: 'bg-red-50 text-red-700 border border-red-200',
-    warning: 'bg-yellow-50 text-orange-700 border border-yellow-200',
-    info: 'bg-blue-50 text-blue-700 border border-blue-200',
-  }
-
-  const IconComponent = {
-    success: CheckCircle,
-    error: XCircle,
-    warning: AlertTriangle,
-    info: Info,
-  }[type]
-
-  const Icon = IconComponent
-
-  return (
-    <div
-      className={`${typeStyles[type]} rounded-xl p-4 flex items-start justify-between gap-3 ${className}`}
-      role="alert"
-    >
-      <div className="flex items-start gap-3 flex-1">
-        <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-        <p className="text-sm font-medium leading-relaxed">{message}</p>
-      </div>
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
-          aria-label="Close alert"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  )
-}
-
-/**
- * Confirmation Dialog Component - Modern Theme
- */
-export function ConfirmDialog({
+export default function ConfirmDialog({
   isOpen,
   title = 'Konfirmasi',
   message,
@@ -59,39 +21,43 @@ export function ConfirmDialog({
 }) {
   if (!isOpen) return null
 
-  // Overlay
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
-      <div
-        className="bg-white rounded-3xl shadow-xl max-w-sm w-full p-6 animate-scale-in"
-      >
-        <div className="text-center mb-6">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${type === 'error' ? 'bg-red-100 text-red-500' :
-            type === 'warning' ? 'bg-orange-100 text-orange-500' :
-              'bg-blue-100 text-blue-500'
-            }`}>
-            <AlertTriangle size={28} />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
-          <p className="text-sm text-gray-500 leading-relaxed font-medium">{message}</p>
-        </div>
+  const typeConfig = {
+    danger: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', btn: 'bg-red-600 hover:bg-red-700' },
+    warning: { icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-50', btn: 'bg-orange-500 hover:bg-orange-600' },
+    info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', btn: 'bg-blue-600 hover:bg-blue-700' },
+    success: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', btn: 'bg-green-600 hover:bg-green-700' },
+  }
 
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors text-sm"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 text-sm ${type === 'error' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' :
-              type === 'warning' ? 'bg-[#FF754C] hover:bg-[#e86a45] shadow-[#FF754C]/30' :
-                'bg-brand-primary hover:bg-brand-primary-light shadow-brand-primary/30'
-              }`}
-          >
-            {confirmText}
-          </button>
+  const config = typeConfig[type === 'error' ? 'danger' : type] || typeConfig.warning
+  const Icon = config.icon
+
+  return (
+    <div className={DIALOG_OVERLAY}>
+      <div className={DIALOG_CARD}>
+        <div className="flex flex-col items-center text-center">
+          <div className={`${ICON_CONTAINER} ${config.bg}`}>
+            <Icon size={24} className={config.color} />
+          </div>
+
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            {message}
+          </p>
+
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={onCancel}
+              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={onConfirm}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors ${config.btn}`}
+            >
+              {confirmText}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -99,56 +65,63 @@ export function ConfirmDialog({
 }
 
 /**
- * Toast Notification Component - Modern Theme
+ * Toast Dialog - Now styled exactly like ConfirmDialog
+ * Acts as an Auto-closing Success/Info Modal
  */
-export function Toast({ type = 'info', message, duration = 3000, onClose }) {
+export function ToastDialog({
+  isOpen,
+  type = 'info',
+  title,
+  message,
+  duration = 3000,
+  onClose,
+}) {
   React.useEffect(() => {
-    if (duration > 0) {
+    if (isOpen && duration > 0) {
       const timer = setTimeout(() => {
         onClose?.()
       }, duration)
       return () => clearTimeout(timer)
     }
-  }, [duration, onClose])
+  }, [isOpen, duration, onClose])
 
-  const typeStyles = {
-    success: 'bg-white border-l-4 border-green-500 text-gray-800',
-    error: 'bg-white border-l-4 border-red-500 text-gray-800',
-    warning: 'bg-white border-l-4 border-orange-500 text-gray-800',
-    info: 'bg-white border-l-4 border-blue-500 text-gray-800',
+  if (!isOpen) return null
+
+  const typeConfig = {
+    success: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', defaultTitle: 'Berhasil' },
+    error: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', defaultTitle: 'Gagal' },
+    warning: { icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-50', defaultTitle: 'Peringatan' },
+    info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', defaultTitle: 'Informasi' },
   }
 
-  const iconColors = {
-    success: 'text-green-500',
-    error: 'text-red-500',
-    warning: 'text-orange-500',
-    info: 'text-blue-500'
-  }
-
-  const IconComponent = {
-    success: CheckCircle,
-    error: XCircle,
-    warning: AlertTriangle,
-    info: Info,
-  }[type]
-
-  const Icon = IconComponent
+  const config = typeConfig[type] || typeConfig.info
+  const Icon = config.icon
+  const displayTitle = title || config.defaultTitle
 
   return (
-    <div
-      className={`${typeStyles[type]} shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded-lg p-4 flex items-center gap-3 min-w-[320px] animate-slide-in mb-4`}
-    >
-      <Icon className={`w-6 h-6 ${iconColors[type]}`} />
-      <p className="flex-1 text-sm font-semibold">{message}</p>
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-transform"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
+    <div className={DIALOG_OVERLAY}>
+      <div className={`${DIALOG_CARD} transform transition-all`}>
+        <div className="flex flex-col items-center text-center">
+          {/* Centered Icon */}
+          <div className={`${ICON_CONTAINER} ${config.bg}`}>
+            <Icon size={24} className={config.color} />
+          </div>
+
+          {/* Centered Text */}
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{displayTitle}</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-4">
+            {message}
+          </p>
+
+          {/* Optional: Close Button for manual dismissal (and nice look) */}
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

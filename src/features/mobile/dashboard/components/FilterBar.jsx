@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Search, RotateCcw } from 'lucide-react';
+import React from 'react';
+import { RotateCcw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../../api/axiosClient';
 
 export default function FilterBar({ filters, onFilterChange }) {
-  const [localFilters, setLocalFilters] = useState(filters);
-
   // Fetch kategori list
   const { data: kategoriData, isLoading: isLoadingKategori } = useQuery({
     queryKey: ['kategori-alat'],
@@ -36,11 +34,9 @@ export default function FilterBar({ filters, onFilterChange }) {
   ];
 
   const handleChange = (key, value) => {
-    setLocalFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSearch = () => {
-    onFilterChange(localFilters);
+    // Apply filter immediately on change
+    const newFilters = { ...filters, [key]: value };
+    onFilterChange(newFilters);
   };
 
   const handleReset = () => {
@@ -49,7 +45,6 @@ export default function FilterBar({ filters, onFilterChange }) {
       bulan_filter: '',
       kategori_filter: ''
     };
-    setLocalFilters(resetFilters);
     onFilterChange(resetFilters);
   };
 
@@ -59,7 +54,7 @@ export default function FilterBar({ filters, onFilterChange }) {
       <div className="grid grid-cols-3 gap-2 mb-2">
         {/* Year */}
         <select
-          value={localFilters.tahun_filter}
+          value={filters.tahun_filter}
           onChange={(e) => handleChange('tahun_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg text-brand-primary focus:outline-none focus:ring-2 focus:ring-purple-300"
         >
@@ -71,7 +66,7 @@ export default function FilterBar({ filters, onFilterChange }) {
 
         {/* Month */}
         <select
-          value={localFilters.bulan_filter}
+          value={filters.bulan_filter}
           onChange={(e) => handleChange('bulan_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-lg text-info-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
@@ -83,7 +78,7 @@ export default function FilterBar({ filters, onFilterChange }) {
 
         {/* Category */}
         <select
-          value={localFilters.kategori_filter}
+          value={filters.kategori_filter}
           onChange={(e) => handleChange('kategori_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-lg text-accent-green focus:outline-none focus:ring-2 focus:ring-emerald-300"
         >
@@ -96,22 +91,14 @@ export default function FilterBar({ filters, onFilterChange }) {
         </select>
       </div>
 
-      {/* Buttons Row */}
-      <div className="flex gap-2">
-        <button
-          onClick={handleSearch}
-          className="flex-1 px-3 py-2 bg-gradient-to-br from-orange-300 to-pending-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1.5"
-        >
-          <Search size={14} />
-          <span>Cari</span>
-        </button>
-        <button
-          onClick={handleReset}
-          className="px-3 py-2 bg-gradient-to-br from-blue-400 to-info-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center"
-        >
-          <RotateCcw size={14} />
-        </button>
-      </div>
+      {/* Reset Button Only */}
+      <button
+        onClick={handleReset}
+        className="w-full px-3 py-2 bg-gradient-to-br from-blue-400 to-info-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1.5"
+      >
+        <RotateCcw size={14} />
+        <span>Reset Filter</span>
+      </button>
     </div>
   );
 }

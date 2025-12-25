@@ -20,7 +20,7 @@ import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
-import { ConfirmDialog, Toast } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
 
 export default function ReportPemeliharaan() {
   usePageTitle('Laporan Pemeliharaan');

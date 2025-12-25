@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { useUpdateLocation } from '../../../../hooks/queries/useInventarisQueries';
 import { useMasterData } from '../../../../hooks/queries/useMasterDataQueries';
-import { Toast } from '../../../../components/Alert/Alert';
+import { ToastContext } from '../../../../components/Alert/ToastProvider';
 import Button from '../../../../components/Button';
 
 export default function UpdateLocationModal({ isOpen, onClose, inventarisId, currentRuanganId }) {
   const [selectedRuangan, setSelectedRuangan] = useState(currentRuanganId || '');
-  const [toast, setToast] = useState(null);
+  const { showToast } = useContext(ToastContext);
 
-  const { data: ruanganList } = useMasterData.ruangan();
+  const { data: ruanganData } = useMasterData.ruangan();
+  const ruanganList = ruanganData?.data || [];
   const updateLocationMutation = useUpdateLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedRuangan) {
-      setToast({ type: 'error', message: 'Pilih ruangan terlebih dahulu' });
+      showToast('Pilih ruangan terlebih dahulu', 'error');
       return;
     }
 
@@ -26,17 +27,13 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
         ruanganId: selectedRuangan
       });
 
-      setToast({ type: 'success', message: 'Lokasi berhasil diperbarui' });
+      showToast('Lokasi berhasil diperbarui', 'success');
 
       setTimeout(() => {
         onClose();
-        setToast(null);
       }, 1500);
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.response?.data?.message || 'Gagal memperbarui lokasi'
-      });
+      showToast(error.response?.data?.message || 'Gagal memperbarui lokasi', 'error');
     }
   };
 
@@ -76,7 +73,7 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none text-sm bg-white"
             >
               <option value="">-- Pilih Ruangan --</option>
-              {ruanganList?.map((ruangan) => (
+              {ruanganList.map((ruangan) => (
                 <option key={ruangan.id_ruangan} value={ruangan.id_ruangan}>
                   {ruangan.nama_ruangan}
                 </option>
@@ -104,14 +101,6 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
           </div>
         </form>
       </div>
-
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 }

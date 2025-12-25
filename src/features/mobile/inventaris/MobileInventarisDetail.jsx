@@ -21,10 +21,69 @@ export default function MobileInventarisDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center pt-20">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-brand-primary rounded-full animate-spin"></div>
-          <p className="text-gray-400 text-sm font-medium animate-pulse">Memuat data...</p>
+      <div className="min-h-screen flex justify-center font-sans">
+        <div className="w-full max-w-md min-h-screen pb-6 relative">
+          {/* Header Image Skeleton */}
+          <div className="relative h-72 bg-gray-200 rounded-b-[30px] overflow-hidden shadow-lg mx-[-1px] animate-pulse">
+            {/* Back Button Skeleton */}
+            <div className="absolute top-4 left-4 w-10 h-10 bg-white/30 backdrop-blur-md rounded-full"></div>
+
+            {/* Title Overlay Skeleton */}
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-gray-300 via-gray-300/80 to-transparent p-6 pt-24">
+              <div className="w-20 h-5 bg-gray-400 rounded-lg mb-2.5"></div>
+              <div className="w-3/4 h-8 bg-gray-400 rounded-lg mb-1.5"></div>
+              <div className="w-1/2 h-4 bg-gray-400/70 rounded-lg"></div>
+            </div>
+          </div>
+
+          <div className="px-5 -mt-6 relative z-10 space-y-5">
+            {/* Location Card Skeleton */}
+            <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 animate-pulse">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-32 h-6 bg-gray-200 rounded-lg"></div>
+                <div className="w-16 h-8 bg-gray-200 rounded-xl"></div>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
+                <div className="bg-gray-200 w-12 h-12 rounded-xl"></div>
+                <div className="flex-1">
+                  <div className="w-16 h-3 bg-gray-200 rounded mb-1"></div>
+                  <div className="w-32 h-5 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Specifications Skeleton */}
+            <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 animate-pulse">
+              <div className="flex items-center gap-2 border-b border-gray-50 pb-3 mb-4">
+                <div className="w-1 h-5 bg-gray-200 rounded-full"></div>
+                <div className="w-40 h-6 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50">
+                    <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                    <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Documents Skeleton */}
+            <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 animate-pulse">
+              <div className="flex items-center gap-2 border-b border-gray-50 pb-3 mb-4">
+                <div className="w-1 h-5 bg-gray-200 rounded-full"></div>
+                <div className="w-32 h-6 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50">
+                    <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                    <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

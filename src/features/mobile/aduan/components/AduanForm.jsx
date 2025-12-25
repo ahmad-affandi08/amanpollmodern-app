@@ -107,7 +107,7 @@ export default function AduanForm({ scannedInventarisId }) {
     e.preventDefault();
 
     if (!validateForm()) {
-      showToast('error', 'Mohon lengkapi form dengan benar');
+      showToast('Mohon lengkapi form dengan benar', 'error');
       return;
     }
 
@@ -132,10 +132,10 @@ export default function AduanForm({ scannedInventarisId }) {
 
       await createAduan.mutateAsync(submitData);
 
-      showToast('success', 'Aduan berhasil ditambahkan!');
+      showToast('Aduan berhasil ditambahkan!', 'success');
       navigate('/mobile/dashboard');
     } catch (error) {
-      showToast('error', error.response?.data?.message || 'Gagal menambahkan aduan');
+      showToast(error.response?.data?.message || 'Gagal menambahkan aduan', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -243,8 +243,8 @@ export default function AduanForm({ scannedInventarisId }) {
           placeholder="Jelaskan keluhan atau masalah yang terjadi... (Ketik atau gunakan voice input)"
           language="id-ID"
           className={`w-full px-3 py-2.5 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all ${errors.keluhan
-              ? 'border-red-300 focus:ring-red-200'
-              : 'border-gray-200 focus:ring-purple-200 focus:border-purple-400'
+            ? 'border-red-300 focus:ring-red-200'
+            : 'border-gray-200 focus:ring-purple-200 focus:border-purple-400'
             }`}
         />
         {errors.keluhan && (

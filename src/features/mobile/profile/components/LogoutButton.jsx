@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../../../hooks';
-import { ConfirmDialog } from '../../../../components/Alert/Alert';
+import ConfirmDialog from '../../../../components/Alert/Alert';
 
 export default function LogoutButton() {
   const { logout } = useAuth();

@@ -26,7 +26,7 @@ export default function InventarisDetail() {
       setData(response.data || response);
     } catch (error) {
       console.error(error);
-      showToast('error', 'Gagal memuat detail inventaris');
+      showToast('Gagal memuat detail inventaris', 'error');
       navigate('/inventaris');
     } finally {
       setLoading(false);

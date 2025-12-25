@@ -69,7 +69,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
       }
     } catch (err) {
       console.error(err);
-      showToast('error', 'Gagal memuat daftar alat');
+      showToast('Gagal memuat daftar alat', 'error');
     } finally {
       setLoadingInventaris(false);
     }
@@ -107,7 +107,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
 
     if (!formData.ruangan_id || !formData.inventaris_id || !formData.keluhan) {
-      showToast('error', 'Mohon lengkapi data wajib (Ruangan, Inventaris, Keluhan).');
+      showToast('Mohon lengkapi data wajib (Ruangan, Inventaris, Keluhan).', 'error');
       return;
     }
 
@@ -129,12 +129,12 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
       }
 
       await AduanApi.create(payload);
-      showToast('success', 'Aduan berhasil dilaporkan');
+      showToast('Aduan berhasil dilaporkan', 'success');
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Submit error:', error);
-      showToast('error', error.response?.data?.message || 'Gagal mengirim aduan');
+      showToast(error.response?.data?.message || 'Gagal mengirim aduan', 'error');
     } finally {
       setSubmitLoading(false);
     }

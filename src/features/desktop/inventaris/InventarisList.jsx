@@ -8,6 +8,7 @@ import {
   useMasterDivisi,
   useMasterRuangan,
   useAuth,
+  useToast,
   usePagination,
   useFilters,
   useDebounce,
@@ -18,7 +19,7 @@ import Input from '../../../components/Input';
 import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Pagination from '../../../components/Pagination';
-import { ConfirmDialog, Toast } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
 import TableSkeleton from '../../../components/TableSkeleton';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
@@ -29,7 +30,6 @@ import noImage from '../../../assets/img/no_image.png';
 import qrCodeIcon from '../../../assets/img/icon-qr-code.png';
 import InventarisApi from '../../../api/InventarisApi';
 
-// Column Definitions - Matching amanpollrsudgemolong
 const COLUMN_DEFS = [
   { key: 'no_inventaris', label: 'No. Inventaris', defaultVisible: true },
   { key: 'nama_alat', label: 'Nama Alat', defaultVisible: true },
@@ -85,7 +85,7 @@ export default function InventarisList() {
   const debouncedSearch = useDebounce(filters.search, 500);
 
   // Alert State
-  const [toast, setToast] = useState(null);
+  const { showToast } = useToast();
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
   // Image Preview Modal
@@ -130,10 +130,10 @@ export default function InventarisList() {
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(id);
-          setToast({ type: 'success', message: 'Inventaris berhasil dihapus' });
+          showToast('Inventaris berhasil dihapus', 'success');
           setConfirmDialog({ isOpen: false });
         } catch (error) {
-          setToast({ type: 'error', message: 'Gagal menghapus inventaris' });
+          showToast('Gagal menghapus inventaris', 'error');
         }
       },
       onCancel: () => setConfirmDialog({ isOpen: false })
@@ -163,14 +163,13 @@ export default function InventarisList() {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      setToast({ type: 'success', message: 'Export berhasil' });
+      showToast('Export berhasil', 'success');
     } catch (error) {
       console.error('Export error:', error);
       console.error('Error response:', error.response);
-      setToast({ type: 'error', message: error.response?.data?.message || 'Gagal export data' });
+      showToast('Gagal export data', 'error');
     }
   };
-
 
 
   const handlePrintLabelWithType = async (labelType, itemId = null) => {
@@ -182,11 +181,11 @@ export default function InventarisList() {
       const response = await InventarisApi.printLabel(params);
       const url = window.URL.createObjectURL(new Blob([response], { type: 'application/pdf' }));
       window.open(url, '_blank');
-      setToast({ type: 'success', message: 'Print label berhasil dibuka' });
+      showToast('Print label berhasil dibuka', 'success');
 
     } catch (error) {
       console.error('Print label error:', error);
-      setToast({ type: 'error', message: 'Gagal membuka print label' });
+      showToast('Gagal membuka print label', 'error');
     }
   };
 
@@ -530,8 +529,12 @@ export default function InventarisList() {
                               />
                             </div>
                           ) : (
-                            <div className="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center" style={{ minWidth: '80px', minHeight: '80px' }}>
-                              <span className="text-gray-300 text-xs font-medium">No Image</span>
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '80px', minHeight: '80px' }}>
+                              <img
+                                src={noImage}
+                                alt="No Image"
+                                className="w-full h-full object-cover opacity-50"
+                              />
                             </div>
                           )}
                         </div>
@@ -668,7 +671,7 @@ export default function InventarisList() {
                               <button
                                 onClick={() => handleDelete(item.id)}
                                 disabled={deleteMutation.isPending}
-                                className="p-3 bg-[#FF754C] text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+                                className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                                 title="Hapus"
                               >
                                 <Trash2 size={20} />
@@ -697,17 +700,9 @@ export default function InventarisList() {
         </div>
       </div>
 
-      {/* Alerts */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       {confirmDialog.isOpen && (
         <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
           title={confirmDialog.title}
           message={confirmDialog.message}
           onConfirm={confirmDialog.onConfirm}

@@ -13,19 +13,19 @@ export default function AssignTeknisiModal({ isOpen, onClose, aduan, teknisiOpti
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!teknisiId) {
-      showToast('error', 'Pilih teknisi terlebih dahulu');
+      showToast('Pilih teknisi terlebih dahulu', 'error');
       return;
     }
 
     setLoading(true);
     try {
       await AduanApi.assignTeknisi(aduan.id_aduan, teknisiId);
-      showToast('success', 'Teknisi berhasil ditugaskan');
+      showToast('Teknisi berhasil ditugaskan', 'success');
       onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
-      showToast('error', 'Gagal menugaskan teknisi');
+      showToast('Gagal menugaskan teknisi', 'error');
     } finally {
       setLoading(false);
     }

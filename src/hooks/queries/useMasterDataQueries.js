@@ -53,9 +53,11 @@ export const useMasterRuangan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.ruangan(filters),
     queryFn: async () => {
-      const res = await MasterApi.getAllRuangan(filters);
+      // Add all=1 to get all ruangan without pagination
+      const params = { ...filters, all: 1 };
+      const res = await MasterApi.getAllRuangan(params);
       return {
-        data: res.data || [],
+        data: res.data || res || [],
         meta: res.meta,
       };
     },

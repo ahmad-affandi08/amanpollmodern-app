@@ -14,14 +14,12 @@ export const useCreateDisposisiAduan = () => {
     mutationFn: ({ aduanId, data }) =>
       disposisiApi.createDisposisiAduan(aduanId, data),
     onSuccess: (response) => {
-      showToast('success', response.data.message || 'Disposisi berhasil disimpan');
-      // Invalidate aduan queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['aduan'] });
+      showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
     },
     onError: (error) => {
-      const message =
-        error.response?.data?.message || 'Gagal menyimpan disposisi';
-      showToast('error', message);
+      console.error('Error saving disposisi:', error);
+      const message = error.response?.data?.message || 'Gagal menyimpan disposisi';
+      showToast(message, 'error');
     },
   });
 };
@@ -37,14 +35,14 @@ export const useCreateDisposisiPemeliharaan = () => {
     mutationFn: ({ pemeliharaanId, data }) =>
       disposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data),
     onSuccess: (response) => {
-      showToast('success', response.data.message || 'Disposisi berhasil disimpan');
+      showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
       // Invalidate pemeliharaan queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['pemeliharaan'] });
     },
     onError: (error) => {
       const message =
         error.response?.data?.message || 'Gagal menyimpan disposisi';
-      showToast('error', message);
+      showToast(message, 'error');
     },
   });
 };

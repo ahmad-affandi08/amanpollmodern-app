@@ -17,9 +17,9 @@ const KonfigurasiSistem = () => {
   const handleToggle = async (enable) => {
     try {
       const result = await toggleMutation.mutateAsync({ enable, secret });
-      showToast('success', result.message);
+      showToast(result.message, 'success');
     } catch (error) {
-      showToast('error', error.response?.data?.message || 'Gagal mengubah status maintenance');
+      showToast(error.response?.data?.message || 'Gagal mengubah status maintenance', 'error');
     }
   };
 

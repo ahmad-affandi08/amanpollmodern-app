@@ -359,8 +359,12 @@ export default function AduanList() {
                               />
                             </div>
                           ) : (
-                            <div className="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center" style={{ minWidth: '80px', minHeight: '80px' }}>
-                              <span className="text-gray-300 text-xs font-medium">No Image</span>
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '80px', minHeight: '80px' }}>
+                              <img
+                                src={noImage}
+                                alt="No Image"
+                                className="w-full h-full object-cover opacity-50"
+                              />
                             </div>
                           )}
                         </div>

@@ -52,7 +52,12 @@ import MobileAduanHistory from './features/mobile/aduan/MobileAduanHistory';
 import MobileAduanDetailUser from './features/mobile/aduan/MobileAduanDetailUser';
 import MobileDisposisiAduan from './features/mobile/aduan/MobileDisposisiAduan';
 import MobileDisposisiPemeliharaan from './features/mobile/pemeliharaan/MobileDisposisiPemeliharaan';
+import MobileAlatBaru from './features/mobile/alat-baru/MobileAlatBaru';
+import MobileAddAlatBaru from './features/mobile/alat-baru/MobileAddAlatBaru';
+import MobileAlatBaruDetail from './features/mobile/alat-baru/MobileAlatBaruDetail';
+import AlatBaruList from './features/desktop/alat-baru/AlatBaruList';
 import KonfigurasiIntegrasi from './features/desktop/konfigurasi/KonfigurasiIntegrasi';
+import KonfigurasiData from './features/desktop/konfigurasi/KonfigurasiData';
 import KonfigurasiSistem from './features/desktop/konfigurasi/KonfigurasiSistem';
 import MaintenancePage from './features/system/MaintenancePage';
 import MaintenanceBypass from './features/system/MaintenanceBypass';
@@ -135,6 +140,12 @@ const router = createBrowserRouter(
       path: '/report/aduan',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><ReportAduan /></DashboardLayout></ProtectedRoute>
     },
+
+    // Alat Baru Routes (Desktop)
+    {
+      path: '/alat-baru',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><AlatBaruList /></DashboardLayout></ProtectedRoute>
+    },
     {
       path: '/report/aduan/:id',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailReportAduan /></DashboardLayout></ProtectedRoute>
@@ -186,6 +197,10 @@ const router = createBrowserRouter(
 
     // Konfigurasi Routes
     {
+      path: '/konfigurasi/data',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiData /></DashboardLayout></ProtectedRoute>
+    },
+    {
       path: '/konfigurasi/integrasi',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiIntegrasi /></DashboardLayout></ProtectedRoute>
     },
@@ -217,6 +232,9 @@ const router = createBrowserRouter(
         { path: 'riwayat-aduan/:id', element: <MobileAduanDetailUser /> },
         { path: 'inventaris', element: <MobileInventaris /> },
         { path: 'inventaris/:id', element: <MobileInventarisDetail /> },
+        { path: 'alat-baru', element: <MobileAlatBaru /> },
+        { path: 'alat-baru/add', element: <MobileAddAlatBaru /> },
+        { path: 'alat-baru/:id', element: <MobileAlatBaruDetail /> },
         { path: 'scan', element: <MobileScanner /> },
         { path: 'pemeliharaan', element: <MobilePemeliharaan /> },
         { path: 'pemeliharaan/history', element: <MobilePemeliharaanHistory /> },

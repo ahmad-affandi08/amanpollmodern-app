@@ -1,34 +1,34 @@
 import React, { createContext, useState, useCallback } from 'react'
-import { Toast } from './Alert'
+import { ToastDialog } from './Alert'
 
 export const ToastContext = createContext()
 
 export default function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([])
+  const [toast, setToast] = useState(null)
 
-  const showToast = useCallback((type = 'info', message, duration = 3000) => {
+  const showToast = useCallback((message, type = 'info', title = null, duration = 3000) => {
     const id = Date.now()
-    setToasts((prev) => [...prev, { id, type, message, duration }])
+    setToast({ id, type, message, title, duration })
   }, [])
 
-  const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  const removeToast = useCallback(() => {
+    setToast(null)
   }, [])
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-9999 flex flex-col gap-3">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            type={toast.type}
-            message={toast.message}
-            duration={toast.duration}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
+      {/* Show ToastDialog as centered modal */}
+      {toast && (
+        <ToastDialog
+          isOpen={true}
+          type={toast.type}
+          title={toast.title}
+          message={toast.message}
+          duration={toast.duration}
+          onClose={removeToast}
+        />
+      )}
     </ToastContext.Provider>
   )
 }

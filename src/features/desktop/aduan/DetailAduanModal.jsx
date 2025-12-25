@@ -23,12 +23,12 @@ export default function DetailAduanModal({ isOpen, onClose, aduan, onUpdate }) {
     setLoading(true);
     try {
       await AduanApi.updateStatus(aduan.id_aduan, newStatus);
-      showToast('success', 'Status berhasil diperbarui');
+      showToast('Status berhasil diperbarui', 'success');
       onUpdate();
       onClose();
     } catch (error) {
       console.error(error);
-      showToast('error', 'Gagal update status');
+      showToast('Gagal update status', 'error');
     } finally {
       setLoading(false);
     }

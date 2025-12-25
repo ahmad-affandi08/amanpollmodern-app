@@ -1,119 +1,119 @@
 @import "tailwindcss";
 
 @theme {
-  /* =========================================
+   /* =========================================
      1. BRAND COLORS (Primary Identity)
      ========================================= */
-  --color-brand-primary: #6C5DD3;
-  /* Main Purple */
-  --color-brand-primary-light: #8075DD;
-  --color-brand-primary-soft: #EDE9FE;
+   --color-brand-primary: #6C5DD3;
+   /* Main Purple */
+   --color-brand-primary-light: #8075DD;
+   --color-brand-primary-soft: #EDE9FE;
 
-  /* Light Purple for gradients/hover */
+   /* Light Purple for gradients/hover */
 
-  /* =========================================
+   /* =========================================
      2. TEXT COLORS
      ========================================= */
-  --color-text-dark: #11142D;
-  /* Headings, Main Text */
-  --color-text-gray: #92929D;
-  /* Subtitles, Muted Text */
+   --color-text-dark: #11142D;
+   /* Headings, Main Text */
+   --color-text-gray: #92929D;
+   /* Subtitles, Muted Text */
 
-  /* =========================================
+   /* =========================================
      3. BACKGROUND COLORS
      ========================================= */
-  --color-bg-light: #F7F7FC;
-  /* App Background */
-  --color-bg-card: #FFFFFF;
-  /* Card Background */
+   --color-bg-light: #F7F7FC;
+   /* App Background */
+   --color-bg-card: #FFFFFF;
+   /* Card Background */
 
-  /* =========================================
+   /* =========================================
      4. SEMANTIC STATE COLORS (Alerts, Badges)
      ========================================= */
 
-  /* Success (Green) */
-  --color-success-50: #F0FDF4;
-  --color-success-100: #DCFCE7;
-  --color-success-500: #22C55E;
-  --color-success-600: #16A34A;
-  --color-success-700: #15803D;
+   /* Success (Green) */
+   --color-success-50: #F0FDF4;
+   --color-success-100: #DCFCE7;
+   --color-success-500: #22C55E;
+   --color-success-600: #16A34A;
+   --color-success-700: #15803D;
 
-  /* Warning (Yellow) */
-  --color-warning-50: #FEFCE8;
-  --color-warning-100: #FEF9C3;
-  --color-warning-500: #EAB308;
-  --color-warning-600: #CA8A04;
-  --color-warning-700: #A16207;
+   /* Warning (Yellow) */
+   --color-warning-50: #FEFCE8;
+   --color-warning-100: #FEF9C3;
+   --color-warning-500: #EAB308;
+   --color-warning-600: #CA8A04;
+   --color-warning-700: #A16207;
 
-  /* Danger (Red) */
-  --color-danger-50: #FEF2F2;
-  --color-danger-100: #FEE2E2;
-  --color-danger-500: #EF4444;
-  --color-danger-600: #DC2626;
-  --color-danger-700: #B91C1C;
+   /* Danger (Red) */
+   --color-danger-50: #FEF2F2;
+   --color-danger-100: #FEE2E2;
+   --color-danger-500: #EF4444;
+   --color-danger-600: #DC2626;
+   --color-danger-700: #B91C1C;
 
-  /* Pending (Orange) */
-  --color-pending-50: #FFF7ED;
-  --color-pending-100: #FFEDD5;
-  --color-pending-500: #F97316;
-  --color-pending-600: #EA580C;
-  --color-pending-700: #C2410C;
+   /* Pending (Orange) */
+   --color-pending-50: #FFF7ED;
+   --color-pending-100: #FFEDD5;
+   --color-pending-500: #F97316;
+   --color-pending-600: #EA580C;
+   --color-pending-700: #C2410C;
 
-  /* Info (Blue) */
-  --color-info-50: #EFF6FF;
-  --color-info-100: #DBEAFE;
-  --color-info-500: #3B82F6;
-  --color-info-600: #2563EB;
-  --color-info-700: #1D4ED8;
+   /* Info (Blue) */
+   --color-info-50: #EFF6FF;
+   --color-info-100: #DBEAFE;
+   --color-info-500: #3B82F6;
+   --color-info-600: #2563EB;
+   --color-info-700: #1D4ED8;
 
-  /* =========================================
+   /* =========================================
      5. ACCENT COLORS (Charts, Graphics)
      ========================================= */
-  --color-accent-orange: #FF754C;
-  --color-accent-yellow-light: #FBBF24;
-  --color-accent-yellow-dark: #F59E0B;
-  --color-accent-cyan-light: #06B6D4;
-  --color-accent-cyan-dark: #0891B2;
-  --color-accent-green: #059669;
+   --color-accent-orange: #FF754C;
+   --color-accent-yellow-light: #FBBF24;
+   --color-accent-yellow-dark: #F59E0B;
+   --color-accent-cyan-light: #06B6D4;
+   --color-accent-cyan-dark: #0891B2;
+   --color-accent-green: #059669;
 
-  /* =========================================
+   /* =========================================
      6. TYPOGRAPHY
      ========================================= */
-  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --font-body: 'Plus Jakarta Sans', 'Inter', sans-serif;
+   --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+   --font-body: 'Plus Jakarta Sans', 'Inter', sans-serif;
 }
 
 /* =========================================
    BASE STYLES
    ========================================= */
 body {
-  background-color: var(--color-bg-light);
-  font-family: var(--font-body);
-  color: var(--color-text-dark);
-  -webkit-font-smoothing: antialiased;
+   background-color: var(--color-bg-light);
+   font-family: var(--font-body);
+   color: var(--color-text-dark);
+   -webkit-font-smoothing: antialiased;
 }
 
 /* =========================================
    CUSTOM SCROLLBAR
    ========================================= */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+   width: 5px;
+   height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+   background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand-primary);
-  opacity: 0.2;
-  /* Light Indigo/Purple check */
-  border-radius: 20px;
+   background-color: var(--color-brand-primary);
+   opacity: 0.2;
+   /* Light Indigo/Purple check */
+   border-radius: 20px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-brand-primary-light);
+   background-color: var(--color-brand-primary-light);
 }
 
 /* =========================================
@@ -126,5 +126,22 @@ input[type="reset"],
 a,
 select,
 option {
-  cursor: pointer;
+   cursor: pointer;
+}
+
+/* =========================================
+   TOAST ANIMATIONS
+   ========================================= */
+@keyframes progress {
+   from {
+      width: 100%;
+   }
+
+   to {
+      width: 0%;
+   }
+}
+
+.animate-progress {
+   animation: progress linear forwards;
 }

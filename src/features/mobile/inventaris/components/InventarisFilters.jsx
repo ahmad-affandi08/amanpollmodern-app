@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Search, RotateCcw, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { RotateCcw, Download } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../../api/axiosClient';
 
 export default function InventarisFilters({ filters, onFilterChange, onExport }) {
-  const [localFilters, setLocalFilters] = useState(filters);
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch nama alat options
@@ -26,21 +25,14 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
     { value: 'Rusak Berat', label: 'Rusak Berat' },
   ];
 
-  useEffect(() => {
-    setLocalFilters(filters);
-  }, [filters]);
-
   const handleChange = (field, value) => {
-    setLocalFilters(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSearch = () => {
-    onFilterChange(localFilters);
+    // Apply filter immediately on change
+    const newFilters = { ...filters, [field]: value };
+    onFilterChange(newFilters);
   };
 
   const handleReset = () => {
     const resetFilters = { kondisi_alat: '', nama_alat: '' };
-    setLocalFilters(resetFilters);
     onFilterChange(resetFilters);
   };
 
@@ -80,7 +72,7 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
           Kondisi Alat
         </label>
         <select
-          value={localFilters.kondisi_alat || ''}
+          value={filters.kondisi_alat || ''}
           onChange={(e) => handleChange('kondisi_alat', e.target.value)}
           className="w-full px-3 py-2 text-sm bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg text-brand-primary focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium"
         >
@@ -98,7 +90,7 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
           Nama Alat
         </label>
         <select
-          value={localFilters.nama_alat || ''}
+          value={filters.nama_alat || ''}
           onChange={(e) => handleChange('nama_alat', e.target.value)}
           className="w-full px-3 py-2 text-sm bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-lg text-accent-green focus:outline-none focus:ring-2 focus:ring-emerald-300 font-medium"
         >
@@ -111,23 +103,14 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
         </select>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 pt-2">
-        <button
-          onClick={handleSearch}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-accent-yellow-light to-accent-yellow-dark text-white rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
-        >
-          <Search size={16} />
-          <span>Cari</span>
-        </button>
-        <button
-          onClick={handleReset}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-accent-cyan-light to-accent-cyan-dark text-white rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
-        >
-          <RotateCcw size={16} />
-          <span>Reset</span>
-        </button>
-      </div>
+      {/* Reset Button */}
+      <button
+        onClick={handleReset}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-accent-cyan-light to-accent-cyan-dark text-white rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
+      >
+        <RotateCcw size={16} />
+        <span>Reset Filter</span>
+      </button>
     </div>
   );
 }

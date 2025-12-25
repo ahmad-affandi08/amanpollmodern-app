@@ -5,7 +5,7 @@ import Button from '../../../../components/Button';
 import Input from '../../../../components/Input';
 import KategoriChecklistApi from '../../../../api/KategoriChecklistApi';
 import ChecklistMaintenanceApi from '../../../../api/ChecklistMaintenanceApi';
-import { Toast } from '../../../../components/Alert/Alert';
+// Toast component removed - using local toast state only
 
 export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData }) {
   const [activeTab, setActiveTab] = useState(null); // Will be set to first category id
@@ -97,8 +97,8 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
 
         {/* Toast Notification inside Modal */}
         {toast && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 w-max">
-            <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
+            <p className="text-sm font-semibold">{toast.message}</p>
           </div>
         )}
 

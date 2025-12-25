@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import { useChangePassword } from '../../../../hooks/queries/useProfileQueries';
-import { Toast } from '../../../../components/Alert/Alert';
+// Toast component removed
 import Button from '../../../../components/Button';
 
 export default function ChangePasswordModal({ isOpen, onClose }) {

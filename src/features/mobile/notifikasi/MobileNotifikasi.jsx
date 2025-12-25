@@ -4,7 +4,7 @@ import { Bell, BellOff, Loader2, CheckCheck, Trash2 } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { useNotifications, useUnreadCount, useMarkAllAsRead, useDeleteAllNotifications } from '../../../hooks';
 import { useToast } from '../../../components/Alert/useToast';
-import { ConfirmDialog } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
 
 export default function MobileNotifikasi() {
   usePageTitle('Notifikasi');
@@ -58,26 +58,26 @@ export default function MobileNotifikasi() {
   const handleMarkAllRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
-      showToast('success', 'Semua notifikasi ditandai sudah dibaca');
+      showToast('Semua notifikasi ditandai sudah dibaca', 'success');
       setShowMarkAllDialog(false);
       // Reset and refetch
       setAllNotifications([]);
       setPage(1);
     } catch (error) {
-      showToast('error', 'Gagal menandai notifikasi');
+      showToast('Gagal menandai notifikasi', 'error');
     }
   };
 
   const handleDeleteAll = async () => {
     try {
       await deleteAllMutation.mutateAsync();
-      showToast('success', 'Semua notifikasi berhasil dihapus');
+      showToast('Semua notifikasi berhasil dihapus', 'success');
       setShowDeleteAllDialog(false);
       // Clear local state immediately
       setAllNotifications([]);
       setPage(1);
     } catch (error) {
-      showToast('error', 'Gagal menghapus notifikasi');
+      showToast('Gagal menghapus notifikasi', 'error');
     }
   };
 

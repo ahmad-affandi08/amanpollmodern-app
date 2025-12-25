@@ -13,6 +13,7 @@ import {
   useFilters,
   useDebounce,
   usePageTitle,
+  useModal,
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Select from '../../../components/Select';
@@ -20,7 +21,10 @@ import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
-import { ConfirmDialog } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 
 export default function ReportAduan() {
@@ -36,6 +40,8 @@ export default function ReportAduan() {
   const userDivisiId = user?.divisi_id;
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const imagePreviewModal = useModal();
 
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
@@ -291,21 +297,37 @@ export default function ReportAduan() {
                     <td className="py-4 px-6 text-text-dark font-medium">{item.nama_alat_nama || '-'}</td>
                     <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate" title={item.keluhan}>{item.keluhan}</td>
                     <td className="py-4 px-6">
-                      {item.img_keluhan ? (
-                        <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:scale-150 transition-transform z-10 relative bg-white">
-                          <img
-                            src={item.img_keluhan}
-                            alt="Foto"
-                            className="w-full h-full object-cover"
-                            onClick={() => window.open(item.img_keluhan, '_blank')}
-                          />
-                        </div >
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                          <FileText size={16} />
-                        </div>
-                      )}
-                    </td >
+                      <div className="flex items-center justify-center">
+                        {item.img_keluhan ? (
+                          <div
+                            className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
+                            style={{ minWidth: '80px', minHeight: '80px', width: '80px', height: '80px' }}
+                          >
+                            <LazyLoadImage
+                              src={item.img_keluhan}
+                              alt="Foto Keluhan"
+                              effect="blur"
+                              className="object-cover"
+                              style={{ width: '80px', height: '80px', display: 'block' }}
+                              placeholderSrc={noImage}
+                              onError={(e) => { e.target.src = noImage; }}
+                              onClick={() => {
+                                setSelectedImage(item.img_keluhan);
+                                imagePreviewModal.open();
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '80px', minHeight: '80px' }}>
+                            <img
+                              src={noImage}
+                              alt="No Image"
+                              className="w-full h-full object-cover opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-4 px-6 text-gray-600">{item.nama_pengadu || '-'}</td>
                     <td className="py-4 px-6 text-gray-600">
                       {item.tanggal_pemeriksaan || 'Belum Ditentukan'}
@@ -384,6 +406,14 @@ export default function ReportAduan() {
       </div >
 
 
+
+
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={imagePreviewModal.isOpen}
+        imageUrl={selectedImage}
+        onClose={imagePreviewModal.close}
+      />
 
       {
         confirmDialog.isOpen && (

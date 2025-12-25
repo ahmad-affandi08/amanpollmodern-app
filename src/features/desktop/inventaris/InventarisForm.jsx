@@ -10,7 +10,7 @@ import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
-import { Toast } from '../../../components/Alert/Alert';
+// Toast component removed - using inline notification
 
 export default function InventarisForm() {
   const navigate = useNavigate();
@@ -300,8 +300,8 @@ export default function InventarisForm() {
   return (
     <div className="animate-fade-in space-y-6">
       {toast && (
-        <div className="fixed top-6 right-6 z-50">
-          <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
+        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
+          <p className="text-sm font-semibold">{toast.message}</p>
         </div>
       )}
 

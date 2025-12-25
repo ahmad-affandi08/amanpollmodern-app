@@ -10,7 +10,7 @@ import useAuth from '../hooks/utils/useAuth';
 import Logo from '../assets/img/logo2-amanpoll.png';
 import Logo3 from '../assets/img/logo3-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
-import { ConfirmDialog } from '../components/Alert/Alert';
+import ConfirmDialog from '../components/Alert/Alert';
 
 export default function DashboardLayout({ children }) {
   // Sidebar State
@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }) {
         { icon: Layers, label: 'Master Kategori', path: '/inventaris/kategori', roles: [ROLE_SUPER_ADMIN] },
         { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] }, // Admin Divisi might need to see names
         { icon: Server, label: 'Data Alat', path: '/inventaris/data' },
-        { icon: PlusCircle, label: 'Data Alat Baru', path: '/inventaris/baru', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] }, // Pimpinan cannot add
+        { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] }, // Pimpinan cannot add
       ].filter(child => hasAccess(child.roles))
     },
     {
@@ -141,6 +141,7 @@ export default function DashboardLayout({ children }) {
       label: 'Konfigurasi',
       roles: [ROLE_SUPER_ADMIN],
       children: [
+        { icon: Building2, label: 'Data Institusi', path: '/konfigurasi/data' },
         { icon: Phone, label: 'Integrasi Fonnte', path: '/konfigurasi/integrasi' },
         { icon: Settings, label: 'Sistem', path: '/konfigurasi/sistem' },
       ]

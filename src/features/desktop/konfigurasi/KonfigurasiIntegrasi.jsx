@@ -37,7 +37,7 @@ const KonfigurasiIntegrasi = () => {
 
   const handleTestConnection = async () => {
     if (!formData.api_token) {
-      showToast('error', 'Mohon isi API Token terlebih dahulu');
+      showToast('Mohon isi API Token terlebih dahulu', 'error');
       return;
     }
 
@@ -45,28 +45,28 @@ const KonfigurasiIntegrasi = () => {
       const result = await testMutation.mutateAsync(formData.api_token);
       if (result.data.success) {
         setTestStatus('success');
-        showToast('success', 'Koneksi berhasil! Token valid.');
+        showToast('Koneksi berhasil! Token valid.', 'success');
       } else {
         setTestStatus('error');
-        showToast('error', result.data.message || 'Koneksi gagal');
+        showToast(result.data.message || 'Koneksi gagal', 'error');
       }
     } catch (error) {
       setTestStatus('error');
-      showToast('error', 'Koneksi gagal: ' + (error.response?.data?.message || error.message));
+      showToast('Koneksi gagal: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
   const handleSave = async () => {
     if (!formData.api_token) {
-      showToast('error', 'Mohon isi API Token');
+      showToast('Mohon isi API Token', 'error');
       return;
     }
 
     try {
       await saveMutation.mutateAsync(formData);
-      showToast('success', 'Konfigurasi berhasil disimpan');
+      showToast('Konfigurasi berhasil disimpan', 'success');
     } catch (error) {
-      showToast('error', 'Gagal menyimpan konfigurasi: ' + (error.response?.data?.message || error.message));
+      showToast('Gagal menyimpan konfigurasi: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 

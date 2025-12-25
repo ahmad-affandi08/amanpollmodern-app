@@ -12,7 +12,7 @@ import {
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import Modal from '../../../components/Modal';
-import { ConfirmDialog, Toast } from '../../../components/Alert/Alert';
+import ConfirmDialog from '../../../components/Alert/Alert';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
 
@@ -109,8 +109,8 @@ export default function MasterKategori() {
   return (
     <div className="space-y-6 animate-fade-in">
       {toast && (
-        <div className="fixed top-6 right-6 z-50">
-          <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
+        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
+          <p className="text-sm font-semibold">{toast.message}</p>
         </div>
       )}
 

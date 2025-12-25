@@ -131,7 +131,7 @@ export default function MobileInventaris() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-text-dark">Inventaris</h1>
-            <p className="text-xs text-text-gray">Daftar alat medis</p>
+            <p className="text-xs text-text-gray">Daftar alat</p>
           </div>
         </div>
       </div>

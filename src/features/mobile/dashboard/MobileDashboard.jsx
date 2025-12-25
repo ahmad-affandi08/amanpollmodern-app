@@ -97,7 +97,7 @@ export default function MobileDashboard() {
     <div className="max-w-md mx-auto px-4 space-y-4">
       {/* Greeting Card */}
       <div className="bg-white rounded-[20px] p-4 mt-3 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-text-dark">Hi, {user.nama_lengkap}! 👋</h2>
+        <h2 className="text-lg font-bold text-brand-primary">Hi, {user.nama_lengkap}! 👋</h2>
         <p className="text-sm text-text-gray">{user.ruangan_nama}</p>
         <p className="text-xs text-text-gray mt-1">Siap melakukan hal besar hari ini?</p>
       </div>

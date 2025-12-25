@@ -19,7 +19,7 @@ import Input from '../../../../components/Input';
 import Select from '../../../../components/Select';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
-import { ConfirmDialog } from '../../../../components/Alert/Alert';
+import ConfirmDialog from '../../../../components/Alert/Alert';
 import MasterApi from '../../../../api/MasterApi';
 
 export default function MasterUser() {
@@ -118,11 +118,11 @@ export default function MasterUser() {
         setConfirmDialog({ isOpen: false });
         try {
           await MasterApi.toggleUserStatus(item.id_user, newStatus);
-          showToast('success', `Status user berhasil diubah menjadi ${newStatus ? 'Active' : 'Inactive'}`);
+          showToast(`Status user berhasil diubah menjadi ${newStatus ? 'Active' : 'Inactive'}`, 'success');
           refetch();
         } catch (error) {
           console.error('Error toggling user status:', error);
-          showToast('error', 'Gagal mengubah status user');
+          showToast('Gagal mengubah status user', 'error');
         }
       },
       onCancel: () => setConfirmDialog({ isOpen: false })
@@ -137,14 +137,14 @@ export default function MasterUser() {
           id: modal.data.id_user,
           data: formData
         });
-        showToast('success', 'User berhasil diperbarui');
+        showToast('User berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
-        showToast('success', 'User berhasil ditambahkan');
+        showToast('User berhasil ditambahkan', 'success');
       }
       modal.close();
     } catch (error) {
-      showToast('error', error.response?.data?.message || 'Gagal menyimpan data');
+      showToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
     }
   };
 
@@ -183,9 +183,9 @@ export default function MasterUser() {
     if (!window.confirm('Yakin ingin menghapus user ini?')) return;
     try {
       await deleteMutation.mutateAsync(id);
-      showToast('success', 'User dihapus');
+      showToast('User dihapus', 'success');
     } catch (error) {
-      showToast('error', 'Gagal menghapus');
+      showToast('Gagal menghapus', 'error');
     }
   };
 

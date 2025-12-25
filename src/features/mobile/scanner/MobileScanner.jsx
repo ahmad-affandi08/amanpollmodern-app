@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QrScanner from 'qr-scanner';
-import { Camera, Flashlight, RefreshCw } from 'lucide-react';
+import { Camera, Flashlight, RefreshCw, AlertCircle, Eye, CheckCircle } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { ToastContext } from '../../../components/Alert/ToastProvider';
 import { useAuthContext } from '../../../context/AuthContext';
@@ -16,6 +16,8 @@ export default function MobileScanner() {
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
   const [cameraFacingMode, setCameraFacingMode] = useState('environment');
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [scannedId, setScannedId] = useState(null);
 
   // Initialize Scanner
   useEffect(() => {
@@ -41,7 +43,8 @@ export default function MobileScanner() {
         });
       }).catch((err) => {
         console.error('Camera access denied:', err);
-        showToast('error', 'Gagal mengakses kamera. Pastikan izin diberikan.');
+        showToast('Gagal mengakses kamera. Pastikan izin diberikan.', 'error');
+        setHasPermission(false); // Make sure this line exists in original or handle logic
       });
 
       return () => {
@@ -58,22 +61,35 @@ export default function MobileScanner() {
       if (navigator.vibrate) {
         navigator.vibrate(200);
       }
-      const scannedId = result.data;
+      const id = result.data;
+      setScannedId(id);
 
       // Show success toast
-      showToast('success', `✅ QR Scan Berhasil: ${scannedId}`);
+      showToast(`✅ QR Scan Berhasil: ${id}`, 'success');
 
-      // Redirect after brief delay
+
+      // Show action modal
       setTimeout(() => {
-        // Check if user is User Ruangan (kategori_user_id === 2)
-        if (user?.kategori_user_id === 2) {
-          navigate('/mobile/aduan', {
-            state: { scannedInventarisId: scannedId }
-          });
-        } else {
-          navigate(`/mobile/inventaris/${scannedId}`);
-        }
-      }, 1000); // Show toast for 1 second before redirect
+        setShowActionModal(true);
+      }, 500);
+    }
+  };
+
+  const handleViewDetail = () => {
+    navigate(`/mobile/inventaris/${scannedId}`);
+  };
+
+  const handleCreateAduan = () => {
+    navigate('/mobile/aduan', {
+      state: { scannedInventarisId: scannedId }
+    });
+  };
+
+  const handleCloseModal = () => {
+    setShowActionModal(false);
+    // Restart scanner
+    if (scanner) {
+      scanner.start();
     }
   };
 
@@ -83,11 +99,43 @@ export default function MobileScanner() {
     }
   };
 
-  const switchCamera = () => {
+  const switchCamera = async () => {
     if (scanner) {
-      const newMode = cameraFacingMode === 'environment' ? 'user' : 'environment';
-      setCameraFacingMode(newMode);
-      scanner.setCamera(newMode);
+      try {
+        // Stop and destroy current scanner
+        await scanner.stop();
+        scanner.destroy();
+
+        // Toggle camera mode
+        const newMode = cameraFacingMode === 'environment' ? 'user' : 'environment';
+        setCameraFacingMode(newMode);
+
+        // Create new scanner with new camera
+        const qrScanner = new QrScanner(
+          videoRef.current,
+          (result) => handleScan(result),
+          {
+            onDecodeError: (error) => { },
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            maxScansPerSecond: 2,
+            preferredCamera: newMode,
+          }
+        );
+
+        setScanner(qrScanner);
+
+        // Start new scanner
+        await qrScanner.start();
+
+        // Check flash availability
+        const hasFlash = await qrScanner.hasFlash();
+        setHasFlash(hasFlash);
+        setIsFlashOn(false);
+      } catch (err) {
+        console.error('Failed to switch camera:', err);
+        showToast('Gagal mengganti kamera', 'error');
+      }
     }
   };
 
@@ -154,6 +202,62 @@ export default function MobileScanner() {
         </div>
       </div>
 
+      {/* Action Modal */}
+      {showActionModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-white rounded-[24px] shadow-2xl overflow-hidden animate-slide-up">
+            {/* Success Header */}
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <CheckCircle size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">Scan Berhasil!</h3>
+                <p className="text-white/90 text-sm font-medium">No. Inventaris: {scannedId}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 space-y-3">
+              <p className="text-center text-gray-600 text-sm font-medium mb-4">
+                Pilih tindakan yang ingin dilakukan:
+              </p>
+
+              {/* View Detail Button */}
+              <button
+                onClick={handleViewDetail}
+                className="w-full bg-gradient-to-r from-brand-primary to-brand-primary-light text-white p-4 rounded-2xl font-bold shadow-lg shadow-brand-primary/30 hover:shadow-xl hover:shadow-brand-primary/40 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+              >
+                <div className="p-2 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
+                  <Eye size={20} />
+                </div>
+                <span>Lihat Detail Alat</span>
+              </button>
+
+              {/* Create Aduan Button */}
+              <button
+                onClick={handleCreateAduan}
+                className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white p-4 rounded-2xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+              >
+                <div className="p-2 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
+                  <AlertCircle size={20} />
+                </div>
+                <span>Laporkan Kerusakan</span>
+              </button>
+
+              {/* Cancel Button */}
+              <button
+                onClick={handleCloseModal}
+                className="w-full bg-gray-100 text-gray-700 p-3 rounded-2xl font-bold hover:bg-gray-200 transition-all active:scale-95"
+              >
+                Scan Lagi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
@@ -163,6 +267,26 @@ export default function MobileScanner() {
         }
         .animate-scan-line {
           animation: scan-line 2.5s linear infinite;
+        }
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
         }
       `}</style>
     </div>

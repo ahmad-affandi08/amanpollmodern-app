@@ -5,7 +5,6 @@ import AnggaranApi from '../../../api/AnggaranApi';
 import TableSkeleton from '../../../components/TableSkeleton';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
-import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';

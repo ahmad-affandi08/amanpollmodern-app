@@ -4,7 +4,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { ArrowLeft, Trash2, Save } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks/queries/usePemeliharaanQueries';
-import { Toast } from '../../../components/Alert/Alert';
+// Toast component removed
 
 export default function MobileFormPemeliharaan() {
   usePageTitle('Form Pemeliharaan');

@@ -8,6 +8,7 @@ export * from './queries/useDashboardQueries';
 export * from './queries/useReportQueries';
 export * from './queries/useKonfigurasiQueries';
 export * from './queries/useProfileQueries';
+export * from './queries/useAlatBaruQueries';
 
 // Mutation Hooks (React Query)
 export * from './mutations/useDisposisiMutations';
