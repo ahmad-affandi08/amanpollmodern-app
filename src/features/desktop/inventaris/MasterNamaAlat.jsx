@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, Tag, Users } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, Tag, Users, ClipboardList } from 'lucide-react';
 import {
   useMasterNamaAlat,
   useCreateNamaAlat,
@@ -191,17 +191,16 @@ export default function MasterNamaAlat() {
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Nama Alat</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Kategori</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Divisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Checklist</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Usia Pakai</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <TableSkeleton rows={5} columns={7} />
+                <TableSkeleton rows={5} columns={6} />
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center">
+                  <td colSpan="6" className="py-12 text-center">
                     <Package size={32} className="mx-auto text-gray-400 mb-4" />
                     <p className="font-bold text-gray-600">Belum ada data</p>
                     <p className="text-sm text-gray-400 mt-1">Silakan tambahkan nama alat baru</p>
@@ -224,17 +223,16 @@ export default function MasterNamaAlat() {
                         <span className="font-semibold">{item.divisi?.nama_divisi || '-'}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-center">
-                      <button
-                        onClick={() => checklistModal.open(item)}
-                        className="text-brand-primary hover:text-brand-primary-light font-bold underline"
-                      >
-                        Detail
-                      </button>
-                    </td>
                     <td className="py-4 px-6 text-sm font-bold">{item.standar_usia_pakai} Tahun</td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => checklistModal.open(item)}
+                          className="p-3 bg-purple-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          title="Checklist Maintenance"
+                        >
+                          <ClipboardList size={20} />
+                        </button>
                         <button onClick={() => handleOpenEdit(item)} className="p-3 bg-brand-primary text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all">
                           <Edit2 size={20} />
                         </button>

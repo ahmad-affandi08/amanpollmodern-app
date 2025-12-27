@@ -6,6 +6,7 @@ import NamaAlatApi from '../../../api/NamaAlatApi';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';
 import { usePageTitle, useToast } from '../../../hooks';
+import useAuth from '../../../hooks/utils/useAuth';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import SearchableSelect from '../../../components/SearchableSelect';
@@ -17,6 +18,7 @@ export default function InventarisForm() {
   usePageTitle(isEdit ? 'Edit Inventaris' : 'Tambah Inventaris');
 
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -45,6 +47,7 @@ export default function InventarisForm() {
     kategori_alkes: '',
     alat_kesehatan: false,
     interval_maintenance: '',
+    perlu_kalibrasi: false, // New state
     awal_kalibrasi: '',
     kadaluwarsa: '',
     img_alat: null,
@@ -93,6 +96,8 @@ export default function InventarisForm() {
 
         const rawAlat = Array.isArray(alatRes) ? alatRes : [];
         setNamaAlatData(rawAlat);
+
+        // Initial Options (will be filtered if Admin Divisi)
         setNamaAlatOptions(rawAlat.map(item => ({ value: item.id, label: item.nama_nama_alat })));
 
         // Fix: use id_ruangan instead of id for ruangan options
@@ -109,6 +114,15 @@ export default function InventarisForm() {
         })) : [];
         setDivisiOptions(divisiOpts);
 
+        // AUTO-SELECT DIVISI FOR ADMIN DIVISI (ID 4)
+        if (!isEdit && user && user.kategori_user_id === 4 && user.divisi_id) {
+          setFormData(prev => ({ ...prev, divisi_id: user.divisi_id }));
+
+          // Filter Nama Alat immediately
+          const filteredAlat = rawAlat.filter(item => String(item.divisi_id) === String(user.divisi_id));
+          setNamaAlatOptions(filteredAlat.map(item => ({ value: item.id, label: item.nama_nama_alat })));
+        }
+
       } catch (error) {
         console.error("Failed to load master data", error);
         showToast('Gagal memuat data master', 'error');
@@ -117,15 +131,17 @@ export default function InventarisForm() {
       }
     };
 
-    fetchMasterData();
-  }, []);
-
-  // Set dataLoading to false for new forms
-  useEffect(() => {
-    if (!isEdit) {
-      setDataLoading(false);
+    if (user) {
+      fetchMasterData();
     }
-  }, [isEdit]);
+  }, [user]); // Add user dependency to ensure we have user info before fetching/setting defaults
+
+  // Set dataLoading to false for new forms (Handled in fetch now mostly, but keep for safety if needed logic differs)
+  useEffect(() => {
+    if (!isEdit && user) {
+      // setDataLoading(false); // Moved to finally block of fetch logic
+    }
+  }, [isEdit, user]);
 
   useEffect(() => {
     if (isEdit) {
@@ -149,7 +165,9 @@ export default function InventarisForm() {
             kondisi_alat: data.kondisi_alat || '',
             kategori_alkes: data.kategori_alkes || '',
             alat_kesehatan: !!data.alat_kesehatan,
+            alat_kesehatan: !!data.alat_kesehatan,
             interval_maintenance: data.interval_maintenance || '',
+            perlu_kalibrasi: !!(data.awal_kalibrasi || data.kadaluwarsa || data.file_sertifikat_url),
             awal_kalibrasi: data.awal_kalibrasi || '',
             kadaluwarsa: data.kadaluwarsa || '',
             img_alat: null,
@@ -381,6 +399,7 @@ export default function InventarisForm() {
                 placeholder="Pilih Divisi"
                 searchPlaceholder="Cari divisi..."
                 required
+                disabled={user?.kategori_user_id === 4}
               />
               <SearchableSelect
                 label="Nama Alat (Master)"
@@ -512,6 +531,21 @@ export default function InventarisForm() {
               </label>
             </div>
 
+            {/* Checkbox Perlu Kalibrasi */}
+            <div className="mb-6 flex items-center gap-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <input
+                type="checkbox"
+                id="perlu_kalibrasi"
+                name="perlu_kalibrasi"
+                checked={formData.perlu_kalibrasi}
+                onChange={handleChange}
+                className="w-5 h-5 text-brand-primary rounded border-gray-300 focus:ring-brand-primary"
+              />
+              <label htmlFor="perlu_kalibrasi" className="font-bold text-text-dark cursor-pointer selection:bg-none">
+                Apakah alat perlu di kalibrasi?
+              </label>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Conditional Rendering Kategori Alkes */}
               {formData.alat_kesehatan && (
@@ -559,19 +593,39 @@ export default function InventarisForm() {
               />
 
               <Input
-                label="Awal Kalibrasi"
-                name="awal_kalibrasi"
-                type="date"
-                value={formData.awal_kalibrasi}
+                label="Interval Maintenance (Tahun)"
+                name="interval_maintenance"
+                type="number"
+                value={formData.interval_maintenance}
                 onChange={handleChange}
+                placeholder="Masukkan Interval Maintenance"
+                required // Added asterisk logic visually by 'required' prop in reusable component if supported, or via label
               />
-              <Input
-                label="Kadaluwarsa"
-                name="kadaluwarsa"
-                type="date"
-                value={formData.kadaluwarsa}
-                onChange={handleChange}
-              />
+
+              {formData.perlu_kalibrasi && (
+                <>
+                  <div className="animate-fade-in-down">
+                    <Input
+                      label="Awal Kalibrasi"
+                      name="awal_kalibrasi"
+                      type="date"
+                      value={formData.awal_kalibrasi}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="animate-fade-in-down">
+                    <Input
+                      label="Kadaluwarsa"
+                      name="kadaluwarsa"
+                      type="date"
+                      value={formData.kadaluwarsa}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -595,37 +649,39 @@ export default function InventarisForm() {
                 </label>
               </div>
 
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors">
-                <input type="file" name="file_sertifikat" id="file_sertifikat" className="hidden" onChange={handleChange} accept=".pdf" />
-                <label htmlFor="file_sertifikat" className="cursor-pointer block">
-                  <FileText className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                  <span className="font-bold text-brand-primary">Upload Sertifikat</span>
-                  <p className="text-xs text-gray-400 mt-1">.pdf (Max 5MB)</p>
+              {formData.perlu_kalibrasi && (
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors animate-fade-in-down">
+                  <input type="file" name="file_sertifikat" id="file_sertifikat" className="hidden" onChange={handleChange} accept=".pdf" />
+                  <label htmlFor="file_sertifikat" className="cursor-pointer block">
+                    <FileText className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                    <span className="font-bold text-brand-primary">Upload Sertifikat</span>
+                    <p className="text-xs text-gray-400 mt-1">.pdf (Max 5MB)</p>
 
-                  {/* Show new file name */}
-                  {formData.file_sertifikat && (
-                    <p className="text-sm text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
-                      {formData.file_sertifikat.name}
-                    </p>
-                  )}
+                    {/* Show new file name */}
+                    {formData.file_sertifikat && (
+                      <p className="text-sm text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
+                        {formData.file_sertifikat.name}
+                      </p>
+                    )}
 
-                  {/* Show existing file if no new file selected */}
-                  {!formData.file_sertifikat && existingFiles.file_sertifikat && (
-                    <div className="mt-2 text-sm">
-                      <p className="text-blue-600 font-medium mb-1">File saat ini tersimpan</p>
-                      <a
-                        href={existingFiles.file_sertifikat}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-gray-500 hover:text-brand-primary underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Lihat Sertifikat
-                      </a>
-                    </div>
-                  )}
-                </label>
-              </div>
+                    {/* Show existing file if no new file selected */}
+                    {!formData.file_sertifikat && existingFiles.file_sertifikat && (
+                      <div className="mt-2 text-sm">
+                        <p className="text-blue-600 font-medium mb-1">File saat ini tersimpan</p>
+                        <a
+                          href={existingFiles.file_sertifikat}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-gray-500 hover:text-brand-primary underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Lihat Sertifikat
+                        </a>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              )}
 
               <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors">
                 <input type="file" name="file_sop" id="file_sop" className="hidden" onChange={handleChange} accept=".pdf" />

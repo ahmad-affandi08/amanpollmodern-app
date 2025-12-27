@@ -129,7 +129,8 @@ export default function AnggaranPemeliharaan() {
       divisi_id: '',
       kategori_alat_id: '',
       ruangan_id: '',
-      tahun_pengadaan: ''
+      tahun_pengadaan: '',
+      search: ''
     };
     setFilters(emptyFilters);
     fetchData(1, emptyFilters);
@@ -228,6 +229,7 @@ export default function AnggaranPemeliharaan() {
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
+                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Usia / Masa Pakai</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tahun</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Harga Awal</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Est. Harga Kini</th>
@@ -237,9 +239,9 @@ export default function AnggaranPemeliharaan() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
               {loading ? (
-                <TableSkeleton rows={5} columns={9} />
+                <TableSkeleton rows={5} columns={10} />
               ) : data.length === 0 ? (
-                <tr><td colSpan="9" className="py-8 text-center text-gray-400">Tidak ada data analisis</td></tr>
+                <tr><td colSpan="10" className="py-8 text-center text-gray-400">Tidak ada data analisis</td></tr>
               ) : (
                 data.map((item, idx) => (
                   <React.Fragment key={idx}>
@@ -259,6 +261,7 @@ export default function AnggaranPemeliharaan() {
                         <div className="text-xs text-gray-400 font-normal">{item.merk}</div>
                       </td>
                       <td className="py-4 px-6 text-gray-600">{item.ruangan}</td>
+                      <td className="py-4 px-6 text-gray-600">{item.usia_sekarang} Thn / {item.usia_pakai} Thn</td>
                       <td className="py-4 px-6">{item.tahun_pengadaan}</td>
                       <td className="py-4 px-6 text-right font-mono text-gray-600">{formatCurrency(item.harga_awal)}</td>
                       <td className="py-4 px-6 text-right font-mono text-gray-600">{formatCurrency(item.estimasi_harga_sekarang)}</td>
@@ -269,7 +272,7 @@ export default function AnggaranPemeliharaan() {
                     </tr>
                     {expandedRow === item.id_inventaris && (
                       <tr className="bg-bg-light">
-                        <td colSpan="9" className="p-6 cursor-default">
+                        <td colSpan="10" className="p-6 cursor-default">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-scale-in">
                             {/* Left Card: Detail Aset */}
                             <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-cyan-500">

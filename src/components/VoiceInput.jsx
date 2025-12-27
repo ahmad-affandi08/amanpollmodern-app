@@ -27,9 +27,6 @@ export default function VoiceInput({
   // Check browser support
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    console.log('🎤 VoiceInput: Checking browser support...');
-    console.log('🎤 SpeechRecognition available:', !!SpeechRecognition);
-    console.log('🎤 Secure context (HTTPS):', window.isSecureContext);
 
     if (!SpeechRecognition) {
       console.error('❌ SpeechRecognition not supported in this browser');
@@ -51,13 +48,11 @@ export default function VoiceInput({
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event) => {
-      console.log('🎤 onresult triggered, results:', event.results.length);
       let interim = '';
       let final = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
-        console.log(`🎤 Result ${i}: "${transcript}" (final: ${event.results[i].isFinal})`);
         if (event.results[i].isFinal) {
           final += transcript + ' ';
         } else {
@@ -68,7 +63,6 @@ export default function VoiceInput({
       setInterimTranscript(interim);
 
       if (final) {
-        console.log('✅ Final transcript:', final);
         // Immediately update value for real-time response using refs
         const newValue = valueRef.current + final;
         onChangeRef.current(newValue);
@@ -85,30 +79,22 @@ export default function VoiceInput({
       if (event.error === 'not-allowed') {
         alert('❌ Izin mikrofon ditolak!\n\nCara mengaktifkan:\n1. Tap icon gembok di address bar\n2. Permissions → Microphone\n3. Set ke "Allow"');
       } else if (event.error === 'no-speech') {
-        console.log('⚠️ No speech detected');
         // Don't auto-restart, let user manually restart if needed
       } else if (event.error === 'network') {
         alert('❌ Koneksi internet diperlukan untuk voice input.');
       } else if (event.error === 'aborted') {
-        console.log('⚠️ Recognition aborted');
       } else {
         alert(`❌ Speech recognition error: ${event.error}`);
       }
     };
 
     recognition.onstart = () => {
-      console.log('✅ Recognition onstart event fired');
-      console.log('🎤 Language:', recognition.lang);
-      console.log('🎤 Continuous:', recognition.continuous);
-      console.log('🎤 InterimResults:', recognition.interimResults);
     };
 
     recognition.onend = () => {
-      console.log('⚠️ Recognition ended');
       // Auto-restart if still listening (check ref, not state)
       if (shouldListenRef.current && recognitionRef.current) {
         try {
-          console.log('🔄 Auto-restarting recognition...');
           recognition.start();
         } catch (e) {
           console.error('Failed to restart recognition:', e);
@@ -130,12 +116,10 @@ export default function VoiceInput({
 
   const toggleListening = () => {
     if (!isSupported || disabled) {
-      console.log('❌ Cannot toggle: supported=', isSupported, 'disabled=', disabled);
       return;
     }
 
     if (isListening) {
-      console.log('🛑 Stopping recognition...');
       // Stop listening
       shouldListenRef.current = false; // Set ref first to prevent auto-restart
       if (recognitionRef.current) {
@@ -144,14 +128,10 @@ export default function VoiceInput({
       setIsListening(false);
       setInterimTranscript('');
     } else {
-      console.log('▶️ Starting recognition...');
-
       // Request microphone permission explicitly
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        console.log('📱 Requesting microphone permission...');
         navigator.mediaDevices.getUserMedia({ audio: true })
           .then((stream) => {
-            console.log('✅ Microphone permission granted');
             // Stop the stream immediately, we just needed permission
             stream.getTracks().forEach(track => track.stop());
 
@@ -161,7 +141,6 @@ export default function VoiceInput({
                 shouldListenRef.current = true; // Set ref before starting
                 recognitionRef.current.start();
                 setIsListening(true);
-                console.log('✅ Recognition started successfully');
               } catch (e) {
                 console.error('❌ Failed to start recognition:', e);
                 shouldListenRef.current = false;
@@ -175,13 +154,11 @@ export default function VoiceInput({
           });
       } else {
         // Fallback: start without explicit permission request
-        console.log('⚠️ getUserMedia not available, starting directly...');
         if (recognitionRef.current) {
           try {
             shouldListenRef.current = true; // Set ref before starting
             recognitionRef.current.start();
             setIsListening(true);
-            console.log('✅ Recognition started successfully');
           } catch (e) {
             console.error('❌ Failed to start recognition:', e);
             shouldListenRef.current = false;

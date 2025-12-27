@@ -1,14 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Camera } from 'lucide-react';
+import CameraCapture from '../../../../components/CameraCapture';
 
 export default function ImageUploadPreview({ value, onChange, error }) {
   const [preview, setPreview] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    processFile(file);
+  };
+
+  const handleCapture = (file) => {
+    processFile(file);
+  };
+
+  const processFile = (file) => {
     // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
@@ -65,24 +75,35 @@ export default function ImageUploadPreview({ value, onChange, error }) {
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={handleClick}
-          className={`w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-3 transition-all duration-300 ${error
-            ? 'border-danger-300 bg-danger-50 hover:bg-danger-100'
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-purple-400'
-            }`}
-        >
-          <div className="p-4 bg-white rounded-full shadow-sm">
-            <ImageIcon size={32} className={error ? 'text-red-400' : 'text-gray-400'} />
-          </div>
-          <div className="text-center">
-            <p className={`text-sm font-medium ${error ? 'text-red-600' : 'text-gray-600'}`}>
-              Klik untuk upload gambar
-            </p>
-            <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
-          </div>
-        </button>
+        <div className="grid grid-cols-2 gap-3 h-32">
+          <button
+            type="button"
+            onClick={handleClick}
+            className={`h-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 transition-all duration-300 ${error
+              ? 'border-danger-300 bg-danger-50 hover:bg-danger-100'
+              : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-brand-primary'
+              }`}
+          >
+            <div className="p-3 bg-white rounded-full shadow-sm">
+              <ImageIcon size={24} className="text-gray-400" />
+            </div>
+            <span className="text-xs font-bold text-gray-600">Upload</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            className={`h-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 transition-all duration-300 ${error
+              ? 'border-danger-300 bg-danger-50 hover:bg-danger-100'
+              : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-brand-primary'
+              }`}
+          >
+            <div className="p-3 bg-white rounded-full shadow-sm">
+              <Camera size={24} className="text-gray-400" />
+            </div>
+            <span className="text-xs font-bold text-gray-600">Ambil Foto</span>
+          </button>
+        </div>
       )}
 
       {/* Hidden File Input */}
@@ -92,6 +113,13 @@ export default function ImageUploadPreview({ value, onChange, error }) {
         accept="image/jpeg,image/jpg,image/png"
         onChange={handleFileChange}
         className="hidden"
+      />
+
+      {/* Camera Component */}
+      <CameraCapture
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCapture}
       />
 
       {/* Error Message */}

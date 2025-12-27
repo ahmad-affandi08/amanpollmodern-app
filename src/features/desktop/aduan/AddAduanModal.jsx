@@ -8,10 +8,13 @@ import InventarisApi from '../../../api/InventarisApi';
 import AduanApi from '../../../api/AduanApi';
 import { useToast } from '../../../components/Alert/useToast';
 import useAuth from '../../../hooks/utils/useAuth';
+import CameraCapture from '../../../components/CameraCapture';
+import { Camera } from 'lucide-react';
 
 export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const [showCamera, setShowCamera] = useState(false);
 
   const [formData, setFormData] = useState({
     ruangan_id: '',
@@ -174,7 +177,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
           </div>
           <div>
             <label className="text-xs text-gray-500 font-bold uppercase">No Inventaris</label>
-            <p className="font-semibold text-gray-800">{formData.no_inventaris || '-'}</p>
+            <p className="font-semibold text-gray-800 break-all">{formData.no_inventaris || '-'}</p>
           </div>
           <div className="col-span-2">
             <label className="text-xs text-gray-500 font-bold uppercase">Merk / Type</label>
@@ -206,21 +209,46 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
 
         <div>
           <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Foto Bukti (Opsional)</label>
-          <div className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 hover:border-brand-primary/50 transition-colors cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-            <div className="text-gray-400">
-              {formData.img_keluhan ? (
-                <span className="text-brand-primary font-medium">{formData.img_keluhan.name}</span>
-              ) : (
-                <span>Klik untuk upload foto</span>
-              )}
+          <div className="flex gap-2">
+            <div className="relative flex-1 border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 hover:border-brand-primary/50 transition-colors cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="text-gray-400">
+                {formData.img_keluhan && !formData.img_keluhan.name.startsWith('capture_') ? (
+                  <span className="text-brand-primary font-medium truncate block max-w-[150px] mx-auto">{formData.img_keluhan.name}</span>
+                ) : (
+                  <span className="text-xs">Klik untuk upload foto</span>
+                )}
+              </div>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowCamera(true)}
+              className="flex flex-col items-center justify-center p-2 h-auto w-24 gap-1 border-dashed"
+            >
+              <Camera size={20} className="text-gray-500" />
+              <span className="text-[10px] text-gray-500 font-normal">Ambil Foto</span>
+            </Button>
           </div>
+
+          {/* Show captured file name if from camera */}
+          {formData.img_keluhan && formData.img_keluhan.name.startsWith('capture_') && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <Camera size={12} /> Foto diambil: {formData.img_keluhan.name}
+            </p>
+          )}
+
+          <CameraCapture
+            isOpen={showCamera}
+            onClose={() => setShowCamera(false)}
+            onCapture={(file) => setFormData(prev => ({ ...prev, img_keluhan: file }))}
+          />
         </div>
 
         <div className="pt-4 flex justify-end gap-3">

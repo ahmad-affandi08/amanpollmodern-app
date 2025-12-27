@@ -5,6 +5,7 @@ import { Camera, Flashlight, RefreshCw, AlertCircle, Eye, CheckCircle } from 'lu
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { ToastContext } from '../../../components/Alert/ToastProvider';
 import { useAuthContext } from '../../../context/AuthContext';
+import InventarisApi from '../../../api/InventarisApi';
 
 export default function MobileScanner() {
   usePageTitle('Scan QR');
@@ -44,7 +45,7 @@ export default function MobileScanner() {
       }).catch((err) => {
         console.error('Camera access denied:', err);
         showToast('Gagal mengakses kamera. Pastikan izin diberikan.', 'error');
-        setHasPermission(false); // Make sure this line exists in original or handle logic
+        // setHasPermission(false); // Removed as it was undefined state
       });
 
       return () => {
@@ -53,25 +54,86 @@ export default function MobileScanner() {
     }
   }, []);
 
-  const handleScan = (result) => {
+  const handleScan = async (result) => {
     if (result && result.data) {
+      // Pause scanner immediately to prevent multiple scans
       if (scanner) {
+        // scanner.stop(); // Stop might be too aggressive if we want to resume fast, but safe.
+        // QrScanner doesn't have pause() in all versions, stop() is fine.
         scanner.stop();
       }
       if (navigator.vibrate) {
-        navigator.vibrate(200);
+        try {
+          navigator.vibrate(200);
+        } catch (e) {
+          // Ignore vibration errors (likely due to lack of user interaction)
+        }
       }
+
       const id = result.data;
-      setScannedId(id);
 
-      // Show success toast
-      showToast(`✅ QR Scan Berhasil: ${id}`, 'success');
+      try {
+        // Fetch item details to validate room
+        const itemRes = await InventarisApi.getById(id);
+        // Handle response structure (wrapped in data or direct)
+        const item = itemRes.data || itemRes;
 
+        // Validation for User Ruangan (Role ID 2 based on logs, or 3)
+        // Adjusting to check for Role 2 or 3 to be safe, or just 2 if we are sure.
+        // Based on log: "User role is not 3 ... 2", so the user is role 2.
+        if (user?.kategori_user_id == 2 || user?.kategori_user_id == 3) {
+          // Get item room ID (prefer direct ID, fallback to object id)
+          const itemRuanganId = item.ruangan_id || item.ruangan?.id_ruangan;
+          const userRuanganId = user.ruangan_id || user.ruangan?.id_ruangan;
 
-      // Show action modal
-      setTimeout(() => {
-        setShowActionModal(true);
-      }, 500);
+          // If item has a room ID, enforce match
+          if (itemRuanganId && String(itemRuanganId) !== String(userRuanganId)) {
+            // Item usually has nested relation from API
+            const itemRoomName = item.ruangan?.nama_ruangan || `ID ${itemRuanganId}`;
+            // User object is flat based on debug screenshot (ruangan_nama)
+            const userRoomName = user.ruangan_nama || user.ruangan?.nama_ruangan || `ID ${userRuanganId}`;
+
+            showToast(`❌ Akses Ditolak: Alat di Ruang "${itemRoomName}", Anda di Ruang "${userRoomName}"`, 'error');
+
+            setTimeout(() => {
+              if (scanner) scanner.start();
+            }, 1500);
+            return;
+          }
+        }
+
+        setScannedId(id);
+        const itemName = item.nama_alat?.nama_nama_alat || item.nama_alat_id || id;
+        showToast(`✅ QR Scan Berhasil: ${itemName}`, 'success');
+
+        // Show action modal
+        setTimeout(() => {
+          setShowActionModal(true);
+        }, 500);
+
+      } catch (error) {
+        console.error("Scan validation error:", error);
+
+        let errorMsg = 'Gagal memvalidasi alat.';
+
+        if (error.response) {
+          // Server responded with error code
+          if (error.response.status === 404) {
+            errorMsg = `Alat dengan Kode '${id}' tidak ditemukan.`;
+          } else {
+            errorMsg += ` Server Error: ${error.response.status}`;
+          }
+        } else if (error.message) {
+          errorMsg += ` ${error.message}`;
+        }
+
+        showToast(`❌ ${errorMsg}`, 'error');
+
+        // Restart scanner
+        setTimeout(() => {
+          if (scanner) scanner.start();
+        }, 1500);
+      }
     }
   };
 
