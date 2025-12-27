@@ -38,9 +38,9 @@ export default function KonfigurasiData() {
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Ukuran file maksimal 2MB', 'error');
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('Ukuran file maksimal 10MB', 'error');
       return;
     }
 
@@ -174,7 +174,7 @@ export default function KonfigurasiData() {
                 Logo Institusi
               </label>
               <p className="text-xs text-gray-500 mb-3">
-                Format: JPG, PNG. Maksimal 2MB
+                Format: JPG, PNG. Maksimal 10MB
               </p>
 
               {/* Upload Area */}

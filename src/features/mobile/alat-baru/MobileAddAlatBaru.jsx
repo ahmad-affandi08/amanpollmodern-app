@@ -45,9 +45,9 @@ export default function MobileAddAlatBaru() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, img_alat_baru: 'Ukuran gambar maksimal 2MB' }));
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, img_alat_baru: 'Ukuran gambar maksimal 10MB' }));
         return;
       }
 

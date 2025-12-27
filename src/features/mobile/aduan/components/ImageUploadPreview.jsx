@@ -26,10 +26,10 @@ export default function ImageUploadPreview({ value, onChange, error }) {
       return;
     }
 
-    // Validate file size (max 2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      alert('Ukuran file maksimal 2MB');
+      alert('Ukuran file maksimal 10MB');
       return;
     }
 

@@ -8,6 +8,30 @@ import { useInventarisDetail } from '../../../hooks/queries/useInventarisQueries
 import { rupiah } from '../../../utils/format';
 import UpdateLocationModal from './components/UpdateLocationModal';
 
+// InfoRow component - moved outside to prevent re-creation on every render
+const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
+  <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
+    <div className="flex items-center gap-2.5 text-gray-500">
+      {Icon && <Icon size={16} className="text-brand-primary/70" />}
+      <span className="text-sm font-medium">{label}</span>
+    </div>
+    <div className="text-right flex-1 pl-4">
+      {isLink && value ? (
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-primary text-sm font-bold hover:underline break-words"
+        >
+          Tampilkan
+        </a>
+      ) : (
+        <span className="text-text-dark text-sm font-semibold break-words">{value || '-'}</span>
+      )}
+    </div>
+  </div>
+);
+
 export default function MobileInventarisDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,29 +106,6 @@ export default function MobileInventarisDetail() {
     return map[status] || 'bg-gray-100 text-gray-700';
   };
 
-  const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
-    <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
-      <div className="flex items-center gap-2.5 text-gray-500">
-        {Icon && <Icon size={16} className="text-brand-primary/70" />}
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      <div className="text-right flex-1 pl-4">
-        {isLink && value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand-primary text-sm font-bold hover:underline break-words"
-          >
-            Tampilkan
-          </a>
-        ) : (
-          <span className="text-text-dark text-sm font-semibold break-words">{value || '-'}</span>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen flex justify-center font-sans">
       <div className="w-full max-w-md min-h-screen pb-6 relative">
@@ -117,8 +118,8 @@ export default function MobileInventarisDetail() {
               alt={inventaris.nama_alat?.nama_nama_alat}
               className="w-full h-full object-cover opacity-90"
               onError={(e) => {
-                e.target.src = '/src/assets/img/no_image.png';
-                e.target.onerror = null; // Prevent infinite loop
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3EGambar Tidak Tersedia%3C/text%3E%3C/svg%3E';
+                e.target.onerror = null;
               }}
             />
           ) : (

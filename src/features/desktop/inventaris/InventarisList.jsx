@@ -544,9 +544,9 @@ export default function InventarisList() {
                     {/* Sertifikat */}
                     {isVisible('file_sertifikat') && (
                       <td className="py-4 px-6 text-sm">
-                        {item.file_sertifikat ? (
+                        {item.file_sertifikat_url ? (
                           <a
-                            href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/inventaris/sertifikat/${item.file_sertifikat}`}
+                            href={item.file_sertifikat_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-brand-primary hover:underline text-xs"
@@ -569,9 +569,9 @@ export default function InventarisList() {
                     {/* File SOP */}
                     {isVisible('file_sop') && (
                       <td className="py-4 px-6 text-sm">
-                        {item.file_sop ? (
+                        {item.file_sop_url ? (
                           <a
-                            href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/inventaris/sop/${item.file_sop}`}
+                            href={item.file_sop_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-brand-primary hover:underline text-xs"

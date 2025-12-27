@@ -5,6 +5,9 @@ import InventarisApi from '../../../api/InventarisApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
+import noImage from '../../../assets/img/no_image.png';
 
 export default function InventarisDetail() {
   usePageTitle('Detail Inventaris');
@@ -170,22 +173,20 @@ export default function InventarisDetail() {
             </div>
 
             {/* Image */}
-            {data.img_alat_url && (
-              <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-                <h2 className="text-lg font-bold text-text-dark mb-4 flex items-center gap-2">
-                  <ImageIcon size={20} />
-                  Foto Alat
-                </h2>
-                <img
-                  src={data.img_alat_url}
-                  alt={data.nama_alat?.nama_nama_alat}
-                  className="w-full h-auto rounded-xl border border-gray-200 max-h-96 object-contain"
-                  onError={(e) => {
-                    e.target.src = '/src/assets/img/no_image.png';
-                  }}
-                />
-              </div>
-            )}
+            <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+              <h2 className="text-lg font-bold text-text-dark mb-4 flex items-center gap-2">
+                <ImageIcon size={20} />
+                Foto Alat
+              </h2>
+              <LazyLoadImage
+                src={data.img_alat_url || noImage}
+                alt={data.nama_alat?.nama_nama_alat}
+                effect="blur"
+                className="w-full h-auto rounded-xl border border-gray-200 max-h-96 object-contain"
+                placeholderSrc={noImage}
+                onError={(e) => { e.target.src = noImage; }}
+              />
+            </div>
 
             {/* File SOP */}
             <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
@@ -193,7 +194,7 @@ export default function InventarisDetail() {
                 <FileText size={20} />
                 File SOP
               </h2>
-              {data.file_sop ? (
+              {data.file_sop_url ? (
                 <a
                   href={data.file_sop_url}
                   target="_blank"
@@ -205,7 +206,7 @@ export default function InventarisDetail() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-text-dark">Lihat File SOP</p>
-                    <p className="text-xs text-gray-500">{data.file_sop}</p>
+                    <p className="text-xs text-gray-500">File SOP</p>
                   </div>
                   <Download size={20} className="text-gray-400" />
                 </a>
@@ -220,7 +221,7 @@ export default function InventarisDetail() {
                 <Award size={20} />
                 File Sertifikat
               </h2>
-              {data.file_sertifikat ? (
+              {data.file_sertifikat_url ? (
                 <a
                   href={data.file_sertifikat_url}
                   target="_blank"
@@ -232,7 +233,7 @@ export default function InventarisDetail() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-text-dark">Lihat Sertifikat</p>
-                    <p className="text-xs text-gray-500">{data.file_sertifikat}</p>
+                    <p className="text-xs text-gray-500">File Sertifikat</p>
                   </div>
                   <Download size={20} className="text-gray-400" />
                 </a>

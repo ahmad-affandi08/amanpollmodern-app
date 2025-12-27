@@ -12,7 +12,7 @@ import React from 'react';
 export default function CalibrationBadge({ item }) {
   const getCalibrationStatus = () => {
     // No certificate = Belum Kalibrasi
-    if (!item.file_sertifikat) {
+    if (!item.file_sertifikat_url) {
       return {
         status: 'belum',
         label: 'Blm Kalibrasi',
