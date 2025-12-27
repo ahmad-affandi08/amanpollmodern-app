@@ -215,8 +215,8 @@ export default function DashboardLayout({ children }) {
                     </div>
 
                     {!collapsed && (
-                      <div className={`transition-transform duration-300 ${openMenus[item.label] ? 'rotate-180' : ''}`}>
-                        <ChevronDown size={18} strokeWidth={2.5} />
+                      <div className={`transition-transform duration-300 ${openMenus[item.label] ? 'rotate-90' : ''}`}>
+                        <ChevronRight size={18} strokeWidth={2.5} />
                       </div>
                     )}
                   </button>
@@ -240,25 +240,34 @@ export default function DashboardLayout({ children }) {
                 )}
 
                 {/* Submenu Items */}
-                {item.children && openMenus[item.label] && !collapsed && (
-                  <div className="ml-6 mt-2 pl-4 py-2 space-y-1 border-l-2 border-white/20 animate-slide-down">
-                    {item.children.map((child, childIndex) => (
-                      <Link
-                        key={childIndex}
-                        to={child.path}
-                        className={`
-                          flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium
-                          ${isPathActive(child.path)
-                            ? 'bg-white/20 text-white shadow-inner backdrop-blur-sm border border-white/10'
-                            : 'text-white/60 hover:text-white hover:bg-white/5'
-                          }
-                        `}
-                        onClick={() => setSidebarOpen(false)}
-                      >
-                        <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPathActive(child.path) ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-110' : 'bg-white/40'}`}></div>
-                        <span>{child.label}</span>
-                      </Link>
-                    ))}
+                {item.children && !collapsed && (
+                  <div
+                    className={`
+                      grid transition-[grid-template-rows] duration-300 ease-in-out
+                      ${openMenus[item.label] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}
+                    `}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="ml-6 mt-2 pl-4 py-2 space-y-1 border-l-2 border-white/20">
+                        {item.children.map((child, childIndex) => (
+                          <Link
+                            key={childIndex}
+                            to={child.path}
+                            className={`
+                              flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium
+                              ${isPathActive(child.path)
+                                ? 'bg-white/20 text-white shadow-inner backdrop-blur-sm border border-white/10'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                              }
+                            `}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPathActive(child.path) ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-110' : 'bg-white/40'}`}></div>
+                            <span>{child.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

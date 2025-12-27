@@ -10,6 +10,7 @@ import {
   useDebounce,
   useModal,
   usePageTitle,
+  useToast,
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
@@ -37,7 +38,7 @@ export default function MasterNamaAlat() {
     divisi_id: ''
   });
 
-  const [toast, setToast] = useState(null);
+  const { showToast } = useToast();
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
   // Queries
@@ -98,10 +99,10 @@ export default function MasterNamaAlat() {
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(item.id);
-          setToast({ type: 'success', message: 'Data berhasil dihapus' });
+          showToast('Data berhasil dihapus', 'success');
           setConfirmDialog({ isOpen: false });
         } catch (error) {
-          setToast({ type: 'error', message: 'Gagal menghapus data. Mungkin sedang digunakan.' });
+          showToast('Gagal menghapus data. Mungkin sedang digunakan.', 'error');
         }
       }
     });
@@ -120,15 +121,15 @@ export default function MasterNamaAlat() {
 
       if (modal.data?.id) {
         await updateMutation.mutateAsync({ id: modal.data.id, data: cleanedData });
-        setToast({ type: 'success', message: 'Data berhasil diperbarui' });
+        showToast('Data berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(cleanedData);
-        setToast({ type: 'success', message: 'Data berhasil ditambahkan' });
+        showToast('Data berhasil ditambahkan', 'success');
       }
       modal.close();
     } catch (error) {
       const msg = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data';
-      setToast({ type: 'error', message: msg });
+      showToast(msg, 'error');
       console.error('Validation errors:', error.response?.data);
     }
   };
@@ -146,11 +147,6 @@ export default function MasterNamaAlat() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {toast && (
-        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
-          <p className="text-sm font-semibold">{toast.message}</p>
-        </div>
-      )}
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}

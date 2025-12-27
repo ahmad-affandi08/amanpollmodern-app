@@ -5,12 +5,10 @@ import InventarisApi from '../../../api/InventarisApi';
 import NamaAlatApi from '../../../api/NamaAlatApi';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle, useToast } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
-import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
-// Toast component removed - using inline notification
 
 export default function InventarisForm() {
   const navigate = useNavigate();
@@ -18,9 +16,9 @@ export default function InventarisForm() {
   const isEdit = !!id;
   usePageTitle(isEdit ? 'Edit Inventaris' : 'Tambah Inventaris');
 
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
-  const [toast, setToast] = useState(null);
 
   // Dropdown Data
   const [namaAlatOptions, setNamaAlatOptions] = useState([]);
@@ -113,7 +111,7 @@ export default function InventarisForm() {
 
       } catch (error) {
         console.error("Failed to load master data", error);
-        setToast({ type: 'error', message: 'Gagal memuat data master' });
+        showToast('Gagal memuat data master', 'error');
       } finally {
         if (!isEdit) setDataLoading(false);
       }
@@ -174,7 +172,7 @@ export default function InventarisForm() {
 
         } catch (error) {
           console.error("Failed to fetch inventaris", error);
-          setToast({ type: 'error', message: 'Gagal memuat data inventaris' });
+          showToast('Gagal memuat data inventaris', 'error');
         } finally {
           setDataLoading(false);
         }
@@ -221,10 +219,14 @@ export default function InventarisForm() {
     }
   };
 
+  const isSoftware = String(formData.kategori_alat_id) === '23';
+
   // Auto-preview no_inventaris when required fields are filled
   useEffect(() => {
     const previewNoInventaris = async () => {
-      if (formData.nama_alat_id && formData.ruangan_id && formData.tahun_pengadaan && !isEdit) {
+      const hasRoom = formData.ruangan_id;
+
+      if (formData.nama_alat_id && formData.tahun_pengadaan && !isEdit && (isSoftware || hasRoom)) {
         try {
           const payload = {
             nama_alat_id: formData.nama_alat_id,
@@ -245,7 +247,7 @@ export default function InventarisForm() {
     };
 
     previewNoInventaris();
-  }, [formData.nama_alat_id, formData.ruangan_id, formData.tahun_pengadaan, isEdit]);
+  }, [formData.nama_alat_id, formData.ruangan_id, formData.tahun_pengadaan, isEdit, isSoftware]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -268,10 +270,10 @@ export default function InventarisForm() {
 
       if (isEdit) {
         await InventarisApi.update(id, payload);
-        setToast({ type: 'success', message: 'Data berhasil diperbarui' });
+        showToast('Data berhasil diperbarui', 'success');
       } else {
         await InventarisApi.create(payload);
-        setToast({ type: 'success', message: 'Data berhasil ditambahkan' });
+        showToast('Data berhasil ditambahkan', 'success');
       }
 
       setTimeout(() => navigate('/inventaris/data'), 1500);
@@ -284,9 +286,9 @@ export default function InventarisForm() {
       if (errors) {
         console.error('Validation errors:', errors);
         const errorMessages = Object.values(errors).flat().join(', ');
-        setToast({ type: 'error', message: `${msg}: ${errorMessages}` });
+        showToast(`${msg}: ${errorMessages}`, 'error');
       } else {
-        setToast({ type: 'error', message: msg });
+        showToast(msg, 'error');
       }
     } finally {
       setLoading(false);
@@ -294,16 +296,61 @@ export default function InventarisForm() {
   };
 
   if (dataLoading) {
-    return <div className="p-8 text-center bg-white rounded-2xl">Memuat data...</div>;
+    return (
+      <div className="animate-fade-in space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Form Skeleton */}
+        <div className="bg-white rounded-[24px] p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] space-y-8">
+          {/* Section 1 Skeleton */}
+          <div>
+            <div className="h-6 w-32 bg-gray-200 rounded mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-12 w-full bg-gray-100 rounded-xl animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 2 Skeleton */}
+          <div>
+            <div className="h-6 w-32 bg-gray-200 rounded mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-12 w-full bg-gray-100 rounded-xl animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3 Skeleton */}
+          <div>
+            <div className="h-6 w-32 bg-gray-200 rounded mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-48 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="animate-fade-in space-y-6">
-      {toast && (
-        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
-          <p className="text-sm font-semibold">{toast.message}</p>
-        </div>
-      )}
 
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -346,16 +393,32 @@ export default function InventarisForm() {
                 required
                 disabled={isEdit || !formData.divisi_id}
               />
-              <SearchableSelect
-                label="Ruangan"
-                name="ruangan_id"
-                options={ruanganOptions}
-                value={formData.ruangan_id}
-                onChange={handleChange}
-                placeholder="Pilih Ruangan"
-                searchPlaceholder="Cari ruangan..."
-                required
-              />
+
+              {!isSoftware && (
+                <>
+                  <SearchableSelect
+                    label="Ruangan"
+                    name="ruangan_id"
+                    options={ruanganOptions}
+                    value={formData.ruangan_id}
+                    onChange={handleChange}
+                    placeholder="Pilih Ruangan"
+                    searchPlaceholder="Cari ruangan..."
+                    required
+                  />
+                  <SearchableSelect
+                    label="Ruang Sekarang"
+                    name="ruang_sekarang"
+                    options={ruanganOptions}
+                    value={formData.ruang_sekarang}
+                    onChange={handleChange}
+                    placeholder="Pilih Ruangan"
+                    searchPlaceholder="Cari ruangan..."
+                    required
+                  />
+                </>
+              )}
+
               <Input
                 label="No Inventaris"
                 name="no_inventaris"
@@ -366,16 +429,7 @@ export default function InventarisForm() {
                 disabled
                 className="bg-gray-50"
               />
-              <SearchableSelect
-                label="Ruang Sekarang"
-                name="ruang_sekarang"
-                options={ruanganOptions}
-                value={formData.ruang_sekarang}
-                onChange={handleChange}
-                placeholder="Pilih Ruangan"
-                searchPlaceholder="Cari ruangan..."
-                required
-              />
+
               <Input
                 label="Gedung"
                 name="gedung"
