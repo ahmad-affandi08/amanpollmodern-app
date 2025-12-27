@@ -8,7 +8,7 @@ import { ToastContext } from '../../../components/Alert/ToastProvider';
 import SignaturePad from '../../../components/SignaturePad';
 import { formatDate } from '../../../utils/format';
 
-export default function MobileAduanDetailTeknisi() {
+export default function MobileAduanFormTeknisi() {
   usePageTitle('Form Pemeriksaan');
   const { id } = useParams();
   const navigate = useNavigate();

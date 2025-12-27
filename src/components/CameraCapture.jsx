@@ -146,7 +146,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
             <Camera className="text-brand-primary" size={24} />
             Ambil Foto
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button type="button" onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={24} className="text-gray-500" />
           </button>
         </div>
@@ -210,6 +210,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
               <div className="w-12 h-12 flex items-center justify-center">
                 {devices.length > 1 && (
                   <button
+                    type="button"
                     onClick={switchCamera}
                     className="p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
                     title="Ganti Kamera"
@@ -221,6 +222,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
 
               {/* Capture Button (Pro Shutter Look) */}
               <button
+                type="button"
                 onClick={handleCapture}
                 disabled={loading || !!error}
                 className="group relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-200"
@@ -233,6 +235,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
           ) : (
             <div className="flex w-full items-center justify-center gap-12">
               <button
+                type="button"
                 onClick={handleRetake}
                 className="flex flex-col items-center gap-2 group"
               >
@@ -244,6 +247,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
               </button>
 
               <button
+                type="button"
                 onClick={handleConfirm}
                 className="flex flex-col items-center gap-2 group"
               >

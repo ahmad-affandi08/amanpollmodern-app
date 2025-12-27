@@ -7,6 +7,7 @@ import { formatDateTime } from '../../../utils/format';
 import { useAuthContext } from '../../../context/AuthContext';
 import { useMobileDashboard } from '../../../hooks/queries/useDashboardQueries';
 import noImage from '../../../assets/img/no_image.png';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 
 export default function MobileAduanListTeknisi() {
   usePageTitle('Daftar Tugas Aduan');
@@ -14,6 +15,8 @@ export default function MobileAduanListTeknisi() {
   const { user } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, pending, sedang_dikerjakan, selesai
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewAlt, setPreviewAlt] = useState('');
 
   // Use dashboard hook for stats
   const { data: dashboardData } = useMobileDashboard({
@@ -215,8 +218,15 @@ export default function MobileAduanListTeknisi() {
                   <img
                     src={item.img_keluhan || noImage}
                     alt="Alat"
-                    className="w-16 h-16 rounded-xl object-cover bg-gray-100"
+                    className="w-16 h-16 rounded-xl object-cover bg-gray-100 cursor-pointer hover:opacity-80 transition-opacity"
                     onError={(e) => { e.target.src = noImage; }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.img_keluhan) {
+                        setPreviewImage(item.img_keluhan);
+                        setPreviewAlt(item.nama_alat_nama || 'Foto Alat');
+                      }
+                    }}
                   />
                 </div>
 
@@ -265,6 +275,13 @@ export default function MobileAduanListTeknisi() {
           <p className="text-sm text-gray-400">Semua tugas sudah ditampilkan</p>
         </div>
       )}
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        imageUrl={previewImage}
+        alt={previewAlt}
+      />
     </div>
   );
 }

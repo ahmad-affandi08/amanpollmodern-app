@@ -41,7 +41,7 @@ import MobileInventaris from './features/mobile/inventaris/MobileInventaris';
 import MobileInventarisDetail from './features/mobile/inventaris/MobileInventarisDetail';
 import MobileProfile from './features/mobile/profile/MobileProfile';
 import MobileScanner from './features/mobile/scanner/MobileScanner';
-import MobileAduanDetailTeknisi from './features/mobile/aduan/MobileAduanDetailTeknisi';
+import MobileAduanFormTeknisi from './features/mobile/aduan/MobileAduanFormTeknisi';
 import MobilePemeliharaan from './features/mobile/pemeliharaan/MobilePemeliharaan';
 import MobilePemeliharaanDetail from './features/mobile/pemeliharaan/MobilePemeliharaanDetail';
 import MobilePemeliharaanHistory from './features/mobile/pemeliharaan/MobilePemeliharaanHistory';
@@ -49,7 +49,7 @@ import MobileFormPemeliharaan from './features/mobile/pemeliharaan/MobileFormPem
 import MobileNotifikasi from './features/mobile/notifikasi/MobileNotifikasi';
 import MobileNotifikasiDetail from './features/mobile/notifikasi/MobileNotifikasiDetail';
 import MobileAduanHistory from './features/mobile/aduan/MobileAduanHistory';
-import MobileAduanDetailUser from './features/mobile/aduan/MobileAduanDetailUser';
+import MobileAduanDetail from './features/mobile/aduan/MobileAduanDetail';
 import MobileDisposisiAduan from './features/mobile/aduan/MobileDisposisiAduan';
 import MobileDisposisiPemeliharaan from './features/mobile/pemeliharaan/MobileDisposisiPemeliharaan';
 import MobileAlatBaru from './features/mobile/alat-baru/MobileAlatBaru';
@@ -227,9 +227,9 @@ const router = createBrowserRouter(
         { index: true, element: <Navigate to="/mobile/dashboard" replace /> },
         { path: 'dashboard', element: <MobileDashboard /> },
         { path: 'aduan', element: <MobileAduan /> },
-        { path: 'aduan/:id', element: <MobileAduanDetailTeknisi /> },
+        { path: 'aduan/:id', element: <MobileAduanFormTeknisi /> },
         { path: 'riwayat-aduan', element: <MobileAduanHistory /> },
-        { path: 'riwayat-aduan/:id', element: <MobileAduanDetailUser /> },
+        { path: 'riwayat-aduan/:id', element: <MobileAduanDetail /> },
         { path: 'inventaris', element: <MobileInventaris /> },
         { path: 'inventaris/:id', element: <MobileInventarisDetail /> },
         { path: 'alat-baru', element: <MobileAlatBaru /> },

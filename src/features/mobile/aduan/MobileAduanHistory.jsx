@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, AlertCircle, ChevronRight, Calendar } from 'lucide-react';
+import { Search, AlertCircle, FileSpreadsheet, ChevronRight } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { useAduanListInfinite } from '../../../hooks/queries/useAduanQueries';
 import { formatDateTime } from '../../../utils/format';
 import { useAuthContext } from '../../../context/AuthContext';
 import noImage from '../../../assets/img/no_image.png';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 
 export default function MobileAduanHistory() {
   usePageTitle('Riwayat Aduan');
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Selesai'); // Default to Selesai only
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewAlt, setPreviewAlt] = useState('');
 
-  // Infinite Scroll User History - Only show completed complaints by default
+  // Check if user is Teknisi (role id 3)
+  const isTeknisi = user?.kategori_user_id === 3;
+
+  // Infinite Scroll - Only show completed (Selesai) complaints
   const {
     data,
     fetchNextPage,
@@ -23,7 +30,7 @@ export default function MobileAduanHistory() {
     isLoading,
     isError
   } = useAduanListInfinite({
-    status_aduan: statusFilter, // Backend expects 'status_aduan', not 'status'
+    status_aduan: 'Selesai', // Always filter to Selesai only
     search: searchQuery,
   }, 10);
 
@@ -42,6 +49,22 @@ export default function MobileAduanHistory() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Handle Export
+  const handleExport = () => {
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+      return;
+    }
+
+    // Build query params
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+
+    // Open export URL in new tab
+    window.open(`/api/report/aduan/export-excel-teknisi?${params.toString()}`, '_blank');
+  };
 
   // Status Badge Helper
   const getStatusBadge = (status) => {
@@ -84,15 +107,50 @@ export default function MobileAduanHistory() {
 
   return (
     <div className="max-w-md mx-auto px-4 pt-4 pb-20">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Riwayat Aduan</h1>
-          <p className="text-xs text-gray-500">Daftar laporan kerusakan yang anda kirim</p>
-        </div>
+      <div className="mb-4">
+        <h1 className="text-xl font-bold text-gray-800">Riwayat Aduan</h1>
+        <p className="text-xs text-gray-500">Daftar laporan kerusakan yang sudah selesai</p>
       </div>
 
-      {/* Search & Filter */}
-      <div className="space-y-3 mb-6">
+      {/* Filter & Export Section - Only for Teknisi */}
+      {isTeknisi && (
+        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4 space-y-3">
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Dari Tanggal</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Sampai Tanggal</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleExport}
+            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl transition-colors active:scale-95"
+          >
+            <FileSpreadsheet size={18} />
+            <span>Export Excel</span>
+          </button>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -102,21 +160,6 @@ export default function MobileAduanHistory() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-sm"
           />
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {['Selesai', 'Tindakan Lanjutan', 'Sedang Dikerjakan', 'Pending'].map(status => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${statusFilter === status
-                ? 'bg-brand-primary text-white border-brand-primary'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-brand-primary/50'
-                }`}
-            >
-              {status}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -131,8 +174,7 @@ export default function MobileAduanHistory() {
           aduanList.map(item => (
             <div
               key={item.id_aduan}
-              onClick={() => navigate(`/mobile/riwayat-aduan/${item.id_aduan}`)}
-              className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+              className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all"
             >
               <div className="flex justify-between items-start mb-3">
                 {getStatusBadge(item.status_aduan)}
@@ -144,10 +186,17 @@ export default function MobileAduanHistory() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <img
-                    src={item.img_keluhan || noImage} // Use img_keluhan for User view
+                    src={item.img_keluhan || noImage}
                     alt="Foto Keluhan"
-                    className="w-16 h-16 rounded-xl object-cover bg-gray-50 border border-gray-100"
+                    className="w-16 h-16 rounded-xl object-cover bg-gray-50 border border-gray-100 cursor-pointer hover:opacity-80 transition-opacity"
                     onError={(e) => { e.target.src = noImage; }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.img_keluhan) {
+                        setPreviewImage(item.img_keluhan);
+                        setPreviewAlt('Foto Keluhan');
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -157,9 +206,19 @@ export default function MobileAduanHistory() {
                   <p className="text-xs text-gray-500 mb-2 truncate">
                     {item.no_inventaris} • {item.ruangan_nama}
                   </p>
-                  <p className="text-xs text-gray-600 line-clamp-2 bg-gray-50 p-2 rounded-lg italic">
+                  <p className="text-xs text-gray-600 line-clamp-2 bg-gray-50 p-2 rounded-lg italic mb-3">
                     "{item.keluhan}"
                   </p>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => navigate(`/mobile/riwayat-aduan/${item.id_aduan}`)}
+                      className="flex items-center gap-1.5 text-xs font-bold text-brand-primary bg-brand-primary/5 px-3 py-1.5 rounded-lg active:scale-95 transition-transform hover:bg-brand-primary/10"
+                    >
+                      Lihat Detail
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -177,6 +236,12 @@ export default function MobileAduanHistory() {
           </div>
         </div>
       )}
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        imageUrl={previewImage}
+        alt={previewAlt}
+      />
     </div>
   );
 }

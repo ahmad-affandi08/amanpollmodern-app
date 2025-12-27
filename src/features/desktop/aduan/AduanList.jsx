@@ -111,18 +111,33 @@ export default function AduanList() {
     value: r.id_ruangan
   }));
 
-  // Filter teknisi based on role and division
-  let teknisi = (usersData?.data || []).filter(u => {
+  // Function to get filtered teknisi options based on equipment's division
+  const getFilteredTeknisiOptions = (aduanDivisiId) => {
+
+    let teknisi = (usersData?.data || []).filter(u => {
+      const role = (u.role || '').toLowerCase();
+      return role === 'teknisi';
+    });
+
+    // Filter by equipment's division
+    if (aduanDivisiId) {
+      const targetDivisiId = parseInt(aduanDivisiId);
+      teknisi = teknisi.filter(u => parseInt(u.divisi_id) === targetDivisiId);
+    }
+
+    return teknisi.map(u => ({
+      label: u.nama_lengkap,
+      value: u.id_user
+    }));
+  };
+
+  // Teknisi options for filter section (shows all teknisi)
+  const allTeknisi = (usersData?.data || []).filter(u => {
     const role = (u.role || '').toLowerCase();
     return role === 'teknisi';
   });
 
-  if (isAdminDivisi && userDivisiId) {
-    const targetDivisiId = parseInt(userDivisiId);
-    teknisi = teknisi.filter(u => parseInt(u.divisi_id) === targetDivisiId);
-  }
-
-  const teknisiOptions = teknisi.map(u => ({
+  const teknisiOptions = allTeknisi.map(u => ({
     label: u.nama_lengkap,
     value: u.id_user
   }));
@@ -435,7 +450,7 @@ export default function AduanList() {
         isOpen={assignModal.isOpen}
         onClose={assignModal.close}
         aduan={assignModal.data}
-        teknisiOptions={teknisiOptions}
+        teknisiOptions={getFilteredTeknisiOptions(assignModal.data?.divisi_id)}
         onSuccess={refetch}
       />
 

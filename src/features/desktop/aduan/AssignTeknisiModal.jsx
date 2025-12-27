@@ -40,6 +40,7 @@ export default function AssignTeknisiModal({ isOpen, onClose, aduan, teknisiOpti
           <div className="flex gap-4 mt-2 text-xs text-gray-500">
             <span>🏠 {aduan?.ruangan_nama}</span>
             <span>🛠 {aduan?.nama_alat_nama}</span>
+            {aduan?.divisi_nama && <span>🏢 {aduan?.divisi_nama}</span>}
           </div>
         </div>
 
