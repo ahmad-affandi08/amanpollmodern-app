@@ -116,6 +116,10 @@ export default function MobileInventarisDetail() {
               src={inventaris.img_alat_url}
               alt={inventaris.nama_alat?.nama_nama_alat}
               className="w-full h-full object-cover opacity-90"
+              onError={(e) => {
+                e.target.src = '/src/assets/img/no_image.png';
+                e.target.onerror = null; // Prevent infinite loop
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-primary to-brand-primary-light">

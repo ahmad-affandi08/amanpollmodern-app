@@ -165,7 +165,6 @@ export default function InventarisForm() {
             kondisi_alat: data.kondisi_alat || '',
             kategori_alkes: data.kategori_alkes || '',
             alat_kesehatan: !!data.alat_kesehatan,
-            alat_kesehatan: !!data.alat_kesehatan,
             interval_maintenance: data.interval_maintenance || '',
             perlu_kalibrasi: !!(data.awal_kalibrasi || data.kadaluwarsa || data.file_sertifikat_url),
             awal_kalibrasi: data.awal_kalibrasi || '',
@@ -592,15 +591,6 @@ export default function InventarisForm() {
                 required // Added asterisk logic visually by 'required' prop in reusable component if supported, or via label
               />
 
-              <Input
-                label="Interval Maintenance (Tahun)"
-                name="interval_maintenance"
-                type="number"
-                value={formData.interval_maintenance}
-                onChange={handleChange}
-                placeholder="Masukkan Interval Maintenance"
-                required // Added asterisk logic visually by 'required' prop in reusable component if supported, or via label
-              />
 
               {formData.perlu_kalibrasi && (
                 <>
