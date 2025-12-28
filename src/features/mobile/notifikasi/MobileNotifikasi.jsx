@@ -192,7 +192,7 @@ export default function MobileNotifikasi() {
                 </div>
 
                 {/* Message Preview */}
-                <p className={`text-sm line-clamp-2 leading-relaxed ${!item.is_read ? 'text-gray-800 font-medium' : 'text-gray-500'
+                <p className={`text-sm line-clamp-3 break-words leading-relaxed ${!item.is_read ? 'text-gray-800 font-medium' : 'text-gray-500'
                   }`}>
                   {item.isi_preview}
                 </p>

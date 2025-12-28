@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import SignatureCanvas from 'react-signature-canvas';
-import { ArrowLeft, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
+import SignaturePad from '../../../components/SignaturePad';
 import { useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks/queries/usePemeliharaanQueries';
-// Toast component removed
+import { ToastDialog } from '../../../components/Alert/Alert';
 
 export default function MobileFormPemeliharaan() {
   usePageTitle('Form Pemeliharaan');
@@ -31,18 +31,19 @@ export default function MobileFormPemeliharaan() {
 
   const handleSafetyCheckChange = (checklistId, value) => {
     setFormData(prev => {
-      const existing = prev.safety_check.find(item => item.id === checklistId);
+      const safetyCheck = prev?.safety_check || [];
+      const existing = safetyCheck.find(item => item.id === checklistId);
       if (existing) {
         return {
           ...prev,
-          safety_check: prev.safety_check.map(item =>
+          safety_check: safetyCheck.map(item =>
             item.id === checklistId ? { ...item, hasil: value } : item
           )
         };
       } else {
         return {
           ...prev,
-          safety_check: [...prev.safety_check, { id: checklistId, hasil: value }]
+          safety_check: [...safetyCheck, { id: checklistId, hasil: value }]
         };
       }
     });
@@ -50,18 +51,19 @@ export default function MobileFormPemeliharaan() {
 
   const handleRadioChange = (category, checklistId, value) => {
     setFormData(prev => {
-      const existing = prev[category].find(item => item.id === checklistId);
+      const categoryArray = prev?.[category] || [];
+      const existing = categoryArray.find(item => item.id === checklistId);
       if (existing) {
         return {
           ...prev,
-          [category]: prev[category].map(item =>
+          [category]: categoryArray.map(item =>
             item.id === checklistId ? { ...item, hasil: value } : item
           )
         };
       } else {
         return {
           ...prev,
-          [category]: [...prev[category], { id: checklistId, hasil: value }]
+          [category]: [...categoryArray, { id: checklistId, hasil: value }]
         };
       }
     });
@@ -157,7 +159,7 @@ export default function MobileFormPemeliharaan() {
                   <textarea
                     key={checklist.id}
                     placeholder={checklist.keterangan}
-                    value={formData.safety_check.find(item => item.id === checklist.id)?.hasil || ''}
+                    value={formData.safety_check?.find(item => item.id === checklist.id)?.hasil || ''}
                     onChange={(e) => handleSafetyCheckChange(checklist.id, e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
                     rows="3"
@@ -229,44 +231,18 @@ export default function MobileFormPemeliharaan() {
 
         {/* Tanda Tangan Teknisi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Tanda Tangan Teknisi Pelaksana</label>
-          <div className="border-2 border-gray-300 rounded-xl overflow-hidden mb-2">
-            <SignatureCanvas
-              ref={signatureTeknisiRef}
-              canvasProps={{
-                className: 'w-full h-48 bg-white'
-              }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => signatureTeknisiRef.current.clear()}
-            className="flex items-center gap-2 px-4 py-2 bg-danger-500 text-white rounded-full text-sm font-bold hover:bg-danger-600 transition-colors"
-          >
-            <Trash2 size={16} />
-            Clear
-          </button>
+          <SignaturePad
+            ref={signatureTeknisiRef}
+            label="Tanda Tangan Teknisi Pelaksana"
+          />
         </div>
 
         {/* Tanda Tangan Kepala Ruang */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Tanda Tangan Kepala Ruang</label>
-          <div className="border-2 border-gray-300 rounded-xl overflow-hidden mb-2">
-            <SignatureCanvas
-              ref={signatureKepalaRuangRef}
-              canvasProps={{
-                className: 'w-full h-48 bg-white'
-              }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => signatureKepalaRuangRef.current.clear()}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-colors"
-          >
-            <Trash2 size={16} />
-            Clear
-          </button>
+          <SignaturePad
+            ref={signatureKepalaRuangRef}
+            label="Tanda Tangan Kepala Ruang"
+          />
         </div>
 
         {/* Nama Kepala Ruangan */}
@@ -318,15 +294,13 @@ export default function MobileFormPemeliharaan() {
       </form>
 
       {/* Toast Notification */}
-      {toast && (
-        <div className="fixed top-4 right-4 z-50">
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            onClose={() => setToast(null)}
-          />
-        </div>
-      )}
+      <ToastDialog
+        isOpen={!!toast}
+        type={toast?.type || 'info'}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+        duration={3000}
+      />
     </div>
   );
 }

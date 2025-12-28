@@ -469,7 +469,7 @@ export default function InventarisList() {
                     {/* Harga Ganti (AIC) */}
                     {isVisible('harga_ganti') && (
                       <td className="py-4 px-6 text-sm text-gray-600">
-                        -
+                        {item.harga_pengganti ? `Rp ${parseInt(item.harga_pengganti).toLocaleString('id-ID')}` : '-'}
                       </td>
                     )}
 
@@ -483,7 +483,7 @@ export default function InventarisList() {
                     {/* Ruang Sekarang */}
                     {isVisible('ruang_sekarang') && (
                       <td className="py-4 px-6 text-sm text-gray-600">
-                        {item.ruang_sekarang || '-'}
+                        {item.ruangan_sekarang?.nama_ruangan || item.ruangan?.nama_ruangan || '-'}
                       </td>
                     )}
 

@@ -330,15 +330,19 @@ export default function ReportAduan() {
                     </td>
                     <td className="py-4 px-6 text-gray-600">{item.nama_pengadu || '-'}</td>
                     <td className="py-4 px-6 text-gray-600">
-                      {item.tanggal_pemeriksaan || 'Belum Ditentukan'}
+                      {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                      }) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-4 px-6 text-gray-600">
-                      {item.jam_pemeriksaan || 'Belum Ditentukan'}
+                      {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleTimeString('id-ID', {
+                        hour: '2-digit', minute: '2-digit'
+                      }) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-4 px-6 text-brand-primary font-medium">
                       {item.teknisi_nama || 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate">{item.tindakan || 'Belum Ditentukan'}</td>
+                    <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate">{item.tindakan_teknisi || 'Belum Ditentukan'}</td>
                     <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate">{item.rekomendasi || '-'}</td>
                     <td className="py-4 px-6 text-gray-600">{item.kondisi_alat || '-'}</td>
                     <td className="py-4 px-6">

@@ -103,10 +103,10 @@ export default function MobileAduanFormTeknisi() {
             <p className="text-xs text-gray-600">Nama Alat</p>
             <p className="font-bold text-gray-800">{aduan.nama_alat_nama}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
             <div>
               <p className="text-xs text-gray-600">No. Inventaris</p>
-              <p className="text-sm font-medium text-gray-800">{aduan.no_inventaris}</p>
+              <p className="text-sm font-medium text-gray-800 break-all">{aduan.no_inventaris}</p>
             </div>
             <div>
               <p className="text-xs text-gray-600">Ruangan</p>
@@ -125,7 +125,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Safety Check / Tindakan Teknisi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <label className="text-xs font-medium text-gray-700 mb-2 block">
-            Safety Check / Tindakan Teknisi *
+            Safety Check / Tindakan Teknisi <span className='text-red-500'>*</span>
           </label>
           <input
             type="text"
@@ -141,7 +141,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Rekomendasi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <label className="text-xs font-medium text-gray-700 mb-2 block">
-            Rekomendasi *
+            Rekomendasi <span className='text-red-500'>*</span>
           </label>
           <input
             type="text"
@@ -157,7 +157,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Kondisi Alat */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <label className="text-xs font-medium text-gray-700 mb-2 block">
-            Kondisi Alat *
+            Kondisi Alat <span className='text-red-500'>*</span>
           </label>
           <select
             name="kondisi_alat"
@@ -208,7 +208,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Status */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <label className="text-xs font-medium text-gray-700 mb-2 block">
-            Status *
+            Status <span className='text-red-500'>*</span>
           </label>
           <select
             name="status_aduan"
@@ -226,7 +226,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Biaya */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <label className="text-xs font-medium text-gray-700 mb-2 block">
-            Biaya Perbaikan (Rp) *
+            Biaya Perbaikan (Rp)
           </label>
           <input
             type="number"
