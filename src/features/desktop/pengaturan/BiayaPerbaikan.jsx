@@ -237,7 +237,7 @@ export default function BiayaPerbaikan() {
                       className={`hover:bg-gray-50/50 cursor-pointer ${expandedRow === item.id_inventaris ? 'bg-gray-50' : ''}`}
                       onClick={() => toggleExpand(item.id_inventaris)}
                     >
-                      <td className="py-4 px-6 sticky left-0 z-10 text-center border-r border-gray-50">
+                      <td className="py-4 px-6 text-center border-r border-gray-50">
                         <div className={`transition-transform duration-200 ${expandedRow === item.id_inventaris ? 'rotate-90' : ''}`}>
                           <div className={`p-1 rounded-full ${expandedRow === item.id_inventaris ? 'bg-brand-primary/10 text-brand-primary' : 'text-gray-400'}`}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
