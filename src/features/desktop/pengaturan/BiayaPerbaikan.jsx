@@ -345,6 +345,7 @@ export default function BiayaPerbaikan() {
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={handlePageChange}
+          totalData={pagination.totalItems}
         />
       </div>
     </div>

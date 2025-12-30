@@ -248,7 +248,12 @@ export default function MasterNamaAlat() {
           </table>
         </div>
 
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalData={filteredData.length}
+        />
       </div>
 
       <Modal

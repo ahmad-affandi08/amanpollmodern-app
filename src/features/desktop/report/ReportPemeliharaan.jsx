@@ -168,7 +168,7 @@ export default function ReportPemeliharaan() {
         <div className="mb-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
@@ -198,9 +198,6 @@ export default function ReportPemeliharaan() {
               placeholder="Semua Divisi"
               searchPlaceholder="Cari divisi..."
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <SearchableSelect
               name="teknisi_id"
               value={filters.teknisi_id}
@@ -209,6 +206,9 @@ export default function ReportPemeliharaan() {
               placeholder="Semua Teknisi"
               searchPlaceholder="Cari teknisi..."
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -216,7 +216,7 @@ export default function ReportPemeliharaan() {
               icon={<AlertCircle className="w-4 h-4" />}
               className="bg-bg-light border-none"
             />
-            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+            <div className="md:col-span-3 grid grid-cols-3 gap-4">
               <Input
                 type="date"
                 value={filters.start_date}
@@ -229,17 +229,14 @@ export default function ReportPemeliharaan() {
                 onChange={(e) => handleFilterChange('end_date', e.target.value)}
                 className="bg-bg-light border-none"
               />
+              <Button
+                variant="outline"
+                onClick={resetFilters}
+                className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+              >
+                Reset Filter
+              </Button>
             </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={resetFilters}
-              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
-            >
-              Reset Filter
-            </Button>
           </div>
         </div>
 
@@ -332,6 +329,7 @@ export default function ReportPemeliharaan() {
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
               onPageChange={pagination.goToPage}
+              totalData={pagination.totalItems}
             />
           </div>
         )}

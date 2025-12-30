@@ -210,7 +210,18 @@ export default function InventarisForm() {
         setPreviews(prev => ({ ...prev, [name]: objectUrl }));
       }
     } else if (type === 'checkbox') {
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      // Special handling for perlu_kalibrasi checkbox
+      if (name === 'perlu_kalibrasi' && !checked) {
+        // Clear date fields when unchecking
+        setFormData(prev => ({
+          ...prev,
+          [name]: checked,
+          awal_kalibrasi: '',
+          kadaluwarsa: ''
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: checked }));
+      }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
 
@@ -275,13 +286,28 @@ export default function InventarisForm() {
       const payload = new FormData();
       Object.keys(formData).forEach(key => {
         const value = formData[key];
-        if (value !== null && value !== undefined && value !== '') {
-          // Boolean handling for FormData
-          if (typeof value === 'boolean') {
-            payload.append(key, value ? '1' : '0');
-          } else {
-            payload.append(key, value);
-          }
+
+        // Skip null and undefined
+        if (value === null || value === undefined) {
+          return;
+        }
+
+        // Special handling for date fields: send empty string as null to clear database
+        if ((key === 'awal_kalibrasi' || key === 'kadaluwarsa') && value === '') {
+          payload.append(key, ''); // Send empty string, backend will handle as null
+          return;
+        }
+
+        // Skip other empty strings (except date fields above)
+        if (value === '') {
+          return;
+        }
+
+        // Boolean handling for FormData
+        if (typeof value === 'boolean') {
+          payload.append(key, value ? '1' : '0');
+        } else {
+          payload.append(key, value);
         }
       });
 
@@ -601,7 +627,6 @@ export default function InventarisForm() {
                       type="date"
                       value={formData.awal_kalibrasi}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                   <div className="animate-fade-in-down">
@@ -611,7 +636,6 @@ export default function InventarisForm() {
                       type="date"
                       value={formData.kadaluwarsa}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                 </>

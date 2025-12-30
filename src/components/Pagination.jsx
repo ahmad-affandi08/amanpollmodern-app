@@ -15,9 +15,14 @@ export default function Pagination({
   totalPages,
   onPageChange,
   showFirstLast = true,
-  className = ''
+  className = '',
+  totalData
 }) {
-  if (totalPages <= 1) return null;
+
+  // If no pagination needed and no totalData to show, hide completely
+  if (totalPages <= 1 && (totalData === undefined || totalData === null)) {
+    return null;
+  }
 
   // Helper to generate page numbers to display
   const getPageNumbers = () => {
@@ -53,87 +58,100 @@ export default function Pagination({
     return pages;
   };
 
+  const showPaginationButtons = totalPages > 1;
+
   return (
-    <div className={`flex items-center justify-center gap-2 mt-6 ${className}`}>
-      {/* First Page */}
-      {showFirstLast && (
-        <button
-          onClick={() => onPageChange(1)}
-          disabled={currentPage === 1}
-          className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-          title="First Page"
-        >
-          <ChevronsLeft size={18} />
-        </button>
+    <div className={`relative w-full flex items-center justify-center gap-2 mt-6 ${className}`}>
+      {showPaginationButtons && (
+        <>
+          {/* First Page */}
+          {showFirstLast && (
+            <button
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1}
+              className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              title="First Page"
+            >
+              <ChevronsLeft size={18} />
+            </button>
+          )}
+
+          {/* Previous */}
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            title="Previous"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          {/* Page Numbers */}
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map((page, index) => {
+              // Responsive logic: On mobile (default), only show current page and neighbors (+/- 1) and ellipsis
+              // On sm/md, show all generated pages
+              const isVisibleOnMobile =
+                page === '...' ||
+                page === currentPage ||
+                page === currentPage - 1 ||
+                page === currentPage + 1 ||
+                page === 1 ||
+                page === totalPages;
+
+              return (
+                <React.Fragment key={index}>
+                  {page === '...' ? (
+                    <span className={`px-2 text-gray-400 ${!isVisibleOnMobile ? 'hidden sm:block' : ''}`}>...</span>
+                  ) : (
+                    <button
+                      onClick={() => onPageChange(page)}
+                      className={`
+                        min-w-[36px] h-9 px-3 rounded-lg text-sm font-bold transition-all
+                        ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
+                        ${currentPage === page
+                          ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
+                          : 'text-gray-600 hover:bg-gray-100'
+                        }
+                      `}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          {/* Next */}
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            title="Next"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          {/* Last Page */}
+          {showFirstLast && (
+            <button
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              title="Last Page"
+            >
+              <ChevronsRight size={18} />
+            </button>
+          )}
+        </>
       )}
 
-      {/* Previous */}
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-        title="Previous"
-      >
-        <ChevronLeft size={18} />
-      </button>
-
-      {/* Page Numbers */}
-      <div className="flex items-center gap-1">
-        {getPageNumbers().map((page, index) => {
-          // Responsive logic: On mobile (default), only show current page and neighbors (+/- 1) and ellipsis
-          // On sm/md, show all generated pages
-          const isVisibleOnMobile =
-            page === '...' ||
-            page === currentPage ||
-            page === currentPage - 1 ||
-            page === currentPage + 1 ||
-            page === 1 ||
-            page === totalPages;
-
-          return (
-            <React.Fragment key={index}>
-              {page === '...' ? (
-                <span className={`px-2 text-gray-400 ${!isVisibleOnMobile ? 'hidden sm:block' : ''}`}>...</span>
-              ) : (
-                <button
-                  onClick={() => onPageChange(page)}
-                  className={`
-                    min-w-[36px] h-9 px-3 rounded-lg text-sm font-bold transition-all
-                    ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
-                    ${currentPage === page
-                      ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
-                      : 'text-gray-600 hover:bg-gray-100'
-                    }
-                  `}
-                >
-                  {page}
-                </button>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-
-      {/* Next */}
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-        title="Next"
-      >
-        <ChevronRight size={18} />
-      </button>
-
-      {/* Last Page */}
-      {showFirstLast && (
-        <button
-          onClick={() => onPageChange(totalPages)}
-          disabled={currentPage === totalPages}
-          className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-          title="Last Page"
-        >
-          <ChevronsRight size={18} />
-        </button>
+      {/* Total Data Info */}
+      {(totalData !== undefined && totalData !== null) && (
+        <div className={`text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 ${showPaginationButtons ? 'absolute right-0 top-1/2 -translate-y-1/2' : ''}`}>
+          Total Data: <span className="text-gray-900 font-bold">{totalData}</span>
+        </div>
       )}
     </div>
   );

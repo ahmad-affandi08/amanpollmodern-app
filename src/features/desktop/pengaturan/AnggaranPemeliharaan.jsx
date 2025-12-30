@@ -358,6 +358,7 @@ export default function AnggaranPemeliharaan() {
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={handlePageChange}
+          totalData={pagination.totalItems}
         />
       </div>
     </div>

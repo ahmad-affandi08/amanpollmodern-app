@@ -30,6 +30,12 @@ export default function AlatBaruList() {
     per_page: pagination.perPage
   });
 
+  useEffect(() => {
+    if (data?.meta) {
+      pagination.setMetadata(data.meta);
+    }
+  }, [data?.meta]);
+
   const approveMutation = useApproveAlatBaru();
   const deleteMutation = useDeleteAlatBaru();
 
@@ -208,6 +214,13 @@ export default function AlatBaruList() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.goToPage}
+          totalData={pagination.totalItems}
+        />
       </div>
 
       {/* Modals */}

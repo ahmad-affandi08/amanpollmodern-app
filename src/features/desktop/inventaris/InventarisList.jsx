@@ -12,6 +12,7 @@ import {
   usePagination,
   useFilters,
   useDebounce,
+  useMasterNamaAlat,
   usePageTitle,
 } from '../../../hooks';
 import Button from '../../../components/Button';
@@ -102,6 +103,7 @@ export default function InventarisList() {
   const { data: kategoriData } = useMasterKategori({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
+  const { data: namaAlatData } = useMasterNamaAlat({ all: 1 });
 
   const deleteMutation = useDeleteInventaris();
 
@@ -264,17 +266,22 @@ export default function InventarisList() {
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
+            {/* Search Nama Alat */}
             <div>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#808191] w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Cari inventaris..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
+              <SearchableSelect
+                name="search"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                options={[
+                  { label: 'Semua Alat', value: '' },
+                  ...(namaAlatData?.data || []).map(item => ({
+                    label: item.nama_nama_alat,
+                    value: item.nama_nama_alat
+                  }))
+                ]}
+                placeholder="Cari nama alat..."
+                searchPlaceholder="Cari..."
+              />
             </div>
 
             {/* Kategori Filter */}
@@ -690,13 +697,12 @@ export default function InventarisList() {
 
         {/* Pagination */}
         <div className="mt-6">
-          {pagination.totalPages > 1 && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-            />
-          )}
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalData={pagination.totalItems}
+          />
         </div>
       </div>
 

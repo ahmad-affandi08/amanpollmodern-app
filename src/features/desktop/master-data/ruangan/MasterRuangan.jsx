@@ -190,6 +190,7 @@ export default function MasterRuangan() {
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={pagination.goToPage}
+          totalData={pagination.totalItems}
         />
       </div>
 

@@ -195,7 +195,12 @@ export default function MasterKategori() {
           </table>
         </div>
 
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalData={filteredCategories.length}
+        />
       </div>
 
       <Modal

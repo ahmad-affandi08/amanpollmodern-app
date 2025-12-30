@@ -86,16 +86,7 @@ export default function Dashboard() {
 
   const stats = dashboardData.stats || {};
   const charts = dashboardData.charts || {};
-  // 'recent' key verified in debug logs
   const recent = dashboardData.recent || dashboardData.recent_activities || [];
-
-  // Debug: Log chart data
-  console.log('Dashboard Charts Data:', {
-    aduan: charts.aduan,
-    kategori: charts.kategori,
-    kondisi: charts.kondisi,
-    pemeliharaan: charts.pemeliharaan
-  });
 
   // Greetings based on time
   const hour = new Date().getHours();

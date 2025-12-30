@@ -152,7 +152,12 @@ export default function MasterDivisi() {
           </table>
         </div>
 
-        <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} />
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.goToPage}
+          totalData={pagination.totalItems}
+        />
       </div>
 
       <Modal isOpen={modal.isOpen} onClose={modal.close} title={modal.data ? "Edit Divisi" : "Tambah Divisi Baru"}>

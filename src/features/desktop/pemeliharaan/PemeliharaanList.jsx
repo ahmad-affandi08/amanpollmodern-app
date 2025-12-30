@@ -363,6 +363,7 @@ export default function PemeliharaanList() {
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
               onPageChange={pagination.goToPage}
+              totalData={pagination.totalItems}
             />
           )}
         </div>
