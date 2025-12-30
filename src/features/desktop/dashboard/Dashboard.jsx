@@ -89,6 +89,14 @@ export default function Dashboard() {
   // 'recent' key verified in debug logs
   const recent = dashboardData.recent || dashboardData.recent_activities || [];
 
+  // Debug: Log chart data
+  console.log('Dashboard Charts Data:', {
+    aduan: charts.aduan,
+    kategori: charts.kategori,
+    kondisi: charts.kondisi,
+    pemeliharaan: charts.pemeliharaan
+  });
+
   // Greetings based on time
   const hour = new Date().getHours();
   let greeting = 'Selamat Pagi';
@@ -190,27 +198,40 @@ export default function Dashboard() {
                 <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
                 <p className="text-xs text-gray-500">Performa penanganan kerusakan per bulan</p>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-brand-primary"></span> Selesai
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B6B]"></span> Pending
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFAF4E]"></span> Pending
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#4ECDC4]"></span> Sedang Dikerjakan
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFAF4E]"></span> Tindakan Lanjutan
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#6C5DD3]"></span> Selesai
                 </div>
               </div>
             </div>
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                {/* Direct usage of charts.aduan array from backend/hook */}
                 <AreaChart data={charts.aduan || []}>
                   <defs>
+                    <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#FF6B6B" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorSedangDikerjakan" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorTindakanLanjutan" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FFAF4E" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#FFAF4E" stopOpacity={0} />
+                    </linearGradient>
                     <linearGradient id="colorSelesai" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
                       <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FFAF4E" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#FFAF4E" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
@@ -220,8 +241,10 @@ export default function Dashboard() {
                     cursor={{ stroke: '#6C5DD3', strokeWidth: 1, strokeDasharray: '5 5' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
                   />
-                  <Area type="monotone" dataKey="Selesai" stroke="#6C5DD3" strokeWidth={3} fillOpacity={1} fill="url(#colorSelesai)" />
-                  <Area type="monotone" dataKey="Pending" stroke="#FFAF4E" strokeWidth={3} fillOpacity={1} fill="url(#colorPending)" />
+                  <Area type="monotone" dataKey="Pending" stroke="#FF6B6B" strokeWidth={2} fillOpacity={1} fill="url(#colorPending)" />
+                  <Area type="monotone" dataKey="Sedang Dikerjakan" stroke="#4ECDC4" strokeWidth={2} fillOpacity={1} fill="url(#colorSedangDikerjakan)" />
+                  <Area type="monotone" dataKey="Tindakan Lanjutan" stroke="#FFAF4E" strokeWidth={2} fillOpacity={1} fill="url(#colorTindakanLanjutan)" />
+                  <Area type="monotone" dataKey="Selesai" stroke="#6C5DD3" strokeWidth={2} fillOpacity={1} fill="url(#colorSelesai)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

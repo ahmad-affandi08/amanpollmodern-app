@@ -235,9 +235,6 @@ export default function DetailReportAduan() {
               <div className={`px-6 py-3 rounded-full font-bold text-lg shadow-sm backdrop-blur-sm bg-white/20 border border-white/30`}>
                 {data.status_aduan || 'Pending'}
               </div>
-              <p className="text-white/80 text-sm text-center">
-                Terakhir diperbarui: {data.update_date ? new Date(data.update_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-              </p>
             </div>
           </div>
 

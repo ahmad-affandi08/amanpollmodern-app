@@ -9,6 +9,7 @@ import {
 import useAuth from '../hooks/utils/useAuth';
 import Logo from '../assets/img/logo2-amanpoll.png';
 import Logo3 from '../assets/img/logo3-amanpoll.png';
+import IconLogo from '../assets/img/icon-logo-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
 import ConfirmDialog from '../components/Alert/Alert';
 
@@ -185,9 +186,7 @@ export default function DashboardLayout({ children }) {
             {!collapsed ? (
               <img src={Logo} alt="AmanPoll Logo" className="h-16 w-auto object-contain transition-all duration-300 drop-shadow-md" />
             ) : (
-              <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-brand-primary font-bold text-2xl shadow-lg ring-4 ring-white/20">
-                A
-              </div>
+              <img src={IconLogo} alt="AmanPoll Icon" className="h-12 w-12 object-contain transition-all duration-300 drop-shadow-lg" />
             )}
           </div>
 

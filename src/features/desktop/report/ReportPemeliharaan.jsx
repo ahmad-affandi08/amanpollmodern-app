@@ -142,7 +142,22 @@ export default function ReportPemeliharaan() {
           <h1 className="text-2xl font-bold text-text-dark">Laporan Pemeliharaan</h1>
           <p className="text-text-gray text-sm mt-1">Rekapitulasi jadwal dan hasil pemeliharaan alat</p>
         </div>
-        <Button onClick={() => navigate('/report/pemeliharaan/export')} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20">
+        <Button
+          onClick={() => {
+            const params = new URLSearchParams();
+            if (filters.search) params.append('search', filters.search);
+            if (filters.ruangan_id) params.append('ruangan_id', filters.ruangan_id);
+            if (filters.divisi_id) params.append('divisi_id', filters.divisi_id);
+            if (filters.teknisi_id) params.append('teknisi_id', filters.teknisi_id);
+            if (filters.status) params.append('status', filters.status);
+            if (filters.kondisi_alat) params.append('kondisi_alat', filters.kondisi_alat);
+            if (filters.start_date) params.append('start_date', filters.start_date);
+            if (filters.end_date) params.append('end_date', filters.end_date);
+
+            window.open(`/api/pemeliharaan/export-excel?${params.toString()}`, '_blank');
+          }}
+          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
+        >
           <Download className="w-4 h-4" />
           Export Data
         </Button>

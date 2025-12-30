@@ -13,59 +13,7 @@ export const useDashboardStats = (filters = {}) => {
     queryKey: queryKeys.dashboard.stats(filters),
     queryFn: () => DashboardApi.getStats(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes (dashboard data changes frequently)
-    select: (data) => {
-      // Transform data for charts
-      const aduanData = data.charts.aduan.labels.map((label, idx) => ({
-        name: label,
-        Pending: data.charts.aduan.pending[idx],
-        Selesai: data.charts.aduan.selesai[idx]
-      }));
-
-      const kategoriData = data.charts.kategori.labels.map((label, idx) => ({
-        name: label,
-        value: data.charts.kategori.data[idx]
-      }));
-
-      const kondisiData = data.charts.kondisi.labels.map((label, idx) => ({
-        name: label,
-        value: data.charts.kondisi.data[idx]
-      }));
-
-      const dayaData = data.charts.daya.labels.map((label, idx) => ({
-        name: label,
-        value: data.charts.daya.data[idx]
-      }));
-
-      const kalibrasiData = data.charts.kalibrasi.labels.map((label, idx) => ({
-        name: label,
-        value: data.charts.kalibrasi.data[idx]
-      }));
-
-      const nilaiInventarisData = data.charts.nilaiInventaris.labels.map((label, idx) => ({
-        name: label,
-        value: data.charts.nilaiInventaris.data[idx]
-      }));
-
-      const pemeliharaanData = data.charts.pemeliharaan.labels.map((label, idx) => ({
-        name: label,
-        'Belum Selesai': data.charts.pemeliharaan.belumSelesai[idx],
-        'Selesai': data.charts.pemeliharaan.selesai[idx]
-      }));
-
-      return {
-        stats: data.stats,
-        charts: {
-          aduan: aduanData,
-          kategori: kategoriData,
-          kondisi: kondisiData,
-          daya: dayaData,
-          kalibrasi: kalibrasiData,
-          nilaiInventaris: nilaiInventarisData,
-          pemeliharaan: pemeliharaanData
-        },
-        recent: data.recent_activities
-      };
-    }
+    // Backend now returns data in correct format, no transformation needed
   });
 };
 

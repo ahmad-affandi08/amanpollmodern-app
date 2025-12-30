@@ -17,10 +17,10 @@ export const usePemeliharaan = (filters = {}) => {
 };
 
 // Get pemeliharaan assignments for teknisi (infinite scroll)
-export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all') => {
+export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', month = null, year = null) => {
   return useInfiniteQuery({
-    queryKey: ['pemeliharaan', 'assignments', { search, status }],
-    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status),
+    queryKey: ['pemeliharaan', 'assignments', { search, status, month, year }],
+    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, month, year),
     getNextPageParam: (lastPage) => {
       // Laravel pagination returns meta with current_page and last_page
       const currentPage = lastPage.meta?.current_page || lastPage.current_page;
@@ -103,3 +103,18 @@ export const useSubmitPemeliharaan = () => {
     },
   });
 };
+
+// Update signature (teknisi or kepala ruang)
+export const useUpdateSignature = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => PemeliharaanApi.updateSignature(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pemeliharaan.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pemeliharaan.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: ['pemeliharaan', 'assignments'] });
+    },
+  });
+};
+

@@ -163,7 +163,6 @@ export default function MobileFormPemeliharaan() {
                     onChange={(e) => handleSafetyCheckChange(checklist.id, e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
                     rows="3"
-                    required
                   />
                 ))}
               </div>
@@ -181,7 +180,6 @@ export default function MobileFormPemeliharaan() {
                           value="ok"
                           onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
                           className="w-4 h-4 text-success-600"
-                          required
                         />
                         <span className="text-sm">Ok</span>
                       </label>

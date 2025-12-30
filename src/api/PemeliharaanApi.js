@@ -6,13 +6,15 @@ const PemeliharaanApi = {
     return response.data;
   },
 
-  getAssignments: async (page = 1, limit = 10, search = '', status = 'all') => {
+  getAssignments: async (page = 1, limit = 10, search = '', status = 'all', month = null, year = null) => {
     const response = await axiosClient.get('/pemeliharaan/assignments', {
       params: {
         page,
         per_page: limit,
         search: search || undefined,
-        status: status !== 'all' ? status : undefined
+        status: status !== 'all' ? status : undefined,
+        month: month || undefined,
+        year: year || undefined
       }
     });
     return response.data;
@@ -48,6 +50,11 @@ const PemeliharaanApi = {
 
   submitForm: async (id, data) => {
     const response = await axiosClient.post(`/pemeliharaan/${id}/submit`, data);
+    return response.data;
+  },
+
+  updateSignature: async (id, data) => {
+    const response = await axiosClient.post(`/pemeliharaan/${id}/update-signature`, data);
     return response.data;
   },
 };
