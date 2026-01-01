@@ -198,14 +198,17 @@ export default function ReportAduan() {
               searchPlaceholder="Cari ruangan..."
             />
 
-            <SearchableSelect
-              name="divisi_id"
-              value={filters.divisi_id}
-              onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
-              options={[{ label: 'Semua Divisi', value: '' }, ...divisiOptions]}
-              placeholder="Semua Divisi"
-              searchPlaceholder="Cari divisi..."
-            />
+            {/* Hide divisi filter for Admin Divisi */}
+            {!isAdminDivisi && (
+              <SearchableSelect
+                name="divisi_id"
+                value={filters.divisi_id}
+                onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
+                options={[{ label: 'Semua Divisi', value: '' }, ...divisiOptions]}
+                placeholder="Semua Divisi"
+                searchPlaceholder="Cari divisi..."
+              />
+            )}
 
             <SearchableSelect
               name="teknisi_id"
@@ -217,7 +220,7 @@ export default function ReportAduan() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Select
               value={filters.status_aduan}
               onChange={(e) => handleFilterChange('status_aduan', e.target.value)}
@@ -225,27 +228,25 @@ export default function ReportAduan() {
               icon={<AlertCircle className="w-4 h-4" />}
               className="bg-bg-light border-none"
             />
-            <div className="md:col-span-3 grid grid-cols-3 gap-4">
-              <Input
-                type="date"
-                value={filters.start_date}
-                onChange={(e) => handleFilterChange('start_date', e.target.value)}
-                className="bg-bg-light border-none"
-              />
-              <Input
-                type="date"
-                value={filters.end_date}
-                onChange={(e) => handleFilterChange('end_date', e.target.value)}
-                className="bg-bg-light border-none"
-              />
-              <Button
-                variant="outline"
-                onClick={resetFilters}
-                className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
-              >
-                Reset Filter
-              </Button>
-            </div>
+            <Input
+              type="date"
+              value={filters.start_date}
+              onChange={(e) => handleFilterChange('start_date', e.target.value)}
+              className="bg-bg-light border-none"
+            />
+            <Input
+              type="date"
+              value={filters.end_date}
+              onChange={(e) => handleFilterChange('end_date', e.target.value)}
+              className="bg-bg-light border-none"
+            />
+            <Button
+              variant="outline"
+              onClick={resetFilters}
+              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+            >
+              Reset Filter
+            </Button>
           </div>
         </div>
 

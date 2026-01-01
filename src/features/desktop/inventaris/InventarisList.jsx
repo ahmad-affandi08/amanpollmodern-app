@@ -370,6 +370,7 @@ export default function InventarisList() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-bg-light border-b border-gray-100">
+                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">No</th>
                 {isVisible('no_inventaris') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">No. Inventaris</th>}
                 {isVisible('nama_alat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Nama Alat</th>}
                 {isVisible('divisi') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Divisi</th>}
@@ -396,10 +397,10 @@ export default function InventarisList() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <TableSkeleton columns={Object.values(visibleColumns).filter(Boolean).length} rows={10} />
+                <TableSkeleton columns={Object.values(visibleColumns).filter(Boolean).length + 1} rows={10} />
               ) : dataList.length === 0 ? (
                 <tr>
-                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-12 text-center">
+                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 1} className="py-12 text-center">
                     <Layers size={32} className="mx-auto text-gray-400 mb-4" />
                     <p className="font-bold text-gray-600">Tidak ada data inventaris</p>
                     <p className="text-sm text-gray-400 mt-1">Coba ubah filter pencarian Anda</p>
@@ -408,6 +409,10 @@ export default function InventarisList() {
               ) : (
                 dataList.map((item, index) => (
                   <tr key={item.id || `row-${index}`} className="hover:bg-gray-50/50 transition-colors">
+                    {/* No Urut */}
+                    <td className="py-4 px-6 font-bold text-gray-800">
+                      {(pagination.currentPage - 1) * pagination.perPage + index + 1}
+                    </td>
                     {/* No Inventaris */}
                     {isVisible('no_inventaris') && (
                       <td className="py-4 px-6 text-sm">

@@ -4,7 +4,7 @@ import { DollarSign, Search, RefreshCw } from 'lucide-react';
 import AnggaranApi from '../../../api/AnggaranApi';
 import TableSkeleton from '../../../components/TableSkeleton';
 import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle, useAuth } from '../../../hooks';
 import SearchableSelect from '../../../components/SearchableSelect';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';
@@ -14,6 +14,10 @@ import Pagination from '../../../components/Pagination';
 export default function AnggaranPemeliharaan() {
   usePageTitle('Anggaran Pemeliharaan');
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const ROLE_ADMIN_DIVISI = 4;
+  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({ total_aic: 0, total_rab: 0 });
@@ -187,15 +191,18 @@ export default function AnggaranPemeliharaan() {
             </div>
           </div>
 
-          <SearchableSelect
-            label="Divisi"
-            name="divisi_id"
-            placeholder="-- Pilih Divisi --"
-            searchPlaceholder="Cari divisi..."
-            options={[{ label: '-- Pilih Divisi --', value: '' }, ...divisiOptions]}
-            value={filters.divisi_id}
-            onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
-          />
+          {/* Hide divisi filter for Admin Divisi */}
+          {!isAdminDivisi && (
+            <SearchableSelect
+              label="Divisi"
+              name="divisi_id"
+              placeholder="-- Pilih Divisi --"
+              searchPlaceholder="Cari divisi..."
+              options={[{ label: '-- Pilih Divisi --', value: '' }, ...divisiOptions]}
+              value={filters.divisi_id}
+              onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
+            />
+          )}
 
           <SearchableSelect
             label="Kategori Alat"

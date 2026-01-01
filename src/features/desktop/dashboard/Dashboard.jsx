@@ -22,6 +22,9 @@ export default function Dashboard() {
     ruangan_filter: ''
   });
 
+  const ROLE_ADMIN_DIVISI = 4;
+  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+
   // Queries
   const { data, isLoading } = useDashboardStats(filters);
   const { data: divisiData } = useMasterDivisi({ all: 1 });
@@ -119,17 +122,23 @@ export default function Dashboard() {
               return <option key={year} value={year}>{year}</option>
             })}
           </select>
-          <div className="w-px bg-gray-200 my-2 mx-1"></div>
-          <select
-            value={filters.divisi_id}
-            onChange={(e) => updateFilter('divisi_id', e.target.value)}
-            className="bg-transparent border-none text-sm font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-lg py-2 pl-3 pr-8 max-w-[150px]"
-          >
-            <option value="">Semua Divisi</option>
-            {divisions.map((d) => (
-              <option key={d.id_divisi} value={d.id_divisi}>{d.nama_divisi}</option>
-            ))}
-          </select>
+
+          {/* Hide divisi filter for Admin Divisi */}
+          {!isAdminDivisi && (
+            <>
+              <div className="w-px bg-gray-200 my-2 mx-1"></div>
+              <select
+                value={filters.divisi_id}
+                onChange={(e) => updateFilter('divisi_id', e.target.value)}
+                className="bg-transparent border-none text-sm font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-lg py-2 pl-3 pr-8 max-w-[150px]"
+              >
+                <option value="">Semua Divisi</option>
+                {divisions.map((d) => (
+                  <option key={d.id_divisi} value={d.id_divisi}>{d.nama_divisi}</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
 

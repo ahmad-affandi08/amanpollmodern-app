@@ -157,7 +157,7 @@ export default function MasterRuangan() {
                     <td className="py-4 px-6 font-medium">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
                     </td>
-                    <td className="py-4 px-6 font-mono text-xs font-bold text-text-gray">
+                    <td className="py-4 px-6 font-mono text-lg font-bold text-text-gray">
                       {item.kode_ruangan || '-'}
                     </td>
                     <td className="py-4 px-6 font-bold text-text-dark">{item.nama_ruangan}</td>

@@ -3,7 +3,7 @@ import { Hammer, Search, AlertTriangle, CheckCircle, TrendingUp, Info } from 'lu
 import AnggaranApi from '../../../api/AnggaranApi';
 import TableSkeleton from '../../../components/TableSkeleton';
 import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle, useAuth } from '../../../hooks';
 import SearchableSelect from '../../../components/SearchableSelect';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';
@@ -13,6 +13,10 @@ import Pagination from '../../../components/Pagination';
 export default function BiayaPerbaikan() {
   usePageTitle('Biaya Perbaikan');
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const ROLE_ADMIN_DIVISI = 4;
+  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({ total_biaya_aktual: 0, total_mmel: 0, jumlah_ganti_aset: 0 });
@@ -30,6 +34,7 @@ export default function BiayaPerbaikan() {
     kategori_alat_id: '',
     ruangan_id: '',
     tahun_pengadaan: '',
+    tahun_filter: new Date().getFullYear().toString(), // Default to current year
     search: ''
   });
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -53,7 +58,7 @@ export default function BiayaPerbaikan() {
   useEffect(() => {
     fetchData(1, { ...filters, search: debouncedSearch });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.divisi_id, filters.kategori_alat_id, filters.ruangan_id, filters.tahun_pengadaan, debouncedSearch]);
+  }, [filters.divisi_id, filters.kategori_alat_id, filters.ruangan_id, filters.tahun_pengadaan, filters.tahun_filter, debouncedSearch]);
 
   const fetchOptions = async () => {
     try {
@@ -133,6 +138,16 @@ export default function BiayaPerbaikan() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
   };
 
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2020; // Starting year for the system
+    const years = [];
+    for (let year = currentYear; year >= startYear; year--) {
+      years.push({ value: year.toString(), label: year.toString() });
+    }
+    return years;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -147,11 +162,11 @@ export default function BiayaPerbaikan() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-brand-primary">
-          <p className="text-gray-500 text-sm mb-2">Total Biaya Perbaikan (Tahun Ini)</p>
+          <p className="text-gray-500 text-sm mb-2">Total Biaya Perbaikan (Tahun {filters.tahun_filter})</p>
           <h2 className="text-2xl font-extrabold text-text-dark">{formatCurrency(totals.total_biaya_aktual)}</h2>
         </div>
         <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-gray-400">
-          <p className="text-gray-500 text-sm mb-2">Total Batas MMEL (Tahun Ini)</p>
+          <p className="text-gray-500 text-sm mb-2">Total Batas MMEL (Tahun {filters.tahun_filter})</p>
           <h2 className="text-2xl font-extrabold text-gray-400">{formatCurrency(totals.total_mmel)}</h2>
         </div>
         <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-red-500">
@@ -162,7 +177,7 @@ export default function BiayaPerbaikan() {
 
       {/* Filters */}
       <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Cari Alat / No Inv</label>
             <div className="relative">
@@ -177,15 +192,29 @@ export default function BiayaPerbaikan() {
             </div>
           </div>
 
+          {/* Year Filter */}
           <SearchableSelect
-            label="Divisi"
-            name="divisi_id"
-            placeholder="-- Pilih Divisi --"
-            searchPlaceholder="Cari divisi..."
-            options={[{ label: '-- Pilih Divisi --', value: '' }, ...divisiOptions]}
-            value={filters.divisi_id}
-            onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
+            label="Tahun Analisis"
+            name="tahun_filter"
+            placeholder="-- Pilih Tahun --"
+            searchPlaceholder="Cari tahun..."
+            options={generateYearOptions()}
+            value={filters.tahun_filter}
+            onChange={(e) => handleFilterChange('tahun_filter', e.target.value)}
           />
+
+          {/* Hide divisi filter for Admin Divisi */}
+          {!isAdminDivisi && (
+            <SearchableSelect
+              label="Divisi"
+              name="divisi_id"
+              placeholder="-- Pilih Divisi --"
+              searchPlaceholder="Cari divisi..."
+              options={[{ label: '-- Pilih Divisi --', value: '' }, ...divisiOptions]}
+              value={filters.divisi_id}
+              onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
+            />
+          )}
 
           <SearchableSelect
             label="Kategori Alat"
@@ -320,6 +349,16 @@ export default function BiayaPerbaikan() {
                               </h6>
                               <div className="text-sm text-gray-600 space-y-1 mb-3">
                                 <p><strong>Rumus:</strong> MMEL = MEL Factor × Fraksi Usia × FV</p>
+                              </div>
+                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
+                                <span className="text-sm font-semibold">Jumlah Perbaikan:</span>
+                                <span className="text-lg font-bold text-blue-600">{item.jumlah_perbaikan}x</span>
+                              </div>
+                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
+                                <span className="text-sm font-semibold">Rata-rata Biaya/Perbaikan:</span>
+                                <span className="text-lg font-bold text-purple-600">
+                                  {item.jumlah_perbaikan > 0 ? formatCurrency(item.biaya_aktual / item.jumlah_perbaikan) : 'Rp 0'}
+                                </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-t border-gray-200">
                                 <span className="text-sm font-semibold">MMEL Limit:</span>
