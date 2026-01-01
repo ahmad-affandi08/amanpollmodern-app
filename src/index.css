@@ -145,3 +145,22 @@ option {
 .animate-progress {
    animation: progress linear forwards;
 }
+
+/* =========================================
+   FADE IN ANIMATION
+   ========================================= */
+@keyframes fadeIn {
+   from {
+      opacity: 0;
+      transform: translateX(-10px);
+   }
+
+   to {
+      opacity: 1;
+      transform: translateX(0);
+   }
+}
+
+.animate-fade-in {
+   animation: fadeIn 0.2s ease-out forwards;
+}

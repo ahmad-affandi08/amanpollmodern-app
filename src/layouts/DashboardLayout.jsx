@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
@@ -20,6 +20,8 @@ export default function DashboardLayout({ children }) {
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({}); // State for collapsible menus
+  const [hoverMenu, setHoverMenu] = useState({ item: null, position: null }); // State for hover menu when collapsed
+  const hoverTimeoutRef = useRef(null); // Ref to store timeout ID
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -198,6 +200,39 @@ export default function DashboardLayout({ children }) {
                 {item.children ? (
                   <button
                     onClick={() => toggleMenu(item.label)}
+                    onMouseEnter={(e) => {
+                      if (collapsed) {
+                        // Clear any pending timeout
+                        if (hoverTimeoutRef.current) {
+                          clearTimeout(hoverTimeoutRef.current);
+                          hoverTimeoutRef.current = null;
+                        }
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setHoverMenu({
+                          item: item,
+                          position: { top: rect.top, left: rect.right }
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (collapsed) {
+                        // Clear any existing timeout
+                        if (hoverTimeoutRef.current) {
+                          clearTimeout(hoverTimeoutRef.current);
+                        }
+                        // Set new timeout and store its ID
+                        hoverTimeoutRef.current = setTimeout(() => {
+                          setHoverMenu(prev => {
+                            // Only clear if still the same item
+                            if (prev.item?.label === item.label) {
+                              return { item: null, position: null };
+                            }
+                            return prev;
+                          });
+                          hoverTimeoutRef.current = null;
+                        }, 300);
+                      }
+                    }}
                     className={`
                       w-full flex items-center px-4 py-3.5 rounded-2xl transition-all duration-300 relative group border border-transparent
                       ${isActive(item)
@@ -287,6 +322,65 @@ export default function DashboardLayout({ children }) {
           </div>
         </div>
       </aside>
+
+      {/* Floating Hover Menu for Collapsed Sidebar */}
+      {collapsed && hoverMenu.item && hoverMenu.position && (
+        <div
+          className="fixed z-50 animate-fade-in"
+          style={{
+            top: `${hoverMenu.position.top}px`,
+            left: `${hoverMenu.position.left + 8}px`,
+          }}
+          onMouseEnter={() => {
+            // Clear any pending timeout when hovering over the menu
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = null;
+            }
+          }}
+          onMouseLeave={() => {
+            // Close menu immediately when leaving
+            setHoverMenu({ item: null, position: null });
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] py-3 px-2 min-w-[220px] border border-gray-100 backdrop-blur-xl">
+            {/* Menu Title */}
+            <div className="px-4 py-2 mb-2 border-b border-gray-100">
+              <div className="flex items-center gap-3 text-brand-primary">
+                <hoverMenu.item.icon size={20} className="min-w-[20px]" />
+                <span className="font-bold text-sm">{hoverMenu.item.label}</span>
+              </div>
+            </div>
+
+            {/* Submenu Items */}
+            <div className="space-y-1">
+              {hoverMenu.item.children?.map((child, childIndex) => (
+                <Link
+                  key={childIndex}
+                  to={child.path}
+                  className={`
+                    flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium
+                    ${isPathActive(child.path)
+                      ? 'bg-brand-primary text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-brand-primary'
+                    }
+                  `}
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    setHoverMenu({ item: null, position: null });
+                  }}
+                >
+                  <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPathActive(child.path)
+                    ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]'
+                    : 'bg-brand-primary/40'
+                    }`}></div>
+                  <span>{child.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Overlay */}
       {sidebarOpen && (
