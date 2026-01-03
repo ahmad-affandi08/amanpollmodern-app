@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Package, AlertCircle, FileText, PlusCircle, Clock } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMobileDashboard } from '../../../hooks/queries/useDashboardQueries';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
-import StatCard from './components/StatCard';
 import DonutChart from './components/DonutChart';
 import FilterBar from './components/FilterBar';
 import MenuGrid from './components/MenuGrid';
@@ -23,7 +22,8 @@ export default function MobileDashboard() {
     setFilters(newFilters);
   };
 
-  if (isLoading) {
+  // Show skeleton only on initial load (isPending), not when refetching
+  if (isLoading && !data) {
     return (
       <div className="max-w-md mx-auto px-4 space-y-4 animate-pulse pt-3">
         {/* Greeting Skeleton */}
@@ -35,19 +35,6 @@ export default function MobileDashboard() {
 
         {/* Filter Skeleton */}
         <div className="h-[42px] bg-white rounded-xl w-full border border-gray-100"></div>
-
-        {/* Stats Skeleton */}
-        <div className="grid grid-cols-2 gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-[120px] bg-white rounded-[24px] p-4 flex flex-col justify-between border border-gray-100">
-              <div>
-                <div className="w-10 h-10 bg-gray-100 rounded-xl mb-3"></div>
-                <div className="h-3 w-16 bg-gray-100 rounded mb-1"></div>
-              </div>
-              <div className="h-6 w-12 bg-gray-200 rounded-lg"></div>
-            </div>
-          ))}
-        </div>
 
         {/* Charts Skeleton */}
         <div className="grid grid-cols-2 gap-4">
@@ -107,53 +94,6 @@ export default function MobileDashboard() {
         filters={filters}
         onFilterChange={handleFilterChange}
       />
-
-      {/* Stats Grid - Conditional based on Role */}
-      {user.kategori_user_id === 3 ? (
-        // TEKNISI VIEW
-        <div className="grid grid-cols-2 gap-4 animate-fade-in">
-          <StatCard
-            title="Tugas Aduan"
-            value={stats.total_aduan_pending || 0}
-            icon={<AlertCircle size={24} />}
-            gradient="from-red-50/50 via-white to-red-50/30"
-            iconGradient="from-red-50 via-red-100 to-red-300"
-            iconColor="text-danger-600"
-            delay="0"
-          />
-          <StatCard
-            title="Pemeliharaan"
-            value={stats.total_pemeliharaan_pending || 0}
-            icon={<Clock size={24} />}
-            gradient="from-blue-50/50 via-white to-blue-50/30"
-            iconGradient="from-blue-50 via-blue-100 to-blue-300"
-            iconColor="text-info-600"
-            delay="100"
-          />
-        </div>
-      ) : (
-        // USER RUANGAN VIEW (Existing)
-        <div className="grid grid-cols-2 gap-4 animate-fade-in">
-          <StatCard
-            title="Total Inventaris"
-            value={stats.total_inventaris || 0}
-            icon={<Package size={24} />}
-            gradient="from-purple-50/50 via-white to-purple-50/30"
-            iconGradient="from-purple-50 via-purple-100 to-purple-300"
-            iconColor="text-brand-primary"
-            delay="0"
-          />
-          <StatCard
-            title="Total Aduan"
-            value={stats.total_aduan || 0}
-            icon={<AlertCircle size={24} />}
-            gradient="from-orange-50/50 via-white to-orange-50/30"
-            iconGradient="from-orange-50 via-orange-100 to-orange-300"
-            iconColor="text-pending-600"
-            delay="100"
-          />
-        </div>
-      )}
 
       {/* Charts Grid - Conditional based on Role */}
       <div className="grid grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '200ms' }}>

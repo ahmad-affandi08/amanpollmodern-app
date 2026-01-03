@@ -72,19 +72,18 @@ export default function MobileFormPemeliharaan() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate signatures
+    // Validate teknisi signature (required)
     if (signatureTeknisiRef.current.isEmpty()) {
       setToast({ type: 'error', message: 'Tanda tangan teknisi harus diisi' });
       return;
     }
 
-    if (signatureKepalaRuangRef.current.isEmpty()) {
-      setToast({ type: 'error', message: 'Tanda tangan kepala ruang harus diisi' });
-      return;
-    }
-
     const ttdTeknisi = signatureTeknisiRef.current.toDataURL();
-    const ttdKepalaRuang = signatureKepalaRuangRef.current.toDataURL();
+
+    // Kepala ruang signature is optional
+    const ttdKepalaRuang = signatureKepalaRuangRef.current.isEmpty()
+      ? null
+      : signatureKepalaRuangRef.current.toDataURL();
 
     const submitData = {
       ...formData,
@@ -239,21 +238,22 @@ export default function MobileFormPemeliharaan() {
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <SignaturePad
             ref={signatureKepalaRuangRef}
-            label="Tanda Tangan Kepala Ruang"
+            label="Tanda Tangan Kepala Ruang (Opsional)"
           />
+          <p className="text-xs text-gray-500 mt-2">Tanda tangan kepala ruang dapat diisi nanti</p>
         </div>
 
         {/* Nama Kepala Ruangan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Nama Kepala Ruangan</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">Nama Kepala Ruangan (Opsional)</label>
           <input
             type="text"
             value={formData.nama_kepala_ruangan}
             onChange={(e) => setFormData(prev => ({ ...prev, nama_kepala_ruangan: e.target.value }))}
             placeholder="Masukkan nama kepala ruangan"
             className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-            required
           />
+          <p className="text-xs text-gray-500 mt-1">Nama dapat diisi nanti saat tanda tangan</p>
         </div>
 
         {/* Biaya */}

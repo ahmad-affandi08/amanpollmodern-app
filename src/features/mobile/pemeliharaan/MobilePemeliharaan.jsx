@@ -63,8 +63,8 @@ export default function MobilePemeliharaan() {
   const pemeliharaanList = data?.pages.flatMap(page => page.data) || [];
 
   // Handle signature modal open
-  const handleOpenSignatureModal = (id, type) => {
-    setSelectedPemeliharaanId(id);
+  const handleOpenSignatureModal = (item, type) => {
+    setSelectedPemeliharaanId(item.id_pemeliharaan);
     setSignatureType(type);
     setSignatureModalOpen(true);
   };
@@ -239,18 +239,18 @@ export default function MobilePemeliharaan() {
                     {item.status}
                   </span>
 
-                  {/* Signature Buttons (only if status is Selesai) */}
-                  {item.status === 'Selesai' && item.status_ttd_teknisi !== 'Sudah TTD' && (
+                  {/* Signature Buttons - Only show when status is Selesai */}
+                  {item.status === 'Selesai' && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
                     <button
-                      onClick={() => handleOpenSignatureModal(item.id_pemeliharaan, 'teknisi')}
+                      onClick={() => handleOpenSignatureModal(item, 'teknisi')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"
                     >
                       {item.status_ttd_teknisi}
                     </button>
                   )}
-                  {item.status === 'Selesai' && item.status_ttd_karu !== 'Sudah TTD' && (
+                  {item.status === 'Selesai' && item.status_ttd_karu && item.status_ttd_karu !== 'Sudah TTD' && (
                     <button
-                      onClick={() => handleOpenSignatureModal(item.id_pemeliharaan, 'karu')}
+                      onClick={() => handleOpenSignatureModal(item, 'karu')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"
                     >
                       {item.status_ttd_karu}
@@ -296,6 +296,11 @@ export default function MobilePemeliharaan() {
         onSubmit={handleSignatureSubmit}
         title={signatureType === 'teknisi' ? 'Tanda Tangan Teknisi' : 'Tanda Tangan Kepala Ruang'}
         isLoading={updateSignature.isPending}
+        existingName={
+          signatureType === 'karu'
+            ? pemeliharaanList.find(item => item.id_pemeliharaan === selectedPemeliharaanId)?.nama_kepala_ruangan || ''
+            : ''
+        }
       />
 
       {/* Toast Notification */}

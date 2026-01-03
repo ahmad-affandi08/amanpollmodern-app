@@ -19,9 +19,7 @@ export default function MobileAduanListTeknisi() {
   const [previewAlt, setPreviewAlt] = useState('');
 
   // Use dashboard hook for stats
-  const { data: dashboardData } = useMobileDashboard({
-    enabled: !!user,
-  });
+  const { data: dashboardData } = useMobileDashboard({});
   const stats = dashboardData?.stats || {};
 
   const {

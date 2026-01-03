@@ -1,8 +1,21 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function DonutChart({ title, data, colors }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white px-3 py-2 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-xs font-semibold text-gray-800">{payload[0].name}</p>
+          <p className="text-sm font-bold text-brand-primary">{payload[0].value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="bg-gradient-to-br from-white via-white to-gray-50/30 rounded-[20px] p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50">
@@ -22,6 +35,7 @@ export default function DonutChart({ title, data, colors }) {
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="none" />
               ))}
             </Pie>
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">

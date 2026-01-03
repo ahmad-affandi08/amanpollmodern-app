@@ -1,18 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import SignaturePad from '../../../../components/SignaturePad';
 
-export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoading }) {
+export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoading, existingName = '' }) {
   const signatureRef = useRef(null);
   const [nama, setNama] = useState('');
   const [error, setError] = useState('');
+
+  // Set existing name when modal opens
+  useEffect(() => {
+    if (isOpen && existingName) {
+      setNama(existingName);
+    }
+  }, [isOpen, existingName]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate name
-    if (!nama.trim()) {
+    // Validate name (only if not already provided)
+    if (!existingName && !nama.trim()) {
       setError('Nama harus diisi');
       return;
     }
@@ -26,13 +33,15 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoa
     // Get signature as base64
     const ttd = signatureRef.current.toDataURL();
 
-    // Submit
-    onSubmit({ nama: nama.trim(), ttd });
+    // Submit (use existing name if provided, otherwise use input)
+    onSubmit({ nama: existingName || nama.trim(), ttd });
   };
 
   const handleClose = () => {
     if (!isLoading) {
-      setNama('');
+      if (!existingName) {
+        setNama('');
+      }
       setError('');
       signatureRef.current?.clear();
       onClose();
@@ -65,20 +74,35 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoa
             </div>
           )}
 
-          {/* Name Input */}
-          <div>
-            <label className="block text-sm font-bold text-gray-800 mb-2">
-              Nama <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
-              placeholder="Masukkan nama Anda"
-              className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-              disabled={isLoading}
-            />
-          </div>
+          {/* Name Input - Only show if no existing name */}
+          {!existingName && (
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-2">
+                Nama <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={nama}
+                onChange={(e) => setNama(e.target.value)}
+                placeholder="Masukkan nama Anda"
+                className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
+          {/* Show existing name if provided */}
+          {existingName && (
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-2">
+                Nama
+              </label>
+              <div className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-700">
+                {existingName}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Nama sudah terisi sebelumnya</p>
+            </div>
+          )}
 
           {/* Signature Pad */}
           <div>

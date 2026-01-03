@@ -183,6 +183,12 @@ export default function MobilePemeliharaanHistory() {
                   <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
                     {item.nama_alat_nama}
                   </h3>
+                  <p className="text-xs text-gray-500 mb-1">
+                    {item.no_inventaris}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-1">
+                    {item.ruangan_nama}
+                  </p>
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <Calendar size={12} />
                     <span>{formatDateTime(item.jadwal_pemeliharaan)}</span>
