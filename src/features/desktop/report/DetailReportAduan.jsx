@@ -74,14 +74,7 @@ export default function DetailReportAduan() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] animate-fade-in">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium">Memuat detail laporan...</p>
-        </div>
-      </div>
-    );
+    return <DetailReportSkeleton />;
   }
 
   if (!data) {
@@ -492,3 +485,197 @@ const SignatureCard = ({ label, name, image, onPreview }) => (
     {name && <p className="text-xs text-gray-600 mt-1 text-center font-medium">{name}</p>}
   </div>
 );
+
+// Modern Skeleton Loading Component
+const DetailReportSkeleton = () => {
+  return (
+    <div className="space-y-6 animate-fade-in pb-10">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+          <div>
+            <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
+            <div className="flex items-center gap-3">
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-40 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        <div className="h-12 w-40 bg-gray-200 rounded-2xl animate-pulse"></div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column Skeleton */}
+        <div className="space-y-6">
+          {/* Device & Complaint Card Skeleton */}
+          <div className="bg-white rounded-[24px] p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Image Skeleton */}
+              <div className="md:col-span-2">
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="relative w-full h-64 bg-gray-200 rounded-2xl overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* Nama Alat Skeleton */}
+              <div>
+                <div className="h-4 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* No Inventaris Skeleton */}
+              <div>
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* Keluhan Skeleton */}
+              <div className="md:col-span-2">
+                <div className="h-4 w-32 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-24 bg-gray-200 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reporter & Location Skeleton */}
+          <div className="bg-white rounded-[24px] p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-5 w-32 bg-gray-300 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Technician Skeleton */}
+          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <div className="w-14 h-14 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-5 w-40 bg-gray-300 rounded mb-2 animate-pulse"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column Skeleton */}
+        <div className="space-y-6">
+          {/* Biaya Skeleton */}
+          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="h-10 w-48 bg-gray-300 rounded-lg animate-pulse"></div>
+          </div>
+
+          {/* Inspection Card Skeleton 1 */}
+          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Tindakan */}
+              <div>
+                <div className="h-3 w-28 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* Rekomendasi */}
+              <div>
+                <div className="h-3 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* Grid Items */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="h-3 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                </div>
+                <div>
+                  <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+
+              {/* Signatures */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                {[1, 2].map((i) => (
+                  <div key={i}>
+                    <div className="h-3 w-16 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                    <div className="h-28 bg-gray-100 rounded-xl relative overflow-hidden">
+                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Inspection Card Skeleton 2 */}
+          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="h-3 w-28 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add shimmer keyframe to global styles if not already present */}
+      <style>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+

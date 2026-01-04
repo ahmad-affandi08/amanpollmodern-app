@@ -284,9 +284,10 @@ const SignatureCard = ({ label, status, image }) => {
           </div>
           {image && (
             <img
-              src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/signatures/${image}`}
+              src={image}
               alt={`TTD ${label}`}
               className="w-full h-16 object-contain bg-white rounded border border-green-200"
+              onError={(e) => { e.target.src = noImage; }}
             />
           )}
         </>

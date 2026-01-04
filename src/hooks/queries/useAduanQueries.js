@@ -143,8 +143,13 @@ export const useUpdateInspection = () => {
 
   return useMutation({
     mutationFn: ({ id, data }) => AduanApi.updateInspection(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalidate all aduan-related queries
       queryClient.invalidateQueries({ queryKey: ['aduan'] });
+      // Specifically invalidate the detail query for this aduan
+      queryClient.invalidateQueries({ queryKey: queryKeys.aduan.detail(variables.id) });
+      // Invalidate assignments (for teknisi list)
+      queryClient.invalidateQueries({ queryKey: ['aduan', 'assignments'] });
     },
   });
 };
