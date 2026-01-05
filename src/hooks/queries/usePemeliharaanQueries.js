@@ -17,10 +17,10 @@ export const usePemeliharaan = (filters = {}) => {
 };
 
 // Get pemeliharaan assignments for teknisi (infinite scroll)
-export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', month = null, year = null) => {
+export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null) => {
   return useInfiniteQuery({
-    queryKey: ['pemeliharaan', 'assignments', { search, status, month, year }],
-    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, month, year),
+    queryKey: ['pemeliharaan', 'assignments', { search, status, kondisi, month, year }],
+    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, kondisi, month, year),
     getNextPageParam: (lastPage) => {
       // Laravel pagination returns meta with current_page and last_page
       const currentPage = lastPage.meta?.current_page || lastPage.current_page;

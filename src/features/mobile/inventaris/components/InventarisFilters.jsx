@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RotateCcw, Download } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../../api/axiosClient';
+import SearchableSelect from '../../../../components/SearchableSelect';
 
 export default function InventarisFilters({ filters, onFilterChange, onExport }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -68,39 +69,34 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
 
       {/* Kondisi Alat */}
       <div className="space-y-1">
-        <label className="block text-xs font-semibold text-text-dark">
-          Kondisi Alat
-        </label>
-        <select
+        <SearchableSelect
+          label="Kondisi Alat"
+          name="kondisi_alat"
+          options={kondisiOptions}
           value={filters.kondisi_alat || ''}
           onChange={(e) => handleChange('kondisi_alat', e.target.value)}
-          className="w-full px-3 py-2 text-sm bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg text-brand-primary focus:outline-none focus:ring-2 focus:ring-purple-300 font-medium"
-        >
-          {kondisiOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          placeholder="Semua Kondisi"
+          searchPlaceholder="Cari kondisi..."
+          displayKey="label"
+          valueKey="value"
+          className="w-full"
+        />
       </div>
 
       {/* Nama Alat */}
       <div className="space-y-1">
-        <label className="block text-xs font-semibold text-text-dark">
-          Nama Alat
-        </label>
-        <select
+        <SearchableSelect
+          label="Nama Alat"
+          name="nama_alat"
+          options={namaAlatList}
           value={filters.nama_alat || ''}
           onChange={(e) => handleChange('nama_alat', e.target.value)}
-          className="w-full px-3 py-2 text-sm bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-lg text-accent-green focus:outline-none focus:ring-2 focus:ring-emerald-300 font-medium"
-        >
-          <option value="">Semua Alat</option>
-          {namaAlatList.map((alat, index) => (
-            <option key={alat.id_nama_alat || index} value={alat.nama_nama_alat}>
-              {alat.nama_nama_alat}
-            </option>
-          ))}
-        </select>
+          placeholder="Semua Alat"
+          searchPlaceholder="Cari nama alat..."
+          displayKey="nama_nama_alat"
+          valueKey="nama_nama_alat"
+          className="w-full"
+        />
       </div>
 
       {/* Reset Button */}

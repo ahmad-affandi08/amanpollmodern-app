@@ -129,6 +129,7 @@ export default function PemeliharaanList() {
     const statusConfig = {
       'Belum Selesai': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
       'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-800' },
+      'Tindakan Lanjutan': { bg: 'bg-purple-100', text: 'text-purple-800' },
       'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
     };
 
@@ -326,7 +327,15 @@ export default function PemeliharaanList() {
                     )}
                     {isVisible('kondisi_alat') && (
                       <td className="py-4 px-6 text-gray-600">
-                        {item.kondisi_alat || '-'}
+                        {item.kondisi_alat ? (
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${item.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-800' :
+                              item.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-800' :
+                                item.kondisi_alat === 'Rusak Berat' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                            }`}>
+                            {item.kondisi_alat}
+                          </span>
+                        ) : '-'}
                       </td>
                     )}
                     {isVisible('actions') && (

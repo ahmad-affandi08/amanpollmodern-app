@@ -100,6 +100,7 @@ export default function InventarisList() {
     per_page: pagination.perPage,
   });
 
+
   const { data: kategoriData } = useMasterKategori({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
@@ -122,6 +123,7 @@ export default function InventarisList() {
   const categories = kategoriData?.data || [];
   const divisions = divisiData?.data || [];
   const rooms = ruanganData?.data || [];
+
 
   // Handlers
   const handleDelete = (id) => {
@@ -291,7 +293,7 @@ export default function InventarisList() {
               onChange={(e) => handleFilterChange('kategori_alat_id', e.target.value)}
               options={[
                 { label: 'Semua Kategori', value: '' },
-                ...categories.map(c => ({ label: c.nama_kategori, value: c.id_kategori_alat }))
+                ...categories.map(c => ({ label: c.nama_kategori, value: c.id }))
               ]}
               placeholder="Semua Kategori"
               searchPlaceholder="Cari kategori..."
@@ -509,8 +511,21 @@ export default function InventarisList() {
                     {/* Kategori Alat */}
                     {isVisible('kategori_alat') && (
                       <td className="py-4 px-6 text-sm text-gray-600">
-                        {item.alat_kesehatan === 1
-                          ? `Alat Kesehatan - ${item.kategori_alkes || ''}`
+                        {(item.alat_kesehatan === 1 || item.alat_kesehatan === true)
+                          ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="font-semibold text-gray-600">Alat Kesehatan</span>
+                              {item.kategori_alkes ? (
+                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium inline-block w-fit">
+                                  {item.kategori_alkes}
+                                </span>
+                              ) : (
+                                <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 font-medium inline-block w-fit">
+                                  Kategori belum diisi
+                                </span>
+                              )}
+                            </div>
+                          )
                           : item.nama_alat?.kategori_alat?.nama_kategori || '-'
                         }
                       </td>

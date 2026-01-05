@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, ClipboardList, MapPin, Package, User, Wrench, DollarSign, FileText, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, ClipboardList, MapPin, Package, User, Wrench, DollarSign, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { usePemeliharaanDetail } from '../../../hooks/queries/usePemeliharaanQueries';
 import { formatDate } from '../../../utils/format';
@@ -28,6 +28,7 @@ export default function MobilePemeliharaanDetail() {
   const StatusBadge = ({ status }) => {
     const statusConfig = {
       'Selesai': { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
+      'Tindakan Lanjutan': { bg: 'bg-purple-100', text: 'text-purple-700', icon: AlertCircle },
       'Belum Selesai': { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock }
     };
     const config = statusConfig[status] || statusConfig['Belum Selesai'];
@@ -164,7 +165,7 @@ export default function MobilePemeliharaanDetail() {
       </div>
 
       {/* Informasi Pemeliharaan Section */}
-      {pemeliharaan.status === 'Selesai' && (
+      {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <ClipboardList size={18} className="text-green-500" />
@@ -196,12 +197,21 @@ export default function MobilePemeliharaanDetail() {
                 <p className="text-sm text-gray-800 pl-5">{pemeliharaan.rekomendasi}</p>
               </div>
             )}
+            {pemeliharaan.status === 'Tindakan Lanjutan' && pemeliharaan.disposisi_nama && (
+              <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
+                <div className="flex items-start gap-2 mb-1">
+                  <User size={14} className="text-purple-500 mt-0.5" />
+                  <p className="text-xs font-medium text-purple-700">Disposisi Ke</p>
+                </div>
+                <p className="text-sm text-gray-800 pl-5">{pemeliharaan.disposisi_nama}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Signature Status Section */}
-      {pemeliharaan.status === 'Selesai' && (
+      {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle size={18} className="text-blue-500" />
@@ -225,7 +235,7 @@ export default function MobilePemeliharaanDetail() {
       {/* Action Buttons */}
       <div className="space-y-3">
         {/* Form Pemeliharaan Button - Only for incomplete tasks */}
-        {pemeliharaan.status !== 'Selesai' && (
+        {pemeliharaan.status === 'Belum Selesai' && (
           <button
             onClick={() => navigate(`/mobile/pemeliharaan/${id}/form`)}
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3.5 rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg"
@@ -236,7 +246,7 @@ export default function MobilePemeliharaanDetail() {
         )}
 
         {/* Hasil Pemeliharaan Button - Only for completed tasks */}
-        {pemeliharaan.status === 'Selesai' && (
+        {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
           <a
             href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/pemeliharaan/${id}/export-hasil`}
             target="_blank"

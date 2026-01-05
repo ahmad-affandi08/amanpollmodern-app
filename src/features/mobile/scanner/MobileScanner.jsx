@@ -78,10 +78,9 @@ export default function MobileScanner() {
         // Handle response structure (wrapped in data or direct)
         const item = itemRes.data || itemRes;
 
-        // Validation for User Ruangan (Role ID 2 based on logs, or 3)
-        // Adjusting to check for Role 2 or 3 to be safe, or just 2 if we are sure.
-        // Based on log: "User role is not 3 ... 2", so the user is role 2.
-        if (user?.kategori_user_id == 2 || user?.kategori_user_id == 3) {
+        // Validation for User Ruangan ONLY (Role ID 2)
+        // Teknisi (3), Pimpinan (1), Admin Divisi (4), Super Admin (5) can scan all equipment
+        if (user?.kategori_user_id == 2) {
           // Get item room ID (prefer direct ID, fallback to object id)
           const itemRuanganId = item.ruangan_id || item.ruangan?.id_ruangan;
           const userRuanganId = user.ruangan_id || user.ruangan?.id_ruangan;

@@ -13,6 +13,7 @@ export default function MobilePemeliharaan() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, belum_selesai, selesai
+  const [kondisiFilter, setKondisiFilter] = useState('all'); // all, Baik, Rusak Ringan, Rusak Berat
 
   // Get current month and year as default
   const currentDate = new Date();
@@ -37,6 +38,7 @@ export default function MobilePemeliharaan() {
     20,
     searchQuery,
     statusFilter,
+    kondisiFilter,
     periodFilter === 'bulan_ini' ? monthFilter : null,
     periodFilter === 'bulan_ini' ? yearFilter : null
   );
@@ -143,6 +145,7 @@ export default function MobilePemeliharaan() {
               <option value="all">Semua Status</option>
               <option value="Belum Selesai">Belum Selesai</option>
               <option value="Selesai">Selesai</option>
+              <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,21 +154,41 @@ export default function MobilePemeliharaan() {
             </div>
           </div>
 
-          {/* Period Filter Dropdown */}
+          {/* Kondisi Filter Dropdown */}
           <div className="relative">
             <select
-              value={periodFilter}
-              onChange={(e) => handlePeriodFilterChange(e.target.value)}
+              value={kondisiFilter}
+              onChange={(e) => setKondisiFilter(e.target.value)}
               className="w-full px-3 py-3 pr-8 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer transition-all"
             >
-              <option value="bulan_ini">Bulan Ini</option>
-              <option value="semua">Semua Data</option>
+              <option value="all">Semua Kondisi</option>
+              <option value="Baik">Baik</option>
+              <option value="Rusak Ringan">Rusak Ringan</option>
+              <option value="Rusak Berat">Rusak Berat</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
+          </div>
+
+        </div>
+
+        {/* Period Filter Dropdown - Full Width */}
+        <div className="relative">
+          <select
+            value={periodFilter}
+            onChange={(e) => handlePeriodFilterChange(e.target.value)}
+            className="w-full px-3 py-3 pr-8 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer transition-all"
+          >
+            <option value="bulan_ini">Bulan Ini</option>
+            <option value="semua">Semua Data</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
         </div>
       </div>
@@ -221,9 +244,21 @@ export default function MobilePemeliharaan() {
                   <p className="text-xs text-gray-500 mb-1">
                     {item.no_inventaris}
                   </p>
-                  <div className="flex items-center gap-1 text-xs text-gray-600">
+                  <p className="text-xs text-gray-500 mb-1">
+                    {item.ruangan_nama}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
                     <Calendar size={12} />
                     <span>{formatDateTime(item.jadwal_pemeliharaan)}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className={`px-1.5 py-0.5 rounded ${item.kondisi_alat === 'Baik' ? 'bg-success-50 text-success-700 border border-success-200' :
+                      item.kondisi_alat === 'Rusak Ringan' ? 'bg-warning-50 text-warning-700 border border-warning-200' :
+                        item.kondisi_alat === 'Rusak Berat' ? 'bg-danger-50 text-danger-700 border border-danger-200' :
+                          'bg-gray-100 text-gray-600'
+                      }`}>
+                      {item.kondisi_alat || 'Belum Dicek'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -232,15 +267,15 @@ export default function MobilePemeliharaan() {
               <div className="flex justify-between items-center gap-2">
                 <div className="flex flex-wrap gap-1">
                   {/* Status Badge */}
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${item.status === 'Belum Selesai'
-                    ? 'bg-warning-100 text-warning-700'
-                    : 'bg-success-100 text-success-700'
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${item.status === 'Belum Selesai' ? 'bg-warning-100 text-warning-700' :
+                    item.status === 'Tindakan Lanjutan' ? 'bg-purple-100 text-purple-700' :
+                      'bg-success-100 text-success-700'
                     }`}>
                     {item.status}
                   </span>
 
-                  {/* Signature Buttons - Only show when status is Selesai */}
-                  {item.status === 'Selesai' && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
+                  {/* Signature Buttons - Show when status is Selesai or Tindakan Lanjutan */}
+                  {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
                     <button
                       onClick={() => handleOpenSignatureModal(item, 'teknisi')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"
@@ -248,7 +283,7 @@ export default function MobilePemeliharaan() {
                       {item.status_ttd_teknisi}
                     </button>
                   )}
-                  {item.status === 'Selesai' && item.status_ttd_karu && item.status_ttd_karu !== 'Sudah TTD' && (
+                  {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_karu && item.status_ttd_karu !== 'Sudah TTD' && (
                     <button
                       onClick={() => handleOpenSignatureModal(item, 'karu')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"

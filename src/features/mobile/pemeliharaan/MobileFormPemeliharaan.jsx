@@ -27,6 +27,8 @@ export default function MobileFormPemeliharaan() {
     keterangan_pemeliharaan: '',
     nama_kepala_ruangan: '',
     biaya: 0,
+    status: 'Selesai',
+    kondisi_alat: 'Baik',
   });
 
   const handleSafetyCheckChange = (checklistId, value) => {
@@ -199,6 +201,39 @@ export default function MobileFormPemeliharaan() {
             )}
           </div>
         ))}
+
+        {/* Status Pemeliharaan */}
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+          <label className="block text-sm font-bold text-gray-800 mb-2">Status Pemeliharaan</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white"
+          >
+            <option value="Selesai">Selesai</option>
+            <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Pilih "Tindakan Lanjutan" jika alat membutuhkan penanganan lebih lanjut.
+          </p>
+        </div>
+
+        {/* Kondisi Alat */}
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+          <label className="block text-sm font-bold text-gray-800 mb-2">Kondisi Alat</label>
+          <select
+            value={formData.kondisi_alat}
+            onChange={(e) => setFormData(prev => ({ ...prev, kondisi_alat: e.target.value }))}
+            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white"
+          >
+            <option value="Baik">Baik</option>
+            <option value="Rusak Ringan">Rusak Ringan</option>
+            <option value="Rusak Berat">Rusak Berat</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Jika "Rusak Berat", notifikasi akan dikirim ke pimpinan.
+          </p>
+        </div>
 
         {/* Rekomendasi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
