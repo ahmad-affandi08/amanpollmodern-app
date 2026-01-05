@@ -8,8 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'https://amanpoll.com',
-        target: 'http://localhost:8000',
+        target: 'https://amanpoll.com',
+        // target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       }

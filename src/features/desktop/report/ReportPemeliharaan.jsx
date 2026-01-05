@@ -8,7 +8,6 @@ import {
   useMasterDivisi,
   useMasterUsers,
   useAuth,
-  useToast,
   usePagination,
   useFilters,
   useDebounce,
@@ -66,7 +65,7 @@ export default function ReportPemeliharaan() {
 
   useEffect(() => {
     if (meta) pagination.setMetadata(meta);
-  }, [meta]);
+  }, [meta, pagination]);
 
   // Options
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
@@ -82,13 +81,6 @@ export default function ReportPemeliharaan() {
     { value: 'Selesai', label: 'Selesai' },
     { value: 'Belum Selesai', label: 'Belum Selesai' },
     { value: 'Tindakan Lanjutan', label: 'Tindakan Lanjutan' }
-  ];
-
-  const kondisiOptions = [
-    { value: 'Baik', label: 'Baik' },
-    { value: 'Rusak Ringan', label: 'Rusak Ringan' },
-    { value: 'Rusak Berat', label: 'Rusak Berat' },
-    { value: 'Dalam Perbaikan', label: 'Dalam Perbaikan' }
   ];
 
   const canDelete = (item) => {
@@ -113,7 +105,7 @@ export default function ReportPemeliharaan() {
           await deleteMutation.mutateAsync(item.id_pemeliharaan);
           setToast({ type: 'success', message: 'Laporan berhasil dihapus' });
           setConfirmDialog({ isOpen: false, id: null });
-        } catch (error) {
+        } catch {
           setToast({ type: 'error', message: 'Gagal menghapus laporan' });
         }
       },
