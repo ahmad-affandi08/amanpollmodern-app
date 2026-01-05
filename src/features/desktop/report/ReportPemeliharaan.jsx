@@ -80,7 +80,8 @@ export default function ReportPemeliharaan() {
 
   const statusOptions = [
     { value: 'Selesai', label: 'Selesai' },
-    { value: 'Belum Selesai', label: 'Belum Selesai' }
+    { value: 'Belum Selesai', label: 'Belum Selesai' },
+    { value: 'Tindakan Lanjutan', label: 'Tindakan Lanjutan' }
   ];
 
   const kondisiOptions = [
@@ -129,6 +130,7 @@ export default function ReportPemeliharaan() {
     const config = {
       'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
       'Belum Selesai': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+      'Tindakan Lanjutan': { bg: 'bg-orange-100', text: 'text-orange-800' },
     };
     const c = config[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${c.bg} ${c.text}`}>{status}</span>;
