@@ -179,14 +179,22 @@ export default function MasterUser() {
     modal.open(item);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Yakin ingin menghapus user ini?')) return;
-    try {
-      await deleteMutation.mutateAsync(id);
-      showToast('User dihapus', 'success');
-    } catch (error) {
-      showToast('Gagal menghapus', 'error');
-    }
+  const handleDelete = (item) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Hapus User',
+      message: `Apakah Anda yakin ingin menghapus user "${item.nama_lengkap}"? Tindakan ini tidak dapat dibatalkan.`,
+      onConfirm: async () => {
+        setConfirmDialog({ isOpen: false });
+        try {
+          await deleteMutation.mutateAsync(item.id_user);
+          showToast('User berhasil dihapus', 'success');
+        } catch (error) {
+          showToast('Gagal menghapus user', 'error');
+        }
+      },
+      onCancel: () => setConfirmDialog({ isOpen: false })
+    });
   };
 
   return (
@@ -199,7 +207,7 @@ export default function MasterUser() {
         </div>
         <Button
           onClick={openAddModal}
-          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20 bg-gray-900 hover:bg-black/90 text-white"
+          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
         >
           <Plus size={18} />
           <span>Tambah User</span>
@@ -405,6 +413,7 @@ export default function MasterUser() {
         message={confirmDialog.message}
         onConfirm={confirmDialog.onConfirm}
         onCancel={confirmDialog.onCancel}
+        type="danger"
       />
     </div>
   );

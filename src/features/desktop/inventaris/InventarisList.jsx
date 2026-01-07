@@ -733,6 +733,7 @@ export default function InventarisList() {
           message={confirmDialog.message}
           onConfirm={confirmDialog.onConfirm}
           onCancel={() => setConfirmDialog({ isOpen: false })}
+          type="danger"
         />
       )}
 

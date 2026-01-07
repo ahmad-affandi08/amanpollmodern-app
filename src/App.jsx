@@ -166,15 +166,15 @@ const router = createBrowserRouter(
     },
     {
       path: '/anggaran/pemeliharaan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><AnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><AnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
     },
     {
       path: '/anggaran/pemeliharaan/:id',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><DetailAnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailAnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
     },
     {
       path: '/anggaran/biaya-perbaikan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><BiayaPerbaikan /></DashboardLayout></ProtectedRoute>
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><BiayaPerbaikan /></DashboardLayout></ProtectedRoute>
     },
     // Notifications
     {

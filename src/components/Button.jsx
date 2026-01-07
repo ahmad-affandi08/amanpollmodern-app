@@ -11,9 +11,9 @@ export default function Button({
   const baseClasses = "flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer";
 
   const variants = {
-    primary: "bg-[#6C5DD3] text-white hover:bg-[#5b4eb5] shadow-lg shadow-[#6C5DD3]/30",
+    primary: "bg-brand-primary text-white hover:bg-brand-primary/90 shadow-lg shadow-brand-primary/30",
     secondary: "bg-[#FF754C] text-white hover:bg-[#e86a45] shadow-lg shadow-[#FF754C]/30",
-    outline: "bg-transparent border-2 border-[#6C5DD3] text-[#6C5DD3] hover:bg-[#6C5DD3]/10",
+    outline: "bg-transparent border-2 border-brand-primary text-brand-primary hover:bg-brand-primary/10",
     ghost: "bg-transparent text-[#808191] hover:text-[#11142D] hover:bg-gray-100",
     danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/30",
   };

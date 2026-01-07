@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }) {
     {
       icon: Wallet,
       label: 'Anggaran & Biaya',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI],
+      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN],
       children: [
         { icon: Settings, label: 'Pengaturan Anggaran', path: '/anggaran/pengaturan', roles: [ROLE_SUPER_ADMIN] },
         { icon: Wallet, label: 'Anggaran Pemeliharaan', path: '/anggaran/pemeliharaan' },

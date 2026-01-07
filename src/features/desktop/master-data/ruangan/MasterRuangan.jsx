@@ -16,6 +16,7 @@ import Modal from '../../../../components/Modal';
 import Input from '../../../../components/Input';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
+import ConfirmDialog from '../../../../components/Alert/Alert';
 
 export default function MasterRuangan() {
   usePageTitle('Master Ruangan');
@@ -28,6 +29,14 @@ export default function MasterRuangan() {
   const [formData, setFormData] = useState({
     nama_ruangan: '',
     kode_ruangan: ''
+  });
+
+  // Confirm Dialog State
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
   });
 
   // Queries
@@ -84,14 +93,22 @@ export default function MasterRuangan() {
     modal.open(item);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Yakin ingin menghapus ruangan ini?')) return;
-    try {
-      await deleteMutation.mutateAsync(id);
-      showToast('Ruangan dihapus', 'success');
-    } catch (error) {
-      showToast('Gagal menghapus', 'error');
-    }
+  const handleDelete = (item) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Hapus Ruangan',
+      message: `Apakah Anda yakin ingin menghapus ruangan "${item.nama_ruangan}"? Tindakan ini tidak dapat dibatalkan.`,
+      onConfirm: async () => {
+        setConfirmDialog({ isOpen: false });
+        try {
+          await deleteMutation.mutateAsync(item.id_ruangan);
+          showToast('Ruangan berhasil dihapus', 'success');
+        } catch (error) {
+          showToast('Gagal menghapus ruangan', 'error');
+        }
+      },
+      onCancel: () => setConfirmDialog({ isOpen: false })
+    });
   };
 
   return (
@@ -104,7 +121,7 @@ export default function MasterRuangan() {
         </div>
         <Button
           onClick={openAddModal}
-          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20 bg-gray-900 hover:bg-black/90 text-white"
+          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
         >
           <Plus size={18} />
           <span>Tambah Ruangan</span>
@@ -170,7 +187,7 @@ export default function MasterRuangan() {
                           <Edit2 size={20} />
                         </button>
                         <button
-                          onClick={() => handleDelete(item.id_ruangan)}
+                          onClick={() => handleDelete(item)}
                           className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
                           disabled={deleteMutation.isPending}
                         >
@@ -225,6 +242,16 @@ export default function MasterRuangan() {
           </div>
         </form>
       </Modal>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={confirmDialog.onCancel}
+        type="danger"
+      />
     </div>
   );
 }

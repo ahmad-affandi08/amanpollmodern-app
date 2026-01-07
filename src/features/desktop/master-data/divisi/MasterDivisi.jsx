@@ -16,6 +16,7 @@ import Modal from '../../../../components/Modal';
 import Input from '../../../../components/Input';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
+import ConfirmDialog from '../../../../components/Alert/Alert';
 
 export default function MasterDivisi() {
   usePageTitle('Master Divisi');
@@ -25,6 +26,14 @@ export default function MasterDivisi() {
   const pagination = usePagination(10);
   const modal = useModal();
   const [formData, setFormData] = useState({ nama_divisi: '' });
+
+  // Confirm Dialog State
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   // Queries
   const { data: divisiData, isLoading } = useMasterDivisi({
@@ -74,14 +83,22 @@ export default function MasterDivisi() {
     modal.open(item);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Yakin ingin menghapus divisi ini?')) return;
-    try {
-      await deleteMutation.mutateAsync(id);
-      showToast('Divisi dihapus', 'success');
-    } catch (error) {
-      showToast('Gagal menghapus', 'error');
-    }
+  const handleDelete = (item) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Hapus Divisi',
+      message: `Apakah Anda yakin ingin menghapus divisi "${item.nama_divisi}"? Tindakan ini tidak dapat dibatalkan.`,
+      onConfirm: async () => {
+        setConfirmDialog({ isOpen: false });
+        try {
+          await deleteMutation.mutateAsync(item.id_divisi);
+          showToast('Divisi berhasil dihapus', 'success');
+        } catch (error) {
+          showToast('Gagal menghapus divisi', 'error');
+        }
+      },
+      onCancel: () => setConfirmDialog({ isOpen: false })
+    });
   };
 
   return (
@@ -91,7 +108,7 @@ export default function MasterDivisi() {
           <h1 className="text-2xl font-bold text-text-dark">Master Divisi</h1>
           <p className="text-text-gray text-sm mt-1">Kelola data divisi/unit kerja di RSUD.</p>
         </div>
-        <Button onClick={openAddModal} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20 bg-gray-900 hover:bg-black/90 text-white">
+        <Button onClick={openAddModal} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20">
           <Plus size={18} />
           <span>Tambah Divisi</span>
         </Button>
@@ -140,7 +157,7 @@ export default function MasterDivisi() {
                         <button onClick={() => openEditModal(item)} className="p-3 bg-brand-primary text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all">
                           <Edit2 size={20} />
                         </button>
-                        <button onClick={() => handleDelete(item.id_divisi)} className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
+                        <button onClick={() => handleDelete(item)} className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
                           <Trash2 size={20} />
                         </button>
                       </div>
@@ -170,6 +187,16 @@ export default function MasterDivisi() {
           </div>
         </form>
       </Modal>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={confirmDialog.onCancel}
+        type="danger"
+      />
     </div>
   );
 }

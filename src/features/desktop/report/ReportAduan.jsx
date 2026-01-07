@@ -442,7 +442,7 @@ export default function ReportAduan() {
             message={confirmDialog.message}
             onConfirm={confirmDialog.onConfirm}
             onCancel={confirmDialog.onCancel}
-            type="warning"
+            type="danger"
           />
         )
       }
