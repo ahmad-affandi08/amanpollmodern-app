@@ -99,10 +99,14 @@ export default function DetailReportPemeliharaan() {
           <div>
             <h1 className="text-2xl font-bold text-text-dark">Detail Laporan Pemeliharaan</h1>
             <div className="flex items-center gap-3 mt-1">
-              <span className="text-sm text-gray-500">ID:</span>
-              <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200">
-                RM-{String(data.id_pemeliharaan).padStart(5, '0')}
-              </span>
+              {data.no_pemeliharaan && (
+                <>
+                  <span className="text-sm text-gray-500">No. Pemeliharaan:</span>
+                  <span className="px-3 py-1 bg-purple-50 text-brand-primary text-xs font-bold rounded-lg border border-purple-200">
+                    {data.no_pemeliharaan}
+                  </span>
+                </>
+              )}
               <StatusBadge status={data.status} />
             </div>
           </div>

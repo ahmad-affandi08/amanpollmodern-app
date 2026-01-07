@@ -77,6 +77,7 @@ export const useDeletePemeliharaan = () => {
     mutationFn: (id) => PemeliharaanApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pemeliharaan.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
     },
   });
 };

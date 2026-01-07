@@ -21,10 +21,12 @@ import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import AddPemeliharaanModal from './AddPemeliharaanModal';
 import EditPemeliharaanModal from './EditPemeliharaanModal';
+import { useToast } from '../../../components/Alert/useToast';
 
 // Column Definitions
 const COLUMN_DEFS = [
-  { key: 'no_pemeliharaan', label: 'No.', defaultVisible: true },
+  { key: 'index', label: 'No.', defaultVisible: true },
+  { key: 'no_pemeliharaan', label: 'No. Pemeliharaan', defaultVisible: true },
   { key: 'tanggal_jadwal', label: 'Tanggal Jadwal', defaultVisible: true },
   { key: 'ruangan', label: 'Ruangan', defaultVisible: true },
   { key: 'divisi', label: 'Divisi', defaultVisible: false },
@@ -40,6 +42,7 @@ const COLUMN_DEFS = [
 export default function PemeliharaanList() {
   usePageTitle('Daftar Pemeliharaan');
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
@@ -64,7 +67,6 @@ export default function PemeliharaanList() {
   const addModal = useModal();
   const editModal = useModal();
 
-  const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
   const { data: pemeliharaanData, isLoading, refetch } = usePemeliharaan({
@@ -110,10 +112,10 @@ export default function PemeliharaanList() {
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(id);
-          setToast({ type: 'success', message: 'Pemeliharaan berhasil dihapus' });
+          showToast('Pemeliharaan berhasil dihapus', 'success');
           setConfirmDialog({ isOpen: false });
         } catch (error) {
-          setToast({ type: 'error', message: 'Gagal menghapus pemeliharaan' });
+          showToast('Gagal menghapus pemeliharaan', 'error');
         }
       },
       onCancel: () => setConfirmDialog({ isOpen: false })
@@ -245,7 +247,8 @@ export default function PemeliharaanList() {
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
-                {isVisible('no_pemeliharaan') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>}
+                {isVisible('index') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>}
+                {isVisible('no_pemeliharaan') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Pemeliharaan</th>}
                 {isVisible('divisi') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Divisi</th>}
                 {isVisible('ruangan') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Ruangan</th>}
                 {isVisible('gedung') && <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Gedung</th>}
@@ -260,10 +263,10 @@ export default function PemeliharaanList() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
               {isLoading ? (
-                <TableSkeleton columns={10} rows={10} />
+                <TableSkeleton columns={11} rows={10} />
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-12 text-center">
+                  <td colSpan="11" className="py-12 text-center">
                     <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="font-bold text-gray-600">Tidak ada data pemeliharaan</p>
                     <p className="text-sm text-gray-400 mt-1">Belum ada jadwal pemeliharaan</p>
@@ -272,9 +275,16 @@ export default function PemeliharaanList() {
               ) : (
                 data.map((item, index) => (
                   <tr key={item.id_pemeliharaan} className="hover:bg-gray-50/50 transition-colors">
-                    {isVisible('no_pemeliharaan') && (
+                    {isVisible('index') && (
                       <td className="py-4 px-6 font-bold text-text-dark">
                         {(pagination.currentPage - 1) * pagination.perPage + index + 1}
+                      </td>
+                    )}
+                    {isVisible('no_pemeliharaan') && (
+                      <td className="py-4 px-6">
+                        <span className="px-2 py-1 rounded-md bg-purple-50 text-brand-primary text-xs font-bold">
+                          {item.no_pemeliharaan || '-'}
+                        </span>
                       </td>
                     )}
                     {isVisible('divisi') && (
@@ -329,9 +339,9 @@ export default function PemeliharaanList() {
                       <td className="py-4 px-6 text-gray-600">
                         {item.kondisi_alat ? (
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${item.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-800' :
-                              item.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-800' :
-                                item.kondisi_alat === 'Rusak Berat' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
+                            item.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-800' :
+                              item.kondisi_alat === 'Rusak Berat' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
                             }`}>
                             {item.kondisi_alat}
                           </span>
@@ -391,14 +401,6 @@ export default function PemeliharaanList() {
         onSuccess={refetch}
       />
 
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       {confirmDialog.isOpen && (
         <ConfirmDialog
           isOpen={confirmDialog.isOpen}
@@ -406,6 +408,7 @@ export default function PemeliharaanList() {
           message={confirmDialog.message}
           onConfirm={confirmDialog.onConfirm}
           onCancel={confirmDialog.onCancel}
+          type="danger"
         />
       )}
     </div>

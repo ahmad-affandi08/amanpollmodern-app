@@ -20,17 +20,18 @@ import Input from '../../../components/Input';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
+import { useToast } from '../../../components/Alert/useToast';
 
 export default function ReportPemeliharaan() {
   usePageTitle('Laporan Pemeliharaan');
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const userDivisiId = user?.divisi_id;
 
-  const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
 
   const pagination = usePagination(10);
@@ -91,7 +92,7 @@ export default function ReportPemeliharaan() {
 
   const handleDelete = (item) => {
     if (!canDelete(item)) {
-      setToast({ type: 'error', message: 'Anda tidak memiliki izin untuk menghapus data ini' });
+      showToast('Anda tidak memiliki izin untuk menghapus data ini', 'error');
       return;
     }
 
@@ -103,10 +104,10 @@ export default function ReportPemeliharaan() {
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(item.id_pemeliharaan);
-          setToast({ type: 'success', message: 'Laporan berhasil dihapus' });
+          showToast('Laporan berhasil dihapus', 'success');
           setConfirmDialog({ isOpen: false, id: null });
         } catch {
-          setToast({ type: 'error', message: 'Gagal menghapus laporan' });
+          showToast('Gagal menghapus laporan', 'error');
         }
       },
       onCancel: () => setConfirmDialog({ isOpen: false, id: null })
@@ -247,6 +248,7 @@ export default function ReportPemeliharaan() {
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
+                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Pemeliharaan</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Divisi</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
                 <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
@@ -262,10 +264,10 @@ export default function ReportPemeliharaan() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
               {isLoading ? (
-                <TableSkeleton columns={12} rows={10} />
+                <TableSkeleton columns={13} rows={10} />
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan="12" className="py-12 text-center">
+                  <td colSpan="13" className="py-12 text-center">
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="font-bold text-gray-600">Tidak ada data pemeliharaan</p>
                     <p className="text-sm text-gray-400 mt-1">Silakan sesuaikan filter pencarian</p>
@@ -276,6 +278,11 @@ export default function ReportPemeliharaan() {
                   <tr key={item.id_pemeliharaan} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-4 px-6 font-bold text-text-dark">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="px-2 py-1 text-xs font-bold rounded-md bg-purple-50 text-brand-primary">
+                        {item.no_pemeliharaan || '-'}
+                      </span>
                     </td>
                     <td className="py-4 px-6 text-gray-600">{item.divisi_nama || '-'}</td>
                     <td className="py-4 px-6 text-gray-600">{item.ruangan_nama || '-'}</td>
