@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, User } from 'lucide-react';
+import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
 import Select from '../../../components/Select';
 import Input from '../../../components/Input';
@@ -11,6 +11,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [teknisiOptions, setTeknisiOptions] = useState([]);
+  // Form Data State
 
   const [formData, setFormData] = useState({
     jadwal_pemeliharaan: '',
@@ -19,8 +20,15 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
 
   useEffect(() => {
     if (isOpen && pemeliharaan) {
+      // Helper to format date safely to YYYY-MM-DD
+      const formatDate = (dateString) => {
+        if (!dateString) return '';
+        // Handle both "YYYY-MM-DD" and "YYYY-MM-DD HH:mm:ss"
+        return dateString.split(' ')[0];
+      };
+
       setFormData({
-        jadwal_pemeliharaan: pemeliharaan.jadwal_pemeliharaan || '',
+        jadwal_pemeliharaan: formatDate(pemeliharaan.jadwal_pemeliharaan),
         teknisi_id: pemeliharaan.teknisi_id || ''
       });
       loadTeknisi();
@@ -56,44 +64,42 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
   if (!isOpen || !pemeliharaan) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl animate-scale-in">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <div>
-            <h3 className="text-xl font-bold text-text-dark">Edit Jadwal Pemeliharaan</h3>
-            <p className="text-gray-500 text-sm mt-1">{pemeliharaan.nama_alat_nama}</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Info Section */}
-          <div className="bg-[#F8F9FB] p-4 rounded-xl border border-gray-200">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">No. Inventaris:</span>
-                <p className="font-bold text-text-dark">{pemeliharaan.no_inventaris}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Ruangan:</span>
-                <p className="font-bold text-text-dark">{pemeliharaan.ruangan_nama}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Merk:</span>
-                <p className="font-bold text-text-dark">{pemeliharaan.merk}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Divisi:</span>
-                <p className="font-bold text-text-dark">{pemeliharaan.divisi_nama}</p>
-              </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Jadwal Pemeliharaan"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>Batal</Button>
+          <Button onClick={handleSubmit} loading={loading}>Simpan Perubahan</Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Info Section */}
+        <div className="bg-[#F8F9FB] p-4 rounded-xl border border-gray-200">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-500 block text-xs">No. Inventaris</span>
+              <p className="font-bold text-text-dark truncate">{pemeliharaan.no_inventaris}</p>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs">Ruangan</span>
+              <p className="font-bold text-text-dark truncate">{pemeliharaan.ruangan_nama}</p>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs">Alat</span>
+              <p className="font-bold text-text-dark truncate">{pemeliharaan.nama_alat_nama}</p>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs">Divisi</span>
+              <p className="font-bold text-text-dark truncate">{pemeliharaan.divisi_nama}</p>
             </div>
           </div>
+        </div>
 
-          {/* Editable Fields */}
+        {/* Editable Fields */}
+        <div className="space-y-3">
           <Input
             type="date"
             label="Jadwal Pemeliharaan"
@@ -109,14 +115,8 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
             options={teknisiOptions.map(t => ({ value: t.id_user, label: t.nama_lengkap }))}
             placeholder="-- Pilih Teknisi --"
           />
-        </form>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50 rounded-b-2xl">
-          <Button variant="secondary" onClick={onClose}>Batal</Button>
-          <Button onClick={handleSubmit} loading={loading}>Simpan Perubahan</Button>
         </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }
