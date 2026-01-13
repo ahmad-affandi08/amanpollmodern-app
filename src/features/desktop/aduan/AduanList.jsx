@@ -24,7 +24,6 @@ import Button from '../../../components/Button';
 import AddAduanModal from './AddAduanModal';
 import AssignTeknisiModal from './AssignTeknisiModal';
 import DetailAduanModal from './DetailAduanModal';
-import InspectionModal from './InspectionModal';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
@@ -78,7 +77,6 @@ export default function AduanList() {
   const addModal = useModal();
   const assignModal = useModal();
   const detailModal = useModal();
-  const inspectionModal = useModal();
   const imagePreviewModal = useModal();
 
   // Queries
@@ -460,14 +458,6 @@ export default function AduanList() {
         onClose={detailModal.close}
         aduan={detailModal.data}
         onUpdate={refetch}
-      />
-
-      <InspectionModal
-        key={inspectionModal.data?.id_aduan || 'inspection-modal'}
-        isOpen={inspectionModal.isOpen}
-        onClose={inspectionModal.close}
-        aduan={inspectionModal.data}
-        onSuccess={refetch}
       />
 
       <ImagePreviewModal
