@@ -1,6 +1,6 @@
 import React, { useRef, useState, useContext, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Edit2, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Edit2, X, ClipboardCheck } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { useAduanDetail, useUpdateInspection } from '../../../hooks/queries/useAduanQueries';
 import { useAuthContext } from '../../../context/AuthContext';
@@ -233,6 +233,84 @@ export default function MobileAduanFormTeknisi() {
           </div>
         )}
       </div>
+
+      {/* Previous Inspection History - Show if already inspected */}
+      {aduan.tindakan_teknisi && (
+        <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-4 mb-4 border border-orange-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <ClipboardCheck size={16} className="text-orange-600" />
+            </div>
+            <h3 className="text-xs font-bold text-orange-700 uppercase tracking-wide">Pemeriksaan Sebelumnya</h3>
+          </div>
+
+          <div className="space-y-3">
+            {/* Previous Technician Action */}
+            <div className="bg-white rounded-xl p-3 border border-orange-100">
+              <p className="text-xs text-gray-600 mb-1">Tindakan Teknisi</p>
+              <p className="text-sm text-gray-800">{aduan.tindakan_teknisi}</p>
+            </div>
+
+            {/* Previous Recommendation */}
+            {aduan.rekomendasi && (
+              <div className="bg-white rounded-xl p-3 border border-orange-100">
+                <p className="text-xs text-gray-600 mb-1">Rekomendasi</p>
+                <p className="text-sm text-gray-800">{aduan.rekomendasi}</p>
+              </div>
+            )}
+
+            {/* Previous Condition & Status */}
+            <div className="grid grid-cols-2 gap-2">
+              {aduan.kondisi_alat && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${aduan.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-700' :
+                    aduan.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                    {aduan.kondisi_alat}
+                  </span>
+                </div>
+              )}
+
+              {aduan.status_aduan && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Status</p>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${aduan.status_aduan === 'Selesai' ? 'bg-green-100 text-green-700' :
+                    aduan.status_aduan === 'Tindakan Lanjutan' ? 'bg-orange-100 text-orange-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                    {aduan.status_aduan}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Previous Inspection Date */}
+            {aduan.tanggal_pemeriksaan && (
+              <div className="bg-white rounded-xl p-3 border border-orange-100">
+                <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {new Date(aduan.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            )}
+
+            {/* Info Badge */}
+            <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
+              <p className="text-xs text-orange-800 font-medium">
+                ℹ️ Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-3">

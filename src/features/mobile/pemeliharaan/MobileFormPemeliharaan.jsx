@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import SignaturePad from '../../../components/SignaturePad';
 import { useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks/queries/usePemeliharaanQueries';
@@ -30,6 +30,21 @@ export default function MobileFormPemeliharaan() {
     status: 'Selesai',
     kondisi_alat: 'Baik',
   });
+
+  // Pre-fill form data when data is loaded
+  React.useEffect(() => {
+    if (data?.pemeliharaan) {
+      setFormData(prev => ({
+        ...prev,
+        // Only pre-fill simple fields, checklists should be fresh for new inspection
+        nama_kepala_ruangan: data.pemeliharaan.nama_kepala_ruangan || '',
+        biaya: data.pemeliharaan.biaya || 0,
+        // Optional: pre-fill other fields if desired, but usually new inspection needs new inputs
+        // rekomendasi: data.pemeliharaan.rekomendasi || '',
+        // keterangan_pemeliharaan: data.pemeliharaan.keterangan_pemeliharaan || '',
+      }));
+    }
+  }, [data]);
 
   const handleSafetyCheckChange = (checklistId, value) => {
     setFormData(prev => {
@@ -144,6 +159,103 @@ export default function MobileFormPemeliharaan() {
           <p className="text-sm text-gray-500">Isi checklist pemeliharaan</p>
         </div>
       </div>
+
+      {/* Previous Inspection History - Show if already inspected */}
+      {data?.pemeliharaan?.keterangan_pemeliharaan && (
+        <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-4 mb-4 border border-orange-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <ClipboardCheck size={16} className="text-orange-600" />
+            </div>
+            <h3 className="text-xs font-bold text-orange-700 uppercase tracking-wide">Pemeriksaan Sebelumnya</h3>
+          </div>
+
+          <div className="space-y-3">
+            {/* Previous Keterangan */}
+            <div className="bg-white rounded-xl p-3 border border-orange-100">
+              <p className="text-xs text-gray-600 mb-1">Keterangan Pemeliharaan</p>
+              <p className="text-sm text-gray-800">{data.pemeliharaan.keterangan_pemeliharaan}</p>
+            </div>
+
+            {/* Previous Recommendation */}
+            {data.pemeliharaan.rekomendasi && (
+              <div className="bg-white rounded-xl p-3 border border-orange-100">
+                <p className="text-xs text-gray-600 mb-1">Rekomendasi</p>
+                <p className="text-sm text-gray-800">{data.pemeliharaan.rekomendasi}</p>
+              </div>
+            )}
+
+            {/* Previous Condition & Status */}
+            <div className="grid grid-cols-2 gap-2">
+              {data.pemeliharaan.kondisi_alat && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${data.pemeliharaan.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-700' :
+                    data.pemeliharaan.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                    {data.pemeliharaan.kondisi_alat}
+                  </span>
+                </div>
+              )}
+
+              {data.pemeliharaan.status && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Status</p>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${data.pemeliharaan.status === 'Selesai' ? 'bg-green-100 text-green-700' :
+                    data.pemeliharaan.status === 'Tindakan Lanjutan' ? 'bg-orange-100 text-orange-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                    {data.pemeliharaan.status}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Previous Inspection Date */}
+            {data.pemeliharaan.tanggal_pemeriksaan && (
+              <div className="bg-white rounded-xl p-3 border border-orange-100">
+                <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {new Date(data.pemeliharaan.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            )}
+
+            {/* Previous Biaya & Kepala Ruangan */}
+            <div className="grid grid-cols-2 gap-2">
+              {data.pemeliharaan.biaya > 0 && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Biaya</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.pemeliharaan.biaya)}
+                  </p>
+                </div>
+              )}
+
+              {data.pemeliharaan.nama_kepala_ruangan && (
+                <div className="bg-white rounded-xl p-3 border border-orange-100">
+                  <p className="text-xs text-gray-600 mb-1">Kepala Ruangan</p>
+                  <p className="text-sm font-medium text-gray-800">{data.pemeliharaan.nama_kepala_ruangan}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Info Badge */}
+            <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
+              <p className="text-xs text-orange-800 font-medium">
+                ℹ️ Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Render Checklist Categories */}

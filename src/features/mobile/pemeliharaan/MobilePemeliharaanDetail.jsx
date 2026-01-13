@@ -234,14 +234,14 @@ export default function MobilePemeliharaanDetail() {
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        {/* Form Pemeliharaan Button - Only for incomplete tasks */}
-        {pemeliharaan.status === 'Belum Selesai' && (
+        {/* Form Pemeliharaan Button - For incomplete tasks OR Tindakan Lanjutan */}
+        {(pemeliharaan.status === 'Belum Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
           <button
             onClick={() => navigate(`/mobile/pemeliharaan/${id}/form`)}
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3.5 rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg"
           >
             <ClipboardList size={20} />
-            Isi Form Pemeliharaan
+            {pemeliharaan.status === 'Tindakan Lanjutan' ? 'Isi Form Pemeliharaan Lanjutan' : 'Isi Form Pemeliharaan'}
           </button>
         )}
 
