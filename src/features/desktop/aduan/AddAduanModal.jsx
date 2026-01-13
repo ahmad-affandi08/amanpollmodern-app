@@ -3,7 +3,6 @@ import Modal from '../../../components/Modal';
 import Input from '../../../components/Input';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Button from '../../../components/Button';
-import MasterApi from '../../../api/MasterApi';
 import InventarisApi from '../../../api/InventarisApi';
 import AduanApi from '../../../api/AduanApi';
 import { useToast } from '../../../components/Alert/useToast';
@@ -28,40 +27,26 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
     no_inventaris: '',
     nama_alat_id: '', // Hidden ID
     nama_alat_nama: '', // Display
+    ruangan_nama: '', // Display (auto-filled)
     divisi_nama: '', // Display
     merk: ''
   });
 
-  const [ruanganOptions, setRuanganOptions] = useState([]);
   const [inventarisOptions, setInventarisOptions] = useState([]);
   const [loadingInventaris, setLoadingInventaris] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      loadRuangan();
+      loadAllInventaris();
       if (!formData.nama_pengadu) setFormData(prev => ({ ...prev, nama_pengadu: user?.nama_lengkap || '' }));
     }
   }, [isOpen]);
 
-  const loadRuangan = async () => {
-    try {
-      const res = await MasterApi.getAllRuangan();
-      if (res.data) setRuanganOptions(res.data.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan })));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleRuanganChange = async (ruanganId) => {
-    setFormData(prev => ({ ...prev, ruangan_id: ruanganId, inventaris_id: '', no_inventaris: '', nama_alat_nama: '', divisi_id: '', divisi_nama: '', merk: '' }));
-    setInventarisOptions([]);
-
-    if (!ruanganId) return;
-
+  const loadAllInventaris = async () => {
     setLoadingInventaris(true);
     try {
-      const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 500 });
+      const res = await InventarisApi.getAll({ per_page: 500 });
 
       if (res.data) {
         setInventarisOptions(res.data.map(item => ({
@@ -90,6 +75,8 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
         no_inventaris: item.no_inventaris || '-',
         nama_alat_id: item.nama_alat?.id || '',
         nama_alat_nama: item.nama_alat?.nama_nama_alat || '-',
+        ruangan_id: item.ruangan?.id_ruangan || '',
+        ruangan_nama: item.ruangan?.nama_ruangan || '-',
         divisi_id: item.divisi?.id_divisi || item.nama_alat?.divisi?.id_divisi || '',
         divisi_nama: item.divisi?.nama_divisi || item.nama_alat?.divisi?.nama_divisi || '-',
         merk: item.merk || '-'
@@ -109,8 +96,8 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.ruangan_id || !formData.inventaris_id || !formData.keluhan) {
-      showToast('Mohon lengkapi data wajib (Ruangan, Inventaris, Keluhan).', 'error');
+    if (!formData.inventaris_id || !formData.keluhan) {
+      showToast('Mohon lengkapi data wajib (Inventaris, Keluhan).', 'error');
       return;
     }
 
@@ -147,17 +134,6 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Buat Laporan Aduan">
       <form onSubmit={handleSubmit} className="space-y-4">
         <SearchableSelect
-          label="Lokasi / Ruangan"
-          name="ruangan_id"
-          options={ruanganOptions}
-          value={formData.ruangan_id}
-          onChange={(e) => handleRuanganChange(e.target.value)}
-          placeholder="-- Pilih Ruangan --"
-          searchPlaceholder="Cari ruangan..."
-          required
-        />
-
-        <SearchableSelect
           label={loadingInventaris ? "Memuat Alat..." : "Pilih Alat / Inventaris"}
           name="inventaris_id"
           options={inventarisOptions}
@@ -166,11 +142,15 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
           placeholder="-- Pilih Inventaris --"
           searchPlaceholder="Cari nomor inventaris atau nama alat..."
           required
-          disabled={!formData.ruangan_id || loadingInventaris}
+          disabled={loadingInventaris}
         />
 
         {/* Read Only Details */}
         <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <div className="col-span-2">
+            <label className="text-xs text-gray-500 font-bold uppercase">Lokasi / Ruangan</label>
+            <p className="font-semibold text-gray-800">{formData.ruangan_nama || '-'}</p>
+          </div>
           <div>
             <label className="text-xs text-gray-500 font-bold uppercase">Nama Alat</label>
             <p className="font-semibold text-gray-800">{formData.nama_alat_nama || '-'}</p>
