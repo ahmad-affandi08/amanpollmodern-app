@@ -210,24 +210,164 @@ export default function MobilePemeliharaanDetail() {
         </div>
       )}
 
-      {/* Signature Status Section */}
-      {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
+      {/* History Timeline - Show if has history */}
+      {pemeliharaan.history && pemeliharaan.history.length > 0 && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-3">
-            <CheckCircle size={18} className="text-blue-500" />
-            <h3 className="text-sm font-bold text-gray-800">Status Tanda Tangan</h3>
+            <Clock size={18} className="text-purple-500" />
+            <h3 className="text-sm font-bold text-gray-800">Riwayat Pemeliharaan</h3>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <SignatureCard
-              label="Teknisi"
-              status={pemeliharaan.status_ttd_teknisi}
-              image={pemeliharaan.ttd_teknisi}
-            />
-            <SignatureCard
-              label="Kepala Ruang"
-              status={pemeliharaan.status_ttd_karu}
-              image={pemeliharaan.ttd_kepala_ruang}
-            />
+          <div className="space-y-3">
+            {/* Historical Actions */}
+            {pemeliharaan.history.map((historyItem, index) => (
+              <div
+                key={historyItem.id}
+                className="rounded-2xl p-4 border-2 bg-purple-50 border-purple-200"
+              >
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle size={16} className="text-purple-600" />
+                  <h4 className="text-sm font-bold text-purple-700">
+                    TINDAKAN AWAL ({historyItem.status})
+                  </h4>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-2">
+                  {historyItem.keterangan_pemeliharaan && (
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Tindakan Petugas</p>
+                      <p className="text-sm text-gray-800">{historyItem.keterangan_pemeliharaan}</p>
+                    </div>
+                  )}
+
+                  {historyItem.rekomendasi && (
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Rekomendasi</p>
+                      <p className="text-sm text-gray-800">{historyItem.rekomendasi}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Kondisi Alat</p>
+                      <KondisiBadge kondisi={historyItem.kondisi_alat} />
+                    </div>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Tanggal</p>
+                      <p className="text-xs font-bold text-gray-800">
+                        {formatDate(historyItem.tanggal_pemeriksaan)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Signatures */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Teknisi</p>
+                      {historyItem.ttd_teknisi ? (
+                        <img
+                          src={historyItem.ttd_teknisi}
+                          alt="TTD Teknisi"
+                          className="w-full h-12 object-contain"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="text-gray-400 text-xs">Belum TTD</div>
+                      )}
+                    </div>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruang</p>
+                      {historyItem.ttd_kepala_ruang ? (
+                        <img
+                          src={historyItem.ttd_kepala_ruang}
+                          alt="TTD Kepala Ruang"
+                          className="w-full h-12 object-contain"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="text-gray-400 text-xs">Belum TTD</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Current/Final Action */}
+            {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
+              <div className="rounded-2xl p-4 border-2 bg-green-50 border-green-200">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle size={16} className="text-green-600" />
+                  <h4 className="text-sm font-bold text-green-700">
+                    {pemeliharaan.status === 'Selesai' ? 'TINDAKAN AKHIR (Selesai)' : 'TINDAKAN LANJUTAN'}
+                  </h4>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-2">
+                  {pemeliharaan.keterangan_pemeliharaan && (
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">
+                        {pemeliharaan.status === 'Selesai' ? 'Tindakan Perbaikan' : 'Keterangan'}
+                      </p>
+                      <p className="text-sm text-gray-800">{pemeliharaan.keterangan_pemeliharaan}</p>
+                    </div>
+                  )}
+
+                  {pemeliharaan.rekomendasi && (
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Rekomendasi</p>
+                      <p className="text-sm text-gray-800">{pemeliharaan.rekomendasi}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Kondisi Akhir</p>
+                      <KondisiBadge kondisi={pemeliharaan.kondisi_alat} />
+                    </div>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Tanggal</p>
+                      <p className="text-xs font-bold text-gray-800">
+                        {formatDate(pemeliharaan.tanggal_pemeriksaan)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Signatures */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Teknisi</p>
+                      {pemeliharaan.ttd_teknisi ? (
+                        <img
+                          src={pemeliharaan.ttd_teknisi}
+                          alt="TTD Teknisi"
+                          className="w-full h-12 object-contain"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="text-gray-400 text-xs">Belum TTD</div>
+                      )}
+                    </div>
+                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruang</p>
+                      {pemeliharaan.ttd_kepala_ruang ? (
+                        <img
+                          src={pemeliharaan.ttd_kepala_ruang}
+                          alt="TTD Kepala Ruang"
+                          className="w-full h-12 object-contain"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="text-gray-400 text-xs">Belum TTD</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -258,61 +258,65 @@ export default function MobileFormPemeliharaan() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Render Checklist Categories */}
-        {data?.checklist_categories?.map((category) => (
-          <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-3">{category.display_kategori}</h3>
+        {/* Render Checklist Categories - Only for first inspection */}
+        {!data?.pemeliharaan?.keterangan_pemeliharaan && (
+          <>
+            {data?.checklist_categories?.map((category) => (
+              <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-800 mb-3">{category.display_kategori}</h3>
 
-            {category.checklists.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
-            ) : category.nama_kategori === 'safety_check' ? (
-              // Safety Check - Textarea
-              <div className="space-y-3">
-                {category.checklists.map((checklist) => (
-                  <textarea
-                    key={checklist.id}
-                    placeholder={checklist.keterangan}
-                    value={formData.safety_check?.find(item => item.id === checklist.id)?.hasil || ''}
-                    onChange={(e) => handleSafetyCheckChange(checklist.id, e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
-                    rows="3"
-                  />
-                ))}
-              </div>
-            ) : (
-              // Maintenance / P.Fungsi - Radio Buttons
-              <div className="space-y-3">
-                {category.checklists.map((checklist) => (
-                  <div key={checklist.id} className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
-                    <div className="flex gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`${category.nama_kategori}_${checklist.id}`}
-                          value="ok"
-                          onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
-                          className="w-4 h-4 text-success-600"
-                        />
-                        <span className="text-sm">Ok</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`${category.nama_kategori}_${checklist.id}`}
-                          value="notok"
-                          onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
-                          className="w-4 h-4 text-danger-600"
-                        />
-                        <span className="text-sm">Not Ok</span>
-                      </label>
-                    </div>
+                {category.checklists.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
+                ) : category.nama_kategori === 'safety_check' ? (
+                  // Safety Check - Textarea
+                  <div className="space-y-3">
+                    {category.checklists.map((checklist) => (
+                      <textarea
+                        key={checklist.id}
+                        placeholder={checklist.keterangan}
+                        value={formData.safety_check?.find(item => item.id === checklist.id)?.hasil || ''}
+                        onChange={(e) => handleSafetyCheckChange(checklist.id, e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+                        rows="3"
+                      />
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  // Maintenance / P.Fungsi - Radio Buttons
+                  <div className="space-y-3">
+                    {category.checklists.map((checklist) => (
+                      <div key={checklist.id} className="bg-gray-50 rounded-xl p-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
+                        <div className="flex gap-6">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`${category.nama_kategori}_${checklist.id}`}
+                              value="ok"
+                              onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
+                              className="w-4 h-4 text-success-600"
+                            />
+                            <span className="text-sm">Ok</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`${category.nama_kategori}_${checklist.id}`}
+                              value="notok"
+                              onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
+                              className="w-4 h-4 text-danger-600"
+                            />
+                            <span className="text-sm">Not Ok</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+            ))}
+          </>
+        )}
 
         {/* Status Pemeliharaan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
