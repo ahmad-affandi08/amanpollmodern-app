@@ -108,7 +108,7 @@ export default function InventarisDetail() {
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-[24px] p-2 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {[
             { id: 'info', label: 'Informasi Alat', icon: FileText },
             { id: 'aduan', label: 'Riwayat Aduan', icon: AlertCircle },
@@ -117,13 +117,14 @@ export default function InventarisDetail() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all ${activeTab === tab.id
-                ? 'bg-brand-primary text-white shadow-lg'
-                : 'text-gray-500 hover:bg-gray-50'
+              className={`flex-1 min-w-fit flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
+                  ? 'bg-brand-primary text-white shadow-lg'
+                  : 'text-gray-500 hover:bg-gray-50'
                 }`}
             >
               <tab.icon size={18} />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden text-xs">{tab.label.replace('Riwayat ', '')}</span>
             </button>
           ))}
         </div>
