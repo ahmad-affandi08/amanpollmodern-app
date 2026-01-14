@@ -293,7 +293,7 @@ export default function MasterUser() {
                           <Edit2 size={20} />
                         </button>
                         <button
-                          onClick={() => handleDelete(item.id_user)}
+                          onClick={() => handleDelete(item)}
                           className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
                           disabled={deleteMutation.isPending}
                         >
