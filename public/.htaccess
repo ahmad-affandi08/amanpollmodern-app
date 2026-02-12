@@ -1,7 +1,4 @@
-# ============================================
-# AMANPOLL PRODUCTION .HTACCESS
-# Laravel Backend + React Frontend Integration
-# ============================================
+
 
 Options -Indexes
 Options +FollowSymLinks
@@ -9,63 +6,32 @@ Options +FollowSymLinks
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
-
-    # ============================================
-    # 1. STATIC FILES (HIGHEST PRIORITY)
-    # ============================================
-    # Serve existing files directly (JS, CSS, images, fonts)
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
-
-    # Serve existing directories directly
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
-
-    # ============================================
-    # 2. LARAVEL BACKEND API
-    # ============================================
-    # Route /api/* to Laravel
     RewriteCond %{REQUEST_URI} ^/api/
     RewriteRule ^(.*)$ public/index.php [L,QSA]
-
-    # Route /storage/* to Laravel storage
     RewriteCond %{REQUEST_URI} ^/storage/
     RewriteRule ^storage/(.*)$ public/storage/$1 [L]
-
-    # ============================================
-    # 3. REACT FRONTEND SPA
-    # ============================================
-    # All other requests → React index.html
     RewriteRule ^ index.html [L]
 </IfModule>
-
-# ============================================
-# MIME TYPES (Critical for JS/CSS loading)
-# ============================================
 <IfModule mod_mime.c>
-    # JavaScript
     AddType application/javascript .js .mjs
     AddType application/json .json
-    
-    # Styles
     AddType text/css .css
-    
-    # Images
     AddType image/png .png
     AddType image/jpeg .jpg .jpeg
     AddType image/gif .gif
     AddType image/svg+xml .svg
     AddType image/webp .webp
     AddType image/x-icon .ico
-    
-    # Fonts
     AddType font/woff2 .woff2
     AddType font/woff .woff
     AddType font/ttf .ttf
     AddType font/otf .otf
 </IfModule>
 
-# Force MIME types for problematic extensions
 <FilesMatch "\.(js|mjs)$">
     ForceType application/javascript
     Header set Content-Type "application/javascript; charset=utf-8"
@@ -76,28 +42,15 @@ Options +FollowSymLinks
     Header set Content-Type "text/css; charset=utf-8"
 </FilesMatch>
 
-# ============================================
-# SECURITY HEADERS
-# ============================================
 <IfModule mod_headers.c>
-    # Prevent clickjacking
     Header set X-Frame-Options "SAMEORIGIN"
-    
-    # XSS Protection
     Header set X-XSS-Protection "1; mode=block"
-    
-    # Prevent MIME sniffing
     Header set X-Content-Type-Options "nosniff"
-    
-    # CORS for API (if needed)
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 </IfModule>
 
-# ============================================
-# COMPRESSION
-# ============================================
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/plain
@@ -109,37 +62,21 @@ Options +FollowSymLinks
     AddOutputFilterByType DEFLATE application/xml
 </IfModule>
 
-# ============================================
-# CACHING
-# ============================================
 <IfModule mod_expires.c>
     ExpiresActive On
-    
-    # Images
     ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/webp "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
-    
-    # Fonts
     ExpiresByType font/woff2 "access plus 1 year"
     ExpiresByType font/woff "access plus 1 year"
     ExpiresByType font/ttf "access plus 1 year"
-    
-    # CSS and JavaScript
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
-    
-    # HTML (no cache for SPA)
     ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
-
-# ============================================
-# FILE PERMISSIONS
-# ============================================
-# Prevent access to sensitive files
 <FilesMatch "^\.">
     Order allow,deny
     Deny from all
