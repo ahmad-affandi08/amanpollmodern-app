@@ -7,25 +7,27 @@ import { formatDateTime } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 import SignatureModal from './components/SignatureModal';
 import { ToastDialog } from '../../../components/Alert/Alert';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 
 export default function MobilePemeliharaan() {
   usePageTitle('Daftar Pemeliharaan');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // all, belum_selesai, selesai
-  const [kondisiFilter, setKondisiFilter] = useState('all'); // all, Baik, Rusak Ringan, Rusak Berat
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [kondisiFilter, setKondisiFilter] = useState('all');
 
-  // Get current month and year as default
   const currentDate = new Date();
-  const [periodFilter, setPeriodFilter] = useState('bulan_ini'); // 'bulan_ini' or 'semua'
-  const [monthFilter, setMonthFilter] = useState(currentDate.getMonth() + 1); // 1-12
+  const [periodFilter, setPeriodFilter] = useState('bulan_ini');
+  const [monthFilter, setMonthFilter] = useState(currentDate.getMonth() + 1);
   const [yearFilter, setYearFilter] = useState(currentDate.getFullYear());
 
-  // Signature modal state
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
-  const [signatureType, setSignatureType] = useState(''); // 'teknisi' or 'karu'
+  const [signatureType, setSignatureType] = useState('');
   const [selectedPemeliharaanId, setSelectedPemeliharaanId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewAlt, setPreviewAlt] = useState('');
 
   const {
     data,
@@ -45,7 +47,6 @@ export default function MobilePemeliharaan() {
 
   const updateSignature = useUpdateSignature();
 
-  // Infinite scroll logic
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -61,17 +62,14 @@ export default function MobilePemeliharaan() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Data is already filtered by backend
   const pemeliharaanList = data?.pages.flatMap(page => page.data) || [];
 
-  // Handle signature modal open
   const handleOpenSignatureModal = (item, type) => {
     setSelectedPemeliharaanId(item.id_pemeliharaan);
     setSignatureType(type);
     setSignatureModalOpen(true);
   };
 
-  // Handle period filter change
   const handlePeriodFilterChange = (period) => {
     setPeriodFilter(period);
     if (period === 'bulan_ini') {
@@ -80,7 +78,6 @@ export default function MobilePemeliharaan() {
     }
   };
 
-  // Handle signature submission
   const handleSignatureSubmit = async (formData) => {
     try {
       await updateSignature.mutateAsync({
@@ -113,15 +110,12 @@ export default function MobilePemeliharaan() {
 
   return (
     <div className="max-w-md mx-auto px-4 pb-4">
-      {/* Header */}
       <div className="py-4">
         <h1 className="text-lg font-bold text-gray-800">Daftar Pemeliharaan</h1>
         <p className="text-sm text-gray-500">Tugas pemeliharaan yang ditugaskan</p>
       </div>
 
-      {/* Search & Filter */}
       <div className="space-y-3 mb-4">
-        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -133,9 +127,7 @@ export default function MobilePemeliharaan() {
           />
         </div>
 
-        {/* Filter Dropdowns - 2 Column Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Status Filter Dropdown */}
           <div className="relative">
             <select
               value={statusFilter}
@@ -154,7 +146,6 @@ export default function MobilePemeliharaan() {
             </div>
           </div>
 
-          {/* Kondisi Filter Dropdown */}
           <div className="relative">
             <select
               value={kondisiFilter}
@@ -175,7 +166,6 @@ export default function MobilePemeliharaan() {
 
         </div>
 
-        {/* Period Filter Dropdown - Full Width */}
         <div className="relative">
           <select
             value={periodFilter}
@@ -193,10 +183,8 @@ export default function MobilePemeliharaan() {
         </div>
       </div>
 
-      {/* List */}
       <div className="space-y-3">
         {isLoading && pemeliharaanList.length === 0 ? (
-          // Skeleton Loading
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
               <div className="flex gap-3 mb-3">
@@ -214,7 +202,6 @@ export default function MobilePemeliharaan() {
             </div>
           ))
         ) : pemeliharaanList.length === 0 ? (
-          // Empty State
           <div className="text-center py-12">
             <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
             <p className="text-gray-500 text-sm">Tidak ada pemeliharaan yang ditugaskan</p>
@@ -226,17 +213,22 @@ export default function MobilePemeliharaan() {
               className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"
             >
               <div className="flex gap-3 mb-3">
-                {/* Image */}
                 <div className="flex-shrink-0">
                   <img
                     src={item.img_alat || noImage}
                     alt="Alat"
-                    className="w-20 h-20 rounded-xl object-cover bg-gray-100"
+                    className="w-20 h-20 rounded-xl object-cover bg-gray-100 cursor-pointer"
                     onError={(e) => { e.target.src = noImage; }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.img_alat) {
+                        setPreviewImage(item.img_alat);
+                        setPreviewAlt(item.nama_alat_nama);
+                      }
+                    }}
                   />
                 </div>
 
-                {/* Info */}
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
                     {item.nama_alat_nama}
@@ -263,10 +255,8 @@ export default function MobilePemeliharaan() {
                 </div>
               </div>
 
-              {/* Status & Actions */}
               <div className="flex justify-between items-center gap-2">
                 <div className="flex flex-wrap gap-1">
-                  {/* Status Badge */}
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${item.status === 'Belum Selesai' ? 'bg-warning-100 text-warning-700' :
                     item.status === 'Tindakan Lanjutan' ? 'bg-purple-100 text-purple-700' :
                       'bg-success-100 text-success-700'
@@ -274,7 +264,6 @@ export default function MobilePemeliharaan() {
                     {item.status}
                   </span>
 
-                  {/* Signature Buttons - Show when status is Selesai or Tindakan Lanjutan */}
                   {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
                     <button
                       onClick={() => handleOpenSignatureModal(item, 'teknisi')}
@@ -293,7 +282,6 @@ export default function MobilePemeliharaan() {
                   )}
                 </div>
 
-                {/* Detail Button */}
                 <button
                   onClick={() => navigate(`/mobile/pemeliharaan/${item.id_pemeliharaan}`)}
                   className="text-xs font-bold text-brand-primary hover:text-brand-primary px-3 py-1.5 rounded-full hover:bg-brand-primary-soft transition-all"
@@ -306,7 +294,6 @@ export default function MobilePemeliharaan() {
         )}
       </div>
 
-      {/* Loading More Indicator */}
       {isFetchingNextPage && (
         <div className="flex justify-center items-center py-6">
           <div className="flex items-center gap-2 text-brand-primary">
@@ -317,14 +304,12 @@ export default function MobilePemeliharaan() {
         </div>
       )}
 
-      {/* End of List */}
       {!hasNextPage && pemeliharaanList.length > 0 && (
         <div className="text-center py-6">
           <p className="text-xs text-gray-400">Semua data telah ditampilkan</p>
         </div>
       )}
 
-      {/* Signature Modal */}
       <SignatureModal
         isOpen={signatureModalOpen}
         onClose={() => setSignatureModalOpen(false)}
@@ -338,13 +323,19 @@ export default function MobilePemeliharaan() {
         }
       />
 
-      {/* Toast Notification */}
       <ToastDialog
         isOpen={!!toast}
         type={toast?.type || 'info'}
         message={toast?.message}
         onClose={() => setToast(null)}
         duration={3000}
+      />
+
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        onClose={() => setPreviewImage(null)}
+        imageUrl={previewImage}
+        alt={previewAlt}
       />
     </div>
   );

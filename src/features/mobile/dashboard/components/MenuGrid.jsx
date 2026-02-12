@@ -77,7 +77,7 @@ export default function MenuGrid() {
   ];
 
   // Select menu items based on user role
-  const menuItems = user?.kategori_user_id === 3 ? teknisiMenuItems : userRuanganMenuItems;
+  const menuItems = parseInt(user?.kategori_user_id) === 3 ? teknisiMenuItems : userRuanganMenuItems;
 
   return (
     <div className="grid grid-cols-2 gap-4">

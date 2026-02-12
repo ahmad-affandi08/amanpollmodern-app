@@ -17,7 +17,9 @@ export default function DashboardLayoutMobile() {
 
   // Navigation items based on role (removed Bell/Notifikasi)
   const getNavItems = () => {
-    if (user?.kategori_user_id === 2) { // User Ruangan
+    const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
+
+    if (roleId === 2) { // User Ruangan
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
@@ -25,7 +27,7 @@ export default function DashboardLayoutMobile() {
         { icon: Package, label: 'Inventaris', path: '/mobile/inventaris' },
         { icon: User, label: 'Profile', path: '/mobile/profile' },
       ];
-    } else if (user?.kategori_user_id === 3) { // Teknisi
+    } else if (roleId === 3) { // Teknisi
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },

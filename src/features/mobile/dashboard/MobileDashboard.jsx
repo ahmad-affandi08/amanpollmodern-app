@@ -97,7 +97,7 @@ export default function MobileDashboard() {
 
       {/* Charts Grid - Conditional based on Role */}
       <div className="grid grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
-        {user.kategori_user_id === 3 ? (
+        {parseInt(user?.kategori_user_id) === 3 ? (
           // TEKNISI VIEW - Aduan & Pemeliharaan Charts
           <>
             <DonutChart

@@ -19,7 +19,7 @@ export default function MobileAduanHistory() {
   const [previewAlt, setPreviewAlt] = useState('');
 
   // Check if user is Teknisi (role id 3)
-  const isTeknisi = user?.kategori_user_id === 3;
+  const isTeknisi = parseInt(user?.kategori_user_id) === 3;
 
   // Infinite Scroll - Only show completed (Selesai) complaints
   const {

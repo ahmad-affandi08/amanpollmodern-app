@@ -42,7 +42,9 @@ export default function MobileAduan() {
   }
 
   // TEKNISI VIEW: Show List of Assigned Tasks
-  if (user?.kategori_user_id === 3) {
+  const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
+
+  if (roleId === 3) {
     return <MobileAduanListTeknisi />;
   }
 
