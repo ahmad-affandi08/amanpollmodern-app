@@ -76,7 +76,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
     if (ruanganId) {
       try {
         setLoading(true);
-        const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 2000 });
+        const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 2000, view: 'simple' });
         setInventarisOptions(res.data || []);
       } catch (error) {
         showToast('Gagal memuat inventaris', 'error');

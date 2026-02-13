@@ -46,7 +46,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
   const loadAllInventaris = async () => {
     setLoadingInventaris(true);
     try {
-      const res = await InventarisApi.getAll({ per_page: 2000 });
+      const res = await InventarisApi.getAll({ per_page: 2000, view: 'simple' });
 
       if (res.data) {
         setInventarisOptions(res.data.map(item => ({
