@@ -482,6 +482,14 @@ export default function DashboardLayout({ children }) {
 
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-1 z-50 animate-fade-in border border-gray-100">
+                    <Link
+                      to="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-text-dark font-semibold hover:bg-brand-primary/5 transition-colors text-xs"
+                    >
+                      <UserIcon size={14} />
+                      <span>Profile</span>
+                    </Link>
                     <button
                       onClick={handleLogoutClick}
                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-accent-orange font-semibold hover:bg-danger-500/5 transition-colors text-xs"

@@ -110,7 +110,7 @@ export default function Dashboard() {
         </div>
 
         {/* Simple Filter Row */}
-        <div className="flex bg-white rounded-lg p-0.5 shadow-sm border border-gray-100">
+        <div className="flex bg-white rounded-lg p-0.5 border border-gray-100">
           <select
             value={filters.tahun_filter}
             onChange={(e) => updateFilter('tahun_filter', e.target.value)}
@@ -192,7 +192,7 @@ export default function Dashboard() {
         {/* Left Column: Both Charts Stacked */}
         <div className="lg:col-span-2 space-y-4">
           {/* Aduan Chart */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
@@ -251,7 +251,7 @@ export default function Dashboard() {
           </div>
 
           {/* Pemeliharaan Chart */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Pemeliharaan</h3>
@@ -295,7 +295,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column: Activity Feed */}
-        <div className="lg:col-span-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 h-full flex flex-col">
+        <div className="lg:col-span-1 bg-white rounded-2xl p-4  border border-gray-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-base text-text-dark">Aktivitas Terbaru</h3>
             <button className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</button>
@@ -341,7 +341,7 @@ export default function Dashboard() {
       {/* Bottom Section: Categories, Quick Actions, Conditions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 1. Category Distribution (Radial/Donut) */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col">
+        <div className="bg-white rounded-2xl p-4  border border-gray-100 flex flex-col">
           <h3 className="font-bold text-text-dark mb-4 text-sm">Distribusi Kategori</h3>
           <div className="flex-1 relative min-h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -405,7 +405,7 @@ export default function Dashboard() {
         </div>
 
         {/* 3. Asset Conditions (Progress Bars) */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col">
+        <div className="bg-white rounded-2xl p-4  border border-gray-100 flex flex-col">
           <h3 className="font-bold text-text-dark mb-4 text-sm">Kondisi Aset</h3>
           <div className="space-y-5">
             {/* Direct usage of charts.kondisi array */}
@@ -442,7 +442,7 @@ function QuickActionButton({ icon, label, onClick, color }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:-translate-y-1 transition-all whitespace-nowrap ${color}`}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold  hover:-translate-y-1 transition-all whitespace-nowrap ${color}`}
     >
       {icon}
       <span>{label}</span>

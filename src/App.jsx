@@ -11,8 +11,6 @@ import Dashboard from './features/desktop/dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { ROLES } from './features/auth/constants';
-
-
 import MasterKategori from './features/desktop/inventaris/MasterKategori';
 import MasterNamaAlat from './features/desktop/inventaris/MasterNamaAlat';
 import InventarisList from './features/desktop/inventaris/InventarisList';
@@ -33,8 +31,6 @@ import AnggaranPemeliharaan from './features/desktop/pengaturan/AnggaranPemeliha
 import DetailAnggaranPemeliharaan from './features/desktop/pengaturan/DetailAnggaranPemeliharaan';
 import BiayaPerbaikan from './features/desktop/pengaturan/BiayaPerbaikan';
 import NotificationCenter from './features/desktop/notifications/NotificationCenter';
-
-
 import DashboardLayoutMobile from './layouts/DashboardLayoutMobile';
 import MobileDashboard from './features/mobile/dashboard/MobileDashboard';
 import MobileAduan from './features/mobile/aduan/MobileAduan';
@@ -60,13 +56,12 @@ import AlatBaruList from './features/desktop/alat-baru/AlatBaruList';
 import KonfigurasiIntegrasi from './features/desktop/konfigurasi/KonfigurasiIntegrasi';
 import KonfigurasiData from './features/desktop/konfigurasi/KonfigurasiData';
 import KonfigurasiSistem from './features/desktop/konfigurasi/KonfigurasiSistem';
+import Profile from './features/desktop/profile/Profile';
 import MaintenancePage from './features/system/MaintenancePage';
 import MaintenanceBypass from './features/system/MaintenanceBypass';
 
 const router = createBrowserRouter(
   [
-
-
     { path: '/', element: <LandingPage /> },
     { path: '/login', element: <Login /> },
     { path: '/register', element: <Register /> },
@@ -85,6 +80,16 @@ const router = createBrowserRouter(
         <ProtectedRoute>
           <DashboardLayout>
             <Dashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/profile',
+      element: (
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Profile />
           </DashboardLayout>
         </ProtectedRoute>
       ),
