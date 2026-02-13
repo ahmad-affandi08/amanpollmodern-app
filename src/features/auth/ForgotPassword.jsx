@@ -101,11 +101,6 @@ export default function ForgotPassword() {
             </div>
           </div>
 
-          <Link to="/login" className="flex items-center gap-2 text-brand-primary hover:text-purple-600 font-bold text-sm mb-4 transition-colors w-fit">
-            <ArrowLeft size={18} />
-            Kembali ke Login
-          </Link>
-
           <div className="text-center lg:text-left mb-6">
             <h1 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2 tracking-tight">Lupa Password? 🔐</h1>
             <h2 className="text-xl lg:text-2xl font-bold text-gray-800">Tenang, Kami Bantu!</h2>
