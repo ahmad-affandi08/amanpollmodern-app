@@ -113,11 +113,21 @@ export async function getDivisi() {
   }
 }
 
+export async function forgotPassword(payload) {
+  try {
+    const res = await axiosClient.post('/forgot-password', payload);
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+}
+
 export default {
   register,
   login,
   logout,
   getUser,
+  forgotPassword,
   getKategoriUser,
   getRuangan,
   getDivisi

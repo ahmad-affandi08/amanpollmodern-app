@@ -6,6 +6,7 @@ import ToastProvider from './components/Alert/ToastProvider';
 import LandingPage from './features/LandingPage';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
+import ForgotPassword from './features/auth/ForgotPassword';
 import Dashboard from './features/desktop/dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -69,6 +70,7 @@ const router = createBrowserRouter(
     { path: '/', element: <LandingPage /> },
     { path: '/login', element: <Login /> },
     { path: '/register', element: <Register /> },
+    { path: '/forgot-password', element: <ForgotPassword /> },
     { path: '/maintenance', element: <MaintenancePage /> },
     { path: '/bypass/:token', element: <MaintenanceBypass /> },
 

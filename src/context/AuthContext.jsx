@@ -85,6 +85,10 @@ export function AuthProvider({ children }) {
     return await AuthApi.register(data);
   };
 
+  const forgotPassword = async (data) => {
+    return await AuthApi.forgotPassword(data);
+  };
+
   const logout = async (callApi = true) => {
     try {
       if (callApi) {
@@ -107,6 +111,7 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       login,
       register,
+      forgotPassword,
       logout,
       checkAuth
     }}>

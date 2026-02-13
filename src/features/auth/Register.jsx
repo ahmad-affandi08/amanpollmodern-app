@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import AuthApi from '../../api/AuthApi';
+import useAuth from '../../hooks/utils/useAuth';
+import * as AuthApi from '../../api/AuthApi';
 import Button from '../../components/Button';
 import SearchableSelect from '../../components/SearchableSelect';
 import Logo from '../../assets/img/icon-logo-amanpoll.png';
@@ -45,6 +46,7 @@ const ThickSelect = ({ label, children, ...props }) => (
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     kategori_user_id: '',
@@ -121,7 +123,7 @@ export default function Register() {
     }
 
     try {
-      await AuthApi.register(form);
+      await register(form);
       setSuccess('Registrasi berhasil! Mohon tunggu persetujuan.');
       setForm({
         kategori_user_id: '', nama_lengkap: '', username: '', wa: '',
