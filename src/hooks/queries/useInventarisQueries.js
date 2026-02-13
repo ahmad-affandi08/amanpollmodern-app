@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import InventarisApi from '../../api/InventarisApi';
 import { queryKeys } from '../../lib/queryKeys';
 
-// Get all inventaris with filters
+
 export const useInventaris = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.inventaris.list(filters),
@@ -16,19 +16,19 @@ export const useInventaris = (filters = {}) => {
   });
 };
 
-// Get single inventaris
+
 export const useInventarisDetail = (id) => {
   return useQuery({
     queryKey: queryKeys.inventaris.detail(id),
     queryFn: async () => {
       const res = await InventarisApi.getById(id);
-      return res; // Ensure response structure matches InventarisResource
+      return res;
     },
     enabled: !!id && id !== 'undefined' && id !== 'null',
   });
 };
 
-// Create inventaris mutation
+
 export const useCreateInventaris = () => {
   const queryClient = useQueryClient();
 
@@ -40,7 +40,7 @@ export const useCreateInventaris = () => {
   });
 };
 
-// Update inventaris mutation
+
 export const useUpdateInventaris = () => {
   const queryClient = useQueryClient();
 
@@ -53,7 +53,7 @@ export const useUpdateInventaris = () => {
   });
 };
 
-// Update location mutation
+
 export const useUpdateLocation = () => {
   const queryClient = useQueryClient();
 
@@ -66,7 +66,7 @@ export const useUpdateLocation = () => {
   });
 };
 
-// Delete inventaris mutation
+
 export const useDeleteInventaris = () => {
   const queryClient = useQueryClient();
 

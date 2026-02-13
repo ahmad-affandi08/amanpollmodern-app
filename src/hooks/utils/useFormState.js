@@ -15,7 +15,7 @@ export const useFormState = (initialState = {}, validators = {}) => {
   const setValue = useCallback((name, value) => {
     setValues(prev => ({ ...prev, [name]: value }));
 
-    // Validate if validator exists and field is touched
+
     if (validators[name] && touched[name]) {
       const error = validators[name](value, values);
       setErrors(prev => ({ ...prev, [name]: error }));
@@ -34,7 +34,7 @@ export const useFormState = (initialState = {}, validators = {}) => {
   const handleBlur = useCallback((e) => {
     setFieldTouched(e.target.name);
 
-    // Validate on blur
+
     const { name, value } = e.target;
     if (validators[name]) {
       const error = validators[name](value, values);
@@ -68,14 +68,14 @@ export const useFormState = (initialState = {}, validators = {}) => {
   const handleSubmit = useCallback((onSubmit) => async (e) => {
     if (e) e.preventDefault();
 
-    // Mark all fields as touched
+
     const allTouched = Object.keys(values).reduce((acc, key) => {
       acc[key] = true;
       return acc;
     }, {});
     setTouched(allTouched);
 
-    // Validate
+
     if (!validate()) {
       return;
     }

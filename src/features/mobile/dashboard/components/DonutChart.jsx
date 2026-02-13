@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 export default function DonutChart({ title, data, colors }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  // Custom tooltip component
+
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (

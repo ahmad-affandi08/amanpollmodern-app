@@ -47,7 +47,7 @@ export default function ReportPemeliharaan() {
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Queries
+
   const { data: pemeliharaanData, isLoading } = useReportPemeliharaan({
     ...filters,
     search: debouncedSearch,
@@ -60,7 +60,7 @@ export default function ReportPemeliharaan() {
   const { data: usersData } = useMasterUsers({ per_page: 500 });
   const deleteMutation = useDeletePemeliharaan();
 
-  // Extract data
+
   const data = pemeliharaanData?.data || [];
   const meta = pemeliharaanData?.meta;
 
@@ -68,7 +68,7 @@ export default function ReportPemeliharaan() {
     if (meta) pagination.setMetadata(meta);
   }, [meta, pagination]);
 
-  // Options
+
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
   const divisiOptions = (divisiData?.data || []).map(d => ({ label: d.nama_divisi, value: d.id_divisi }));
 
@@ -85,8 +85,8 @@ export default function ReportPemeliharaan() {
   ];
 
   const canDelete = (item) => {
-    if (user?.kategori_user_id === 1) return true; // Superadmin
-    if (user?.kategori_user_id === 4) return item.status !== 'Selesai'; // Admin Divisi only if not finished
+    if (user?.kategori_user_id === 1) return true;
+    if (user?.kategori_user_id === 4) return item.status !== 'Selesai';
     return false;
   };
 

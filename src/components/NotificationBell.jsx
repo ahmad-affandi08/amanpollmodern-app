@@ -15,14 +15,14 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // React Query hooks
+
   const { data: notifications = [], isLoading } = useUnreadNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
 
-  // Close dropdown when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -34,7 +34,7 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle mark as read
+
   const handleMarkAsRead = (id, e) => {
     e.stopPropagation();
     if (!id) {
@@ -44,7 +44,7 @@ const NotificationBell = () => {
     markAsReadMutation.mutate(id);
   };
 
-  // Handle delete
+
   const handleDelete = (id, e) => {
     e.stopPropagation();
     if (!id) {
@@ -56,7 +56,7 @@ const NotificationBell = () => {
     }
   };
 
-  // Handle mark all as read
+
   const handleMarkAllAsRead = (e) => {
     e.stopPropagation();
     markAllAsReadMutation.mutate();

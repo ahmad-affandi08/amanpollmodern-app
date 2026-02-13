@@ -18,10 +18,10 @@ export default function MobileAduanHistory() {
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
 
-  // Check if user is Teknisi (role id 3)
+
   const isTeknisi = parseInt(user?.kategori_user_id) === 3;
 
-  // Infinite Scroll - Only show completed (Selesai) complaints
+
   const {
     data,
     fetchNextPage,
@@ -30,13 +30,13 @@ export default function MobileAduanHistory() {
     isLoading,
     isError
   } = useAduanListInfinite({
-    status_aduan: 'Selesai', // Always filter to Selesai only
+    status_aduan: 'Selesai',
     search: searchQuery,
   }, 10);
 
   const aduanList = data?.pages.flatMap(page => page.data) || [];
 
-  // Infinite scroll handler
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
@@ -50,23 +50,23 @@ export default function MobileAduanHistory() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Handle Export
+
   const handleExport = () => {
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
       return;
     }
 
-    // Build query params
+
     const params = new URLSearchParams();
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
 
-    // Open export URL in new tab
+
     window.open(`/api/report/aduan/export-excel-teknisi?${params.toString()}`, '_blank');
   };
 
-  // Status Badge Helper
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-800' },

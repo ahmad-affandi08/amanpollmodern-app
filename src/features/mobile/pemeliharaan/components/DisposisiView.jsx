@@ -7,7 +7,7 @@ import DisposisiForm from './DisposisiForm';
  * Modern redesign with glassmorphism and smooth animations (matching Aduan design)
  */
 export default function DisposisiView({ pemeliharaan }) {
-  // Check if disposisi already exists
+
   const hasDisposisi = pemeliharaan?.disposisi_tgl;
 
   if (hasDisposisi) {
@@ -81,6 +81,6 @@ export default function DisposisiView({ pemeliharaan }) {
     );
   }
 
-  // Show form if no disposisi
+
   return <DisposisiForm pemeliharaan={pemeliharaan} />;
 }

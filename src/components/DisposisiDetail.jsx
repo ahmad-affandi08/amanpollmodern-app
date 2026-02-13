@@ -7,7 +7,7 @@ export default function DisposisiDetail({ disposisi }) {
     return null;
   }
 
-  // Format date to Indonesian format
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);

@@ -34,7 +34,7 @@ export default function ReportAduan() {
   const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
-  const ROLE_PIMPINAN = 5; // Correct value from constants.js
+  const ROLE_PIMPINAN = 5;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const isPimpinan = user?.kategori_user_id === ROLE_PIMPINAN;
   const userDivisiId = user?.divisi_id;
@@ -56,7 +56,7 @@ export default function ReportAduan() {
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Queries
+
   const { data: aduanData, isLoading } = useReportAduan({
     ...filters,
     search: debouncedSearch,
@@ -69,7 +69,7 @@ export default function ReportAduan() {
   const { data: usersData } = useMasterUsers({ per_page: 500 });
   const deleteMutation = useDeleteAduan();
 
-  // Extract data
+
   const data = aduanData?.data || [];
   const meta = aduanData?.meta;
 
@@ -77,7 +77,7 @@ export default function ReportAduan() {
     if (meta) pagination.setMetadata(meta);
   }, [meta]);
 
-  // Options
+
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
   const divisiOptions = (divisiData?.data || []).map(d => ({ label: d.nama_divisi, value: d.id_divisi }));
 
@@ -101,7 +101,7 @@ export default function ReportAduan() {
     { label: 'Dalam Perbaikan', value: 'Dalam Perbaikan' }
   ];
 
-  // Handlers
+
   const handleDelete = (id) => {
     setConfirmDialog({
       isOpen: true,

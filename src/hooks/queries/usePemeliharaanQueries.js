@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import PemeliharaanApi from '../../api/PemeliharaanApi';
 import { queryKeys } from '../../lib/queryKeys';
 
-// Get all pemeliharaan with filters
+
 export const usePemeliharaan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.pemeliharaan.list(filters),
@@ -16,13 +16,13 @@ export const usePemeliharaan = (filters = {}) => {
   });
 };
 
-// Get pemeliharaan assignments for teknisi (infinite scroll)
+
 export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null) => {
   return useInfiniteQuery({
     queryKey: ['pemeliharaan', 'assignments', { search, status, kondisi, month, year }],
     queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, kondisi, month, year),
     getNextPageParam: (lastPage) => {
-      // Laravel pagination returns meta with current_page and last_page
+
       const currentPage = lastPage.meta?.current_page || lastPage.current_page;
       const lastPageNum = lastPage.meta?.last_page || lastPage.last_page;
 
@@ -32,7 +32,7 @@ export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'al
   });
 };
 
-// Get single pemeliharaan
+
 export const usePemeliharaanDetail = (id) => {
   return useQuery({
     queryKey: queryKeys.pemeliharaan.detail(id),
@@ -44,7 +44,7 @@ export const usePemeliharaanDetail = (id) => {
   });
 };
 
-// Create pemeliharaan mutation
+
 export const useCreatePemeliharaan = () => {
   const queryClient = useQueryClient();
 
@@ -56,7 +56,7 @@ export const useCreatePemeliharaan = () => {
   });
 };
 
-// Update pemeliharaan mutation
+
 export const useUpdatePemeliharaan = () => {
   const queryClient = useQueryClient();
 
@@ -69,7 +69,7 @@ export const useUpdatePemeliharaan = () => {
   });
 };
 
-// Delete pemeliharaan mutation
+
 export const useDeletePemeliharaan = () => {
   const queryClient = useQueryClient();
 
@@ -82,7 +82,7 @@ export const useDeletePemeliharaan = () => {
   });
 };
 
-// Get form data for pemeliharaan
+
 export const useFormPemeliharaan = (id) => {
   return useQuery({
     queryKey: ['pemeliharaan', 'form', id],
@@ -91,7 +91,7 @@ export const useFormPemeliharaan = (id) => {
   });
 };
 
-// Submit pemeliharaan form
+
 export const useSubmitPemeliharaan = () => {
   const queryClient = useQueryClient();
 
@@ -105,7 +105,7 @@ export const useSubmitPemeliharaan = () => {
   });
 };
 
-// Update signature (teknisi or kepala ruang)
+
 export const useUpdateSignature = () => {
   const queryClient = useQueryClient();
 

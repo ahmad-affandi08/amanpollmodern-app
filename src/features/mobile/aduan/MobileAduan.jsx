@@ -12,7 +12,7 @@ export default function MobileAduan() {
   const location = useLocation();
   const scannedInventarisId = location.state?.scannedInventarisId;
 
-  // Dummy loading state (you might want to pass real prop or context)
+
   const isLoading = false;
 
   if (isLoading) {
@@ -41,14 +41,14 @@ export default function MobileAduan() {
     );
   }
 
-  // TEKNISI VIEW: Show List of Assigned Tasks
+
   const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
 
   if (roleId === 3) {
     return <MobileAduanListTeknisi />;
   }
 
-  // USER RUANGAN VIEW: Show Create Form
+
   return (
     <div className="max-w-md mx-auto px-4 space-y-4">
       {/* Header Card */}

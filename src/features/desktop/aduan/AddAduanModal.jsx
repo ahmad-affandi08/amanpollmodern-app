@@ -23,12 +23,12 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
     img_keluhan: null,
     nama_pengadu: user?.nama_lengkap || '',
 
-    // Auto-filled
+
     no_inventaris: '',
-    nama_alat_id: '', // Hidden ID
-    nama_alat_nama: '', // Display
-    ruangan_nama: '', // Display (auto-filled)
-    divisi_nama: '', // Display
+    nama_alat_id: '',
+    nama_alat_nama: '',
+    ruangan_nama: '',
+    divisi_nama: '',
     merk: ''
   });
 
@@ -46,7 +46,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
   const loadAllInventaris = async () => {
     setLoadingInventaris(true);
     try {
-      const res = await InventarisApi.getAll({ per_page: 500 });
+      const res = await InventarisApi.getAll({ per_page: 2000 });
 
       if (res.data) {
         setInventarisOptions(res.data.map(item => ({

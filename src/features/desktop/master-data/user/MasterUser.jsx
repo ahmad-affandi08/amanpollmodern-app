@@ -30,7 +30,7 @@ export default function MasterUser() {
   const pagination = usePagination(10);
   const modal = useModal();
 
-  // Form State
+
   const [formData, setFormData] = useState({
     nama_lengkap: '',
     username: '',
@@ -43,7 +43,7 @@ export default function MasterUser() {
     active: true
   });
 
-  // Confirm Dialog State
+
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -51,10 +51,10 @@ export default function MasterUser() {
     onConfirm: null
   });
 
-  // Options State
+
   const [kategoriOptions, setKategoriOptions] = useState([]);
 
-  // Queries
+
   const { data: usersData, isLoading, refetch } = useMasterUsers({
     page: pagination.currentPage,
     per_page: pagination.perPage,
@@ -64,21 +64,21 @@ export default function MasterUser() {
   const { data: divisiData } = useMasterDivisi({ all: 1 });
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
 
-  // Mutations
+
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
 
-  // Extract data
+
   const data = usersData?.data || [];
   const meta = usersData?.meta;
 
-  // Update pagination
+
   useEffect(() => {
     if (meta) pagination.setMetadata(meta);
   }, [meta]);
 
-  // Fetch kategori options
+
   useEffect(() => {
     const fetchKategori = async () => {
       try {
@@ -96,7 +96,7 @@ export default function MasterUser() {
     fetchKategori();
   }, []);
 
-  // Prepare options
+
   const divisiOptions = (divisiData?.data || []).map(d => ({
     label: d.nama_divisi,
     value: d.id_divisi
@@ -107,7 +107,7 @@ export default function MasterUser() {
     value: r.id_ruangan
   }));
 
-  // Handlers
+
   const handleToggleStatus = (item) => {
     const newStatus = !item.active;
     setConfirmDialog({

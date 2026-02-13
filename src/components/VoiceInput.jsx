@@ -14,17 +14,17 @@ export default function VoiceInput({
   const [interimTranscript, setInterimTranscript] = useState('');
   const recognitionRef = useRef(null);
   const textareaRef = useRef(null);
-  const shouldListenRef = useRef(false); // Track intended listening state
-  const valueRef = useRef(value); // Track latest value
-  const onChangeRef = useRef(onChange); // Track latest onChange
+  const shouldListenRef = useRef(false);
+  const valueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
 
-  // Update refs when props change
+
   useEffect(() => {
     valueRef.current = value;
     onChangeRef.current = onChange;
   }, [value, onChange]);
 
-  // Check browser support
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -40,7 +40,7 @@ export default function VoiceInput({
       return;
     }
 
-    // Initialize Speech Recognition
+
     const recognition = new SpeechRecognition();
     recognition.lang = language;
     recognition.continuous = true;
@@ -63,7 +63,7 @@ export default function VoiceInput({
       setInterimTranscript(interim);
 
       if (final) {
-        // Immediately update value for real-time response using refs
+
         const newValue = valueRef.current + final;
         onChangeRef.current(newValue);
         setInterimTranscript('');
@@ -74,12 +74,12 @@ export default function VoiceInput({
       console.error('❌ Speech recognition error:', event.error);
       console.error('❌ Error details:', event);
       setIsListening(false);
-      shouldListenRef.current = false; // Always set to false on error
+      shouldListenRef.current = false;
 
       if (event.error === 'not-allowed') {
         alert('❌ Izin mikrofon ditolak!\n\nCara mengaktifkan:\n1. Tap icon gembok di address bar\n2. Permissions → Microphone\n3. Set ke "Allow"');
       } else if (event.error === 'no-speech') {
-        // Don't auto-restart, let user manually restart if needed
+
       } else if (event.error === 'network') {
         alert('❌ Koneksi internet diperlukan untuk voice input.');
       } else if (event.error === 'aborted') {
@@ -92,7 +92,7 @@ export default function VoiceInput({
     };
 
     recognition.onend = () => {
-      // Auto-restart if still listening (check ref, not state)
+
       if (shouldListenRef.current && recognitionRef.current) {
         try {
           recognition.start();
@@ -111,8 +111,8 @@ export default function VoiceInput({
         recognitionRef.current.stop();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]); // Only re-initialize when language changes
+
+  }, [language]);
 
   const toggleListening = () => {
     if (!isSupported || disabled) {
@@ -120,25 +120,25 @@ export default function VoiceInput({
     }
 
     if (isListening) {
-      // Stop listening
-      shouldListenRef.current = false; // Set ref first to prevent auto-restart
+
+      shouldListenRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
       setIsListening(false);
       setInterimTranscript('');
     } else {
-      // Request microphone permission explicitly
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ audio: true })
           .then((stream) => {
-            // Stop the stream immediately, we just needed permission
+
             stream.getTracks().forEach(track => track.stop());
 
-            // Now start recognition
+
             if (recognitionRef.current) {
               try {
-                shouldListenRef.current = true; // Set ref before starting
+                shouldListenRef.current = true;
                 recognitionRef.current.start();
                 setIsListening(true);
               } catch (e) {
@@ -153,10 +153,10 @@ export default function VoiceInput({
             alert('❌ Izin mikrofon ditolak!\n\nCara mengaktifkan:\n1. Tap icon gembok di address bar\n2. Permissions → Microphone\n3. Set ke "Allow"\n4. Refresh halaman');
           });
       } else {
-        // Fallback: start without explicit permission request
+
         if (recognitionRef.current) {
           try {
-            shouldListenRef.current = true; // Set ref before starting
+            shouldListenRef.current = true;
             recognitionRef.current.start();
             setIsListening(true);
           } catch (e) {

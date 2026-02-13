@@ -33,31 +33,31 @@ export default function MasterKategori() {
   const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
-  // Queries
+
   const { data: kategoriData, isLoading } = useMasterKategori({ all: 1 });
 
-  // Mutations
+
   const createMutation = useCreateKategori();
   const updateMutation = useUpdateKategori();
   const deleteMutation = useDeleteKategori();
 
-  // Extract data
+
   const categories = kategoriData?.data || kategoriData || [];
 
-  // Filter data
+
   const filteredCategories = categories.filter(cat =>
     cat.nama_kategori?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
     cat.kode_kategori_alat?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  // Pagination
+
   const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
   const paginatedCategories = filteredCategories.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Handlers
+
   const handleOpenCreate = () => {
     setFormData({ kode_kategori_alat: '', nama_kategori: '' });
     modal.open();

@@ -27,7 +27,7 @@ export default function MasterDivisi() {
   const modal = useModal();
   const [formData, setFormData] = useState({ nama_divisi: '' });
 
-  // Confirm Dialog State
+
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -35,28 +35,28 @@ export default function MasterDivisi() {
     onConfirm: null
   });
 
-  // Queries
+
   const { data: divisiData, isLoading } = useMasterDivisi({
     page: pagination.currentPage,
     per_page: pagination.perPage,
     search: debouncedSearch
   });
 
-  // Mutations
+
   const createMutation = useCreateDivisi();
   const updateMutation = useUpdateDivisi();
   const deleteMutation = useDeleteDivisi();
 
-  // Extract data
+
   const data = divisiData?.data || [];
   const meta = divisiData?.meta;
 
-  // Update pagination
+
   useEffect(() => {
     if (meta) pagination.setMetadata(meta);
   }, [meta]);
 
-  // Handlers
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

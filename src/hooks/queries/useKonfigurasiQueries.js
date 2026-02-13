@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import KonfigurasiApi from '../../api/KonfigurasiApi';
 import { queryKeys } from '../../lib/queryKeys';
 
-// Get Fonnte configuration
+
 export const useFonnteConfig = () => {
   return useQuery({
     queryKey: queryKeys.konfigurasi.fonnte(),
@@ -13,7 +13,7 @@ export const useFonnteConfig = () => {
   });
 };
 
-// Save Fonnte configuration
+
 export const useSaveFonnteConfig = () => {
   const queryClient = useQueryClient();
 
@@ -25,7 +25,7 @@ export const useSaveFonnteConfig = () => {
   });
 };
 
-// Test Fonnte connection
+
 export const useTestFonnteConnection = () => {
   return useMutation({
     mutationFn: (apiToken) => KonfigurasiApi.testFonnteConnection(apiToken),

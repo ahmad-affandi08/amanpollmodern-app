@@ -7,7 +7,7 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoa
   const [nama, setNama] = useState('');
   const [error, setError] = useState('');
 
-  // Set existing name when modal opens
+
   useEffect(() => {
     if (isOpen && existingName) {
       setNama(existingName);
@@ -18,22 +18,22 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoa
     e.preventDefault();
     setError('');
 
-    // Validate name (only if not already provided)
+
     if (!existingName && !nama.trim()) {
       setError('Nama harus diisi');
       return;
     }
 
-    // Validate signature
+
     if (signatureRef.current?.isEmpty()) {
       setError('Tanda tangan harus diisi');
       return;
     }
 
-    // Get signature as base64
+
     const ttd = signatureRef.current.toDataURL();
 
-    // Submit (use existing name if provided, otherwise use input)
+
     onSubmit({ nama: existingName || nama.trim(), ttd });
   };
 

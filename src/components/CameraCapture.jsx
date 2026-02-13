@@ -11,12 +11,12 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 1. Initialize Camera
+
   const startCamera = useCallback(async (deviceId = null) => {
     setLoading(true);
     setError('');
 
-    // Stop existing stream if any
+
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -25,7 +25,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
       const constraints = {
         video: deviceId
           ? { deviceId: { exact: deviceId } }
-          : { facingMode: 'environment' } // Prefer back camera on mobile
+          : { facingMode: 'environment' }
       };
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -43,14 +43,14 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
     }
   }, [stream]);
 
-  // 2. Get Available Devices (for switching)
+
   useEffect(() => {
     if (isOpen) {
-      // Small delay to ensure modal transition doesn't glitch stream init
+
       const timer = setTimeout(() => {
         startCamera();
 
-        // Enumerate devices
+
         navigator.mediaDevices.enumerateDevices()
           .then(devices => {
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -63,15 +63,15 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
     }
 
     return () => {
-      // Cleanup: stop stream when closed
+
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isOpen]);
 
-  // Cleanup on unmount/close
+
   useEffect(() => {
     if (!isOpen && stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -85,16 +85,16 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      // Set canvas size to match video
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
       const context = canvas.getContext('2d');
-      // Flip horizontal if not using back camera (selfie mode logic generally) - simplified here:
-      // If we added scaling flip in CSS, we might need to handle it in canvas too, but for environment cam usually standard
+
+
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const imageUrl = canvas.toDataURL('image/jpeg', 0.85); // 85% quality
+      const imageUrl = canvas.toDataURL('image/jpeg', 0.85);
       setCapturedImage(imageUrl);
     }
   };
@@ -105,7 +105,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
 
   const handleConfirm = () => {
     if (capturedImage) {
-      // Convert DataURL to File
+
       fetch(capturedImage)
         .then(res => res.blob())
         .then(blob => {
@@ -118,11 +118,11 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
 
   const switchCamera = () => {
     if (devices.length > 1) {
-      // Find current device index
+
       const currentIndex = devices.findIndex(d => d.deviceId === activeDeviceId);
 
-      // If undefined/null, assume first device was active, so go to second (index 1)
-      // If we have current index, go to next
+
+
       const nextIndex = currentIndex === -1 ? 1 : (currentIndex + 1) % devices.length;
 
       const nextDevice = devices[nextIndex];

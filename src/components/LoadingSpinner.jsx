@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function LoadingSpinner({ fullScreen = true, size = 'md', className = '' }) {
-  // Size mapping for inline usage
+
   const sizeClasses = {
     sm: 'w-6 h-6 border-2',
     md: 'w-10 h-10 border-3',
@@ -39,7 +39,7 @@ export default function LoadingSpinner({ fullScreen = true, size = 'md', classNa
     );
   }
 
-  // Inline version
+
   return (
     <div className={`flex justify-center items-center p-4 ${className}`}>
       <div className={`relative ${sizeClasses[size] || sizeClasses.md}`}>

@@ -22,7 +22,7 @@ export default function MobileAlatBaru() {
 
   const alatBaruList = data?.pages || [];
 
-  // Loading skeleton
+
   if (isLoading) {
     return (
       <div className="max-w-md mx-auto px-4 space-y-4 pt-3">
@@ -41,7 +41,7 @@ export default function MobileAlatBaru() {
     );
   }
 
-  // Error state
+
   if (isError) {
     return (
       <div className="max-w-md mx-auto px-4 pt-3">
@@ -92,7 +92,7 @@ export default function MobileAlatBaru() {
             )}
           </>
         ) : (
-          // Empty State
+
           <div className="bg-white rounded-[20px] p-8 text-center border border-gray-100 mt-8">
             <PackagePlus className="mx-auto text-gray-300 mb-4" size={64} />
             <h3 className="text-lg font-bold text-text-dark mb-2">Belum Ada Alat Baru</h3>

@@ -39,7 +39,7 @@ export default function ImagePreviewModal({ isOpen, onClose, imageUrl, altText =
     document.body.removeChild(link);
   };
 
-  // Check if it's a QR code
+
   const isQRCode = imageUrl?.includes('qrcode') || altText?.toLowerCase().includes('qr');
 
   return ReactDOM.createPortal(

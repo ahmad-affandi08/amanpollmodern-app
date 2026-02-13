@@ -7,14 +7,14 @@ import SearchableSelect from '../../../../components/SearchableSelect';
 export default function InventarisFilters({ filters, onFilterChange, onExport }) {
   const [isExporting, setIsExporting] = useState(false);
 
-  // Fetch nama alat options
+
   const { data: namaAlatData } = useQuery({
     queryKey: ['nama-alat'],
     queryFn: async () => {
       const response = await axiosClient.get('/nama-alat');
       return response.data.data;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 
   const namaAlatList = Array.isArray(namaAlatData) ? namaAlatData : [];
@@ -27,7 +27,7 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
   ];
 
   const handleChange = (field, value) => {
-    // Apply filter immediately on change
+
     const newFilters = { ...filters, [field]: value };
     onFilterChange(newFilters);
   };

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import AduanApi from '../../api/AduanApi';
 import { queryKeys } from '../../lib/queryKeys';
 
-// Get all aduan with filters
+
 export const useAduan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.aduan.list(filters),
@@ -16,7 +16,7 @@ export const useAduan = (filters = {}) => {
   });
 };
 
-// Get all aduan with filters (Infinite Scroll)
+
 export const useAduanListInfinite = (filters = {}, limit = 10) => {
   return useInfiniteQuery({
     queryKey: ['aduan', 'infinite', filters],
@@ -40,7 +40,7 @@ export const useAduanListInfinite = (filters = {}, limit = 10) => {
   });
 };
 
-// Get assigned aduan for teknisi (Infinite Scroll)
+
 export const useAduanAssignments = (limit = 10, statusFilter = undefined) => {
   return useInfiniteQuery({
     queryKey: ['aduan', 'assignments', statusFilter],
@@ -50,7 +50,7 @@ export const useAduanAssignments = (limit = 10, statusFilter = undefined) => {
         per_page: limit
       };
 
-      // Map frontend filter values to backend status values
+
       if (statusFilter) {
         const statusMap = {
           'pending': 'Pending',
@@ -62,7 +62,7 @@ export const useAduanAssignments = (limit = 10, statusFilter = undefined) => {
       }
 
       const res = await AduanApi.getAssignments(pageParam, limit, params.status_aduan);
-      return res; // Expecting { data: [], links: {}, meta: {} }
+      return res;
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.meta?.current_page < lastPage.meta?.last_page) {
@@ -73,19 +73,19 @@ export const useAduanAssignments = (limit = 10, statusFilter = undefined) => {
   });
 };
 
-// Get single aduan
+
 export const useAduanDetail = (id) => {
   return useQuery({
     queryKey: queryKeys.aduan.detail(id),
     queryFn: async () => {
       const res = await AduanApi.getById(id);
-      return res; // Backend returns AduanResource directly, not wrapped in { data: ... }
+      return res;
     },
     enabled: !!id,
   });
 };
 
-// Create aduan mutation
+
 export const useCreateAduan = () => {
   const queryClient = useQueryClient();
 
@@ -97,7 +97,7 @@ export const useCreateAduan = () => {
   });
 };
 
-// Update aduan mutation
+
 export const useUpdateAduan = () => {
   const queryClient = useQueryClient();
 
@@ -110,7 +110,7 @@ export const useUpdateAduan = () => {
   });
 };
 
-// Update status mutation
+
 export const useUpdateAduanStatus = () => {
   const queryClient = useQueryClient();
 
@@ -123,38 +123,38 @@ export const useUpdateAduanStatus = () => {
   });
 };
 
-// Delete aduan mutation
+
 export const useDeleteAduan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id) => AduanApi.delete(id),
     onSuccess: () => {
-      // Invalidate both aduan lists and report queries
+
       queryClient.invalidateQueries({ queryKey: queryKeys.aduan.lists() });
       queryClient.invalidateQueries({ queryKey: ['reports', 'aduan'] });
     },
   });
 };
 
-// Update inspection (Form Pemeriksaan) mutation
+
 export const useUpdateInspection = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }) => AduanApi.updateInspection(id, data),
     onSuccess: (_, variables) => {
-      // Invalidate all aduan-related queries
+
       queryClient.invalidateQueries({ queryKey: ['aduan'] });
-      // Specifically invalidate the detail query for this aduan
+
       queryClient.invalidateQueries({ queryKey: queryKeys.aduan.detail(variables.id) });
-      // Invalidate assignments (for teknisi list)
+
       queryClient.invalidateQueries({ queryKey: ['aduan', 'assignments'] });
     },
   });
 };
 
-// Get inventaris list by ruangan (for mobile aduan form)
+
 export const useInventarisList = (ruanganId) => {
   return useQuery({
     queryKey: ['inventaris', ruanganId],
@@ -162,7 +162,7 @@ export const useInventarisList = (ruanganId) => {
       const response = await fetch(`/api/inventaris?ruangan_id=${ruanganId}`);
       const data = await response.json();
 
-      // Transform data for select dropdown
+
       if (Array.isArray(data?.data)) {
         return data.data.map(item => ({
           value: item.id_inventaris,
@@ -177,11 +177,11 @@ export const useInventarisList = (ruanganId) => {
       return [];
     },
     enabled: !!ruanganId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Get divisi list (for mobile aduan form)
+
 export const useDivisiList = () => {
   return useQuery({
     queryKey: ['divisi'],
@@ -189,7 +189,7 @@ export const useDivisiList = () => {
       const response = await fetch('/api/divisi');
       const data = await response.json();
 
-      // Transform data for select dropdown
+
       if (Array.isArray(data?.data)) {
         return data.data.map(item => ({
           value: item.id_divisi,
@@ -198,6 +198,6 @@ export const useDivisiList = () => {
       }
       return [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };

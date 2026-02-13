@@ -25,16 +25,16 @@ export default function DisposisiForm({ aduan }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate signature
+
     if (signaturePadRef.current?.isEmpty()) {
       alert('Silakan tanda tangan terlebih dahulu.');
       return;
     }
 
-    // Get signature data
+
     const ttd_base64 = signaturePadRef.current?.toDataURL();
 
-    // Submit
+
     createDisposisi.mutate(
       {
         aduanId: aduan.id_aduan,
@@ -45,7 +45,7 @@ export default function DisposisiForm({ aduan }) {
       },
       {
         onSuccess: () => {
-          // Navigate back or refresh
+
           navigate(-1);
         },
       }

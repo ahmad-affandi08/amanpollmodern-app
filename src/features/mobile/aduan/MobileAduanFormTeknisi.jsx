@@ -28,7 +28,7 @@ export default function MobileAduanFormTeknisi() {
     kondisi_alat: '',
     status_aduan: '',
     biaya: '0',
-    inventaris_id: null, // For equipment change
+    inventaris_id: null,
   });
 
   const [isEditingEquipment, setIsEditingEquipment] = useState(false);
@@ -36,7 +36,7 @@ export default function MobileAduanFormTeknisi() {
   const [isLoadingInventaris, setIsLoadingInventaris] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
 
-  // Fetch inventaris options when editing equipment
+
   useEffect(() => {
     const fetchInventaris = async () => {
       if (!isEditingEquipment || !aduan?.ruangan_id) return;
@@ -45,7 +45,7 @@ export default function MobileAduanFormTeknisi() {
       try {
         const response = await axiosClient.get('/inventaris/search', {
           params: {
-            q: '', // Empty query to get all
+            q: '',
             ruangan_id: aduan.ruangan_id
           }
         });
@@ -92,7 +92,7 @@ export default function MobileAduanFormTeknisi() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate signatures
+
     if (ttdTeknisiRef.current?.isEmpty()) {
       showToast('Tanda tangan teknisi harus diisi!', 'error');
       return;

@@ -20,11 +20,11 @@ export default function MobileNotifikasi() {
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteAllMutation = useDeleteAllNotifications();
 
-  // Accumulate notifications from all pages
+
   useEffect(() => {
     if (data?.data) {
       setAllNotifications(prev => {
-        // Avoid duplicates
+
         const existingIds = new Set(prev.map(n => n.id_notifikasi));
         const newItems = data.data.filter(n => !existingIds.has(n.id_notifikasi));
         return [...prev, ...newItems];
@@ -32,14 +32,14 @@ export default function MobileNotifikasi() {
     }
   }, [data]);
 
-  // Infinite scroll
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      // Load more when near bottom
+
       if (scrollTop + clientHeight >= scrollHeight - 100 && !isLoading && data?.meta) {
         const { current_page, last_page } = data.meta;
         if (current_page < last_page) {
@@ -52,7 +52,7 @@ export default function MobileNotifikasi() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isLoading, data?.meta]);
 
-  // Use accumulated notifications from all loaded pages
+
   const notifikasiList = allNotifications;
 
   const handleMarkAllRead = async () => {
@@ -60,7 +60,7 @@ export default function MobileNotifikasi() {
       await markAllAsReadMutation.mutateAsync();
       showToast('Semua notifikasi ditandai sudah dibaca', 'success');
       setShowMarkAllDialog(false);
-      // Reset and refetch
+
       setAllNotifications([]);
       setPage(1);
     } catch (error) {
@@ -73,7 +73,7 @@ export default function MobileNotifikasi() {
       await deleteAllMutation.mutateAsync();
       showToast('Semua notifikasi berhasil dihapus', 'success');
       setShowDeleteAllDialog(false);
-      // Clear local state immediately
+
       setAllNotifications([]);
       setPage(1);
     } catch (error) {
@@ -129,7 +129,7 @@ export default function MobileNotifikasi() {
       {/* List */}
       <div className="space-y-3">
         {isLoading ? (
-          // Skeleton Loading
+
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
               <div className="flex gap-3 mb-3">
@@ -144,7 +144,7 @@ export default function MobileNotifikasi() {
             </div>
           ))
         ) : notifikasiList.length === 0 ? (
-          // Empty State
+
           <div className="text-center py-16">
             <Bell className="mx-auto text-gray-300 mb-4" size={64} />
             <p className="text-gray-500 text-sm font-medium">Tidak ada notifikasi</p>

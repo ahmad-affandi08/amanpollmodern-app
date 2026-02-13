@@ -15,23 +15,23 @@ export default function DashboardLayoutMobile() {
 
   const isActive = (path) => location.pathname === path;
 
-  // Navigation items based on role (removed Bell/Notifikasi)
+
   const getNavItems = () => {
     const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
 
-    if (roleId === 2) { // User Ruangan
+    if (roleId === 2) {
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
-        { type: 'qr', path: '/mobile/scan' }, // QR Code in center
+        { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Inventaris', path: '/mobile/inventaris' },
         { icon: User, label: 'Profile', path: '/mobile/profile' },
       ];
-    } else if (roleId === 3) { // Teknisi
+    } else if (roleId === 3) {
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
-        { type: 'qr', path: '/mobile/scan' }, // QR Code in center
+        { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Pemeliharaan', path: '/mobile/pemeliharaan' },
         { icon: User, label: 'Profile', path: '/mobile/profile' },
       ];

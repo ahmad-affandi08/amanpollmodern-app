@@ -7,13 +7,13 @@ export default function InventarisSelect({ ruanganId, value, onChange, onInventa
 
   const [selectedInventaris, setSelectedInventaris] = useState(null);
 
-  // Extract data from response
+
   const inventarisList = inventarisData?.data || [];
 
   const handleChange = (e) => {
     const selectedId = e.target.value;
 
-    // Call parent onChange with the event
+
     if (onChange) {
       onChange(e);
     }
@@ -23,10 +23,10 @@ export default function InventarisSelect({ ruanganId, value, onChange, onInventa
         (inv) => String(inv.id_inventaris || inv.id) === String(selectedId)
       );
       if (found) {
-        // Transform to match expected structure
+
         const transformedData = {
           id_inventaris: found.id_inventaris || found.id,
-          id_nama_alat: found.nama_alat?.id || null, // Fixed: use nama_alat.id
+          id_nama_alat: found.nama_alat?.id || null,
           no_inventaris: found.no_inventaris,
           nama_alat: found.nama_alat?.nama_nama_alat || 'Unknown',
           merk: found.merk || found.type || '',
@@ -78,11 +78,11 @@ export default function InventarisSelect({ ruanganId, value, onChange, onInventa
     );
   }
 
-  // Format options for SearchableSelect
+
   const options = inventarisList.map((inv) => ({
     value: inv.id_inventaris || inv.id,
     label: `${inv.nama_alat?.nama_nama_alat || 'Unknown'} - ${inv.no_inventaris}`,
-    // Store additional data for display
+
     namaAlat: inv.nama_alat?.nama_nama_alat || 'Unknown',
     noInventaris: inv.no_inventaris,
   }));

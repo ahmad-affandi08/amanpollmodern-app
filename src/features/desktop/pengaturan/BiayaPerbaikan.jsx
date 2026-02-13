@@ -28,13 +28,13 @@ export default function BiayaPerbaikan() {
   });
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // Filters
+
   const [filters, setFilters] = useState({
     divisi_id: '',
     kategori_alat_id: '',
     ruangan_id: '',
     tahun_pengadaan: '',
-    tahun_filter: new Date().getFullYear().toString(), // Default to current year
+    tahun_filter: new Date().getFullYear().toString(),
     search: ''
   });
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -57,7 +57,7 @@ export default function BiayaPerbaikan() {
 
   useEffect(() => {
     fetchData(1, { ...filters, search: debouncedSearch });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filters.divisi_id, filters.kategori_alat_id, filters.ruangan_id, filters.tahun_pengadaan, filters.tahun_filter, debouncedSearch]);
 
   const fetchOptions = async () => {
@@ -83,7 +83,7 @@ export default function BiayaPerbaikan() {
   const fetchData = async (page = 1, currentFilters = filters) => {
     setLoading(true);
     try {
-      // Clean filters
+
       const cleanedFilters = Object.fromEntries(
         Object.entries(currentFilters).filter(([_, v]) => v !== '' && v != null)
       );
@@ -97,7 +97,7 @@ export default function BiayaPerbaikan() {
       const res = await AnggaranApi.getRepairAnalysis(params);
       const responseData = res.data.data;
 
-      // Check structure: { items: { data: [], ... }, totals: { ... } }
+
       if (responseData && responseData.items) {
         setData(responseData.items.data || []);
         setTotals(responseData.totals || { total_biaya_aktual: 0, total_mmel: 0, jumlah_ganti_aset: 0 });
@@ -108,7 +108,7 @@ export default function BiayaPerbaikan() {
           totalItems: responseData.items.total
         }));
       } else if (responseData && responseData.data) {
-        // Fallback if previous structure
+
         setData(responseData.data || []);
       } else {
         setData([]);
@@ -140,7 +140,7 @@ export default function BiayaPerbaikan() {
 
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
-    const startYear = 2020; // Starting year for the system
+    const startYear = 2020;
     const years = [];
     for (let year = currentYear; year >= startYear; year--) {
       years.push({ value: year.toString(), label: year.toString() });

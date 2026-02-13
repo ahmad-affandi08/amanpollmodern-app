@@ -16,14 +16,14 @@ export default function AlatBaruList() {
   usePageTitle('Pengajuan Alat Baru');
   const { showToast } = useToast();
 
-  // Filters & Pagination
+
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
     search: '',
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Queries
+
   const { data, isLoading, isError } = useAlatBaru({
     search: debouncedSearch,
     page: pagination.currentPage,
@@ -39,17 +39,17 @@ export default function AlatBaruList() {
   const approveMutation = useApproveAlatBaru();
   const deleteMutation = useDeleteAlatBaru();
 
-  // State
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
   const [confirmApprove, setConfirmApprove] = useState({ isOpen: false, id: null });
   const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '', altText: '' });
 
-  // Extract Data
+
   const items = data?.pages || [];
 
-  // Handlers
+
   const handleDetail = (item) => {
     setSelectedItem(item);
     setDetailModalOpen(true);

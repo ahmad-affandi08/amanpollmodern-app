@@ -31,17 +31,17 @@ export default function MobileFormPemeliharaan() {
     kondisi_alat: 'Baik',
   });
 
-  // Pre-fill form data when data is loaded
+
   React.useEffect(() => {
     if (data?.pemeliharaan) {
       setFormData(prev => ({
         ...prev,
-        // Only pre-fill simple fields, checklists should be fresh for new inspection
+
         nama_kepala_ruangan: data.pemeliharaan.nama_kepala_ruangan || '',
         biaya: data.pemeliharaan.biaya || 0,
-        // Optional: pre-fill other fields if desired, but usually new inspection needs new inputs
-        // rekomendasi: data.pemeliharaan.rekomendasi || '',
-        // keterangan_pemeliharaan: data.pemeliharaan.keterangan_pemeliharaan || '',
+
+
+
       }));
     }
   }, [data]);
@@ -89,7 +89,7 @@ export default function MobileFormPemeliharaan() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate teknisi signature (required)
+
     if (signatureTeknisiRef.current.isEmpty()) {
       setToast({ type: 'error', message: 'Tanda tangan teknisi harus diisi' });
       return;
@@ -97,7 +97,7 @@ export default function MobileFormPemeliharaan() {
 
     const ttdTeknisi = signatureTeknisiRef.current.toDataURL();
 
-    // Kepala ruang signature is optional
+
     const ttdKepalaRuang = signatureKepalaRuangRef.current.isEmpty()
       ? null
       : signatureKepalaRuangRef.current.toDataURL();
@@ -268,7 +268,7 @@ export default function MobileFormPemeliharaan() {
                 {category.checklists.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
                 ) : category.nama_kategori === 'safety_check' ? (
-                  // Safety Check - Textarea
+
                   <div className="space-y-3">
                     {category.checklists.map((checklist) => (
                       <textarea
@@ -282,7 +282,7 @@ export default function MobileFormPemeliharaan() {
                     ))}
                   </div>
                 ) : (
-                  // Maintenance / P.Fungsi - Radio Buttons
+
                   <div className="space-y-3">
                     {category.checklists.map((checklist) => (
                       <div key={checklist.id} className="bg-gray-50 rounded-xl p-3">

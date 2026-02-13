@@ -18,14 +18,14 @@ export default function SearchableSelect({
   required = false,
   disabled = false,
   className = '',
-  variant = 'default', // 'default' or 'thick'
+  variant = 'default',
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Close dropdown when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -38,20 +38,20 @@ export default function SearchableSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Focus search input when dropdown opens
+
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Filter options based on search term
+
   const filteredOptions = options.filter((option) => {
     const displayValue = option[displayKey]?.toString().toLowerCase() || '';
     return displayValue.includes(searchTerm.toLowerCase());
   });
 
-  // Get selected option display text
+
   const selectedOption = options.find((opt) => String(opt[valueKey]) === String(value));
   const selectedText = selectedOption ? selectedOption[displayKey] : placeholder;
 

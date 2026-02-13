@@ -118,8 +118,8 @@ export default function InventarisDetail() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 min-w-fit flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
-                  ? 'bg-brand-primary text-white shadow-lg'
-                  : 'text-gray-500 hover:bg-gray-50'
+                ? 'bg-brand-primary text-white shadow-lg'
+                : 'text-gray-500 hover:bg-gray-50'
                 }`}
             >
               <tab.icon size={18} />
@@ -420,7 +420,7 @@ export default function InventarisDetail() {
   );
 }
 
-// Helper Component
+
 function DetailField({ label, value }) {
   return (
     <div className="space-y-1">
@@ -432,7 +432,7 @@ function DetailField({ label, value }) {
   );
 }
 
-// Skeleton Loading Component
+
 function InventarisDetailSkeleton() {
   return (
     <div className="space-y-6 animate-fade-in">

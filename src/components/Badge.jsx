@@ -42,24 +42,24 @@ export default function Badge({
  */
 export function getStatusBadgeVariant(status) {
   const statusMap = {
-    // Kondisi Alat
+
     'Baik': 'success',
     'Rusak Ringan': 'warning',
     'Rusak Berat': 'error',
     'Dalam Perbaikan': 'info',
 
-    // Status Aduan
+
     'Pending': 'warning',
     'Sedang Dikerjakan': 'info',
     'Tindakan Lanjutan': 'secondary',
     'Selesai': 'success',
     'Ditolak': 'error',
 
-    // Status Pemeliharaan
+
     'Belum Selesai': 'warning',
     'Selesai': 'success',
 
-    // Generic
+
     'Active': 'success',
     'Inactive': 'gray',
   };

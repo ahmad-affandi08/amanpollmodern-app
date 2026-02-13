@@ -26,7 +26,7 @@ export default function MobileAddAlatBaru() {
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // Fetch nama alat options
+
   const { data: namaAlatData } = useMasterNamaAlat({ all: 1 });
 
   const namaAlatOptions = (namaAlatData?.data || []).map((item) => ({
@@ -45,13 +45,13 @@ export default function MobileAddAlatBaru() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 10MB)
+
       if (file.size > 10 * 1024 * 1024) {
         setErrors((prev) => ({ ...prev, img_alat_baru: 'Ukuran gambar maksimal 10MB' }));
         return;
       }
 
-      // Validate file type
+
       if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
         setErrors((prev) => ({ ...prev, img_alat_baru: 'Format harus jpg, jpeg, atau png' }));
         return;
@@ -60,7 +60,7 @@ export default function MobileAddAlatBaru() {
       setFormData((prev) => ({ ...prev, img_alat_baru: file }));
       setErrors((prev) => ({ ...prev, img_alat_baru: '' }));
 
-      // Create preview
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);

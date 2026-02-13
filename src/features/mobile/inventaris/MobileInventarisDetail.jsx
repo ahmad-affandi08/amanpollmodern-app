@@ -8,7 +8,7 @@ import { useInventarisDetail } from '../../../hooks/queries/useInventarisQueries
 import { rupiah } from '../../../utils/format';
 import UpdateLocationModal from './components/UpdateLocationModal';
 
-// InfoRow component - moved outside to prevent re-creation on every render
+
 const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
   <div className="flex items-start justify-between py-3 border-b border-gray-50 last:border-0">
     <div className="flex items-center gap-2.5 text-gray-500">
@@ -39,7 +39,7 @@ export default function MobileInventarisDetail() {
   const [activeTab, setActiveTab] = useState('info');
   const [isLocationModalOpen, setLocationModalOpen] = useState(false);
 
-  // Loading state
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex justify-center font-sans">
@@ -66,7 +66,7 @@ export default function MobileInventarisDetail() {
     );
   }
 
-  // Error state
+
   if (isError || !inventaris) {
     return (
       <div className="min-h-screen bg-bg-light flex justify-center">

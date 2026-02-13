@@ -19,15 +19,15 @@ export default function Pagination({
   totalData
 }) {
 
-  // If no pagination needed and no totalData to show, hide completely
+
   if (totalPages <= 1 && (totalData === undefined || totalData === null)) {
     return null;
   }
 
-  // Helper to generate page numbers to display
+
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisiblePages = 5; // Number of pages to show at once
+    const maxVisiblePages = 5;
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
@@ -89,8 +89,8 @@ export default function Pagination({
           {/* Page Numbers */}
           <div className="flex items-center gap-1">
             {getPageNumbers().map((page, index) => {
-              // Responsive logic: On mobile (default), only show current page and neighbors (+/- 1) and ellipsis
-              // On sm/md, show all generated pages
+
+
               const isVisibleOnMobile =
                 page === '...' ||
                 page === currentPage ||

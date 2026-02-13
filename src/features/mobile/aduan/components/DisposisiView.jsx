@@ -7,7 +7,7 @@ import DisposisiForm from './DisposisiForm';
  * Modern redesign with glassmorphism and smooth animations
  */
 export default function DisposisiView({ aduan }) {
-  // Check if disposisi already exists
+
   const hasDisposisi = aduan?.disposisi_tgl;
 
   if (hasDisposisi) {
@@ -91,6 +91,6 @@ export default function DisposisiView({ aduan }) {
     );
   }
 
-  // Show form if no disposisi
+
   return <DisposisiForm aduan={aduan} />;
 }

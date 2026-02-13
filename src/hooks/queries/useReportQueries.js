@@ -12,7 +12,7 @@ export const useReportAduan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.reports.aduan(filters),
     queryFn: () => AduanApi.getAll(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -25,6 +25,6 @@ export const useReportPemeliharaan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.reports.pemeliharaan(filters),
     queryFn: () => PemeliharaanApi.getAll(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };

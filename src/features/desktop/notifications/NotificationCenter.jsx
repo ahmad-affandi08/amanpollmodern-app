@@ -14,12 +14,12 @@ import { id as idLocale } from 'date-fns/locale';
 
 const NotificationCenter = () => {
   usePageTitle('Pusat Notifikasi');
-  const [filter, setFilter] = useState('all'); // all, unread, read
+  const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
   const pagination = usePagination(20);
 
-  // React Query hooks
+
   const { data, isLoading } = useNotifications(pagination.currentPage, pagination.perPage);
   const notifications = data?.data || [];
   const meta = data?.meta;
@@ -29,34 +29,34 @@ const NotificationCenter = () => {
   const deleteNotificationMutation = useDeleteNotification();
   const deleteAllMutation = useDeleteAllNotifications();
 
-  // Update pagination when meta changes
+
   if (meta && meta.current_page !== pagination.currentPage) {
     pagination.setMetadata(meta);
   }
 
-  // Handle mark as read
+
   const handleMarkAsRead = (id) => {
     markAsReadMutation.mutate(id);
   };
 
-  // Handle delete
+
   const handleDelete = (id) => {
     if (!confirm('Hapus notifikasi ini?')) return;
     deleteNotificationMutation.mutate(id);
   };
 
-  // Handle mark all as read
+
   const handleMarkAllAsRead = () => {
     markAllAsReadMutation.mutate();
   };
 
-  // Handle delete all
+
   const handleDeleteAll = () => {
     if (!confirm('Hapus semua notifikasi?')) return;
     deleteAllMutation.mutate();
   };
 
-  // Filter notifications
+
   const filteredNotifications = notifications.filter(notif => {
     const matchesFilter = filter === 'all' ||
       (filter === 'unread' && !notif.is_read) ||

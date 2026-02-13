@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import { useChangePassword } from '../../../../hooks/queries/useProfileQueries';
-// Toast component removed
+
 import Button from '../../../../components/Button';
 
 export default function ChangePasswordModal({ isOpen, onClose }) {
@@ -34,7 +34,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
       await changePasswordMutation.mutateAsync(formData);
       setToast({ type: 'success', message: 'Password berhasil diubah' });
 
-      // Reset form and close after delay
+
       setTimeout(() => {
         setFormData({ old_password: '', new_password: '' });
         onClose();

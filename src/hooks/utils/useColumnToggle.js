@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
  */
 export default function useColumnToggle(columnDefs, storageKey = 'columnVisibility') {
   const [visibleColumns, setVisibleColumns] = useState(() => {
-    // Try to load from localStorage
+
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
@@ -17,20 +17,20 @@ export default function useColumnToggle(columnDefs, storageKey = 'columnVisibili
       }
     }
 
-    // Default: use defaultVisible from columnDefs
+
     const initial = {};
     columnDefs.forEach(col => {
-      initial[col.key] = col.defaultVisible !== false; // default to true if not specified
+      initial[col.key] = col.defaultVisible !== false;
     });
     return initial;
   });
 
-  // Save to localStorage whenever visibility changes
+
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(visibleColumns));
   }, [visibleColumns, storageKey]);
 
-  // Toggle individual column
+
   const toggleColumn = (columnKey) => {
     setVisibleColumns(prev => ({
       ...prev,
@@ -38,7 +38,7 @@ export default function useColumnToggle(columnDefs, storageKey = 'columnVisibili
     }));
   };
 
-  // Show all columns
+
   const showAll = () => {
     const all = {};
     columnDefs.forEach(col => {
@@ -47,7 +47,7 @@ export default function useColumnToggle(columnDefs, storageKey = 'columnVisibili
     setVisibleColumns(all);
   };
 
-  // Hide all columns (except alwaysVisible ones)
+
   const hideAll = () => {
     const hidden = {};
     columnDefs.forEach(col => {
@@ -56,7 +56,7 @@ export default function useColumnToggle(columnDefs, storageKey = 'columnVisibili
     setVisibleColumns(hidden);
   };
 
-  // Check if column is visible
+
   const isVisible = (columnKey) => {
     return visibleColumns[columnKey] !== false;
   };

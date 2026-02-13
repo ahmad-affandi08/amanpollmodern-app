@@ -4,7 +4,7 @@ import KategoriAlatApi from '../../api/KategoriAlatApi';
 import NamaAlatApi from '../../api/NamaAlatApi';
 import { queryKeys } from '../../lib/queryKeys';
 
-// ==================== USERS ====================
+
 export const useMasterUsers = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.users(filters),
@@ -48,12 +48,12 @@ export const useDeleteUser = () => {
   });
 };
 
-// ==================== RUANGAN ====================
+
 export const useMasterRuangan = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.ruangan(filters),
     queryFn: async () => {
-      // Add all=1 to get all ruangan without pagination
+
       const params = { ...filters, all: 1 };
       const res = await MasterApi.getAllRuangan(params);
       return {
@@ -94,7 +94,7 @@ export const useDeleteRuangan = () => {
   });
 };
 
-// ==================== DIVISI ====================
+
 export const useMasterDivisi = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.divisi(filters),
@@ -138,13 +138,13 @@ export const useDeleteDivisi = () => {
   });
 };
 
-// ==================== NAMA ALAT ====================
+
 export const useMasterNamaAlat = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.namaAlat(filters),
     queryFn: async () => {
       const res = await NamaAlatApi.getAll(filters);
-      // Handle both array and object responses
+
       if (Array.isArray(res)) {
         return { data: res, meta: null };
       }
@@ -186,13 +186,13 @@ export const useDeleteNamaAlat = () => {
   });
 };
 
-// ==================== KATEGORI ====================
+
 export const useMasterKategori = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.master.kategori(filters),
     queryFn: async () => {
       const res = await KategoriAlatApi.getAll(filters);
-      // Handle both array and object responses
+
       if (Array.isArray(res)) {
         return { data: res, meta: null };
       }
@@ -233,7 +233,7 @@ export const useDeleteKategori = () => {
     },
   });
 };
-// Unified export for convenience
+
 export const useMasterData = {
   users: useMasterUsers,
   ruangan: useMasterRuangan,

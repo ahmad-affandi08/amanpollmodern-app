@@ -10,7 +10,7 @@ export default function MobilePemeliharaanHistory() {
   usePageTitle('Riwayat Pemeliharaan');
   const navigate = useNavigate();
 
-  const [statusFilter, setStatusFilter] = useState('all'); // Default to 'all' to show everything
+  const [statusFilter, setStatusFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -21,9 +21,9 @@ export default function MobilePemeliharaanHistory() {
     isFetchingNextPage,
     isLoading,
     error
-  } = usePemeliharaanAssignments(20, '', statusFilter); // Pass empty search and statusFilter
+  } = usePemeliharaanAssignments(20, '', statusFilter);
 
-  // Infinite scroll logic
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -41,7 +41,7 @@ export default function MobilePemeliharaanHistory() {
 
   const pemeliharaanList = data?.pages.flatMap(page => page.data).filter(Boolean) || [];
 
-  // Client-side filtering for dates only (status already filtered by backend)
+
   const filteredList = pemeliharaanList.filter(item => {
     const matchesStartDate = !startDate || new Date(item.jadwal_pemeliharaan) >= new Date(startDate);
     const matchesEndDate = !endDate || new Date(item.jadwal_pemeliharaan) <= new Date(endDate);
@@ -137,7 +137,7 @@ export default function MobilePemeliharaanHistory() {
       {/* List */}
       <div className="space-y-3">
         {isLoading ? (
-          // Skeleton Loading
+
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
               <div className="flex gap-3 mb-3">
@@ -154,7 +154,7 @@ export default function MobilePemeliharaanHistory() {
             </div>
           ))
         ) : filteredList.length === 0 ? (
-          // Empty State
+
           <div className="text-center py-12">
             <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
             <p className="text-gray-500 text-sm">

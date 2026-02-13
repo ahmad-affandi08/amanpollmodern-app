@@ -21,8 +21,8 @@ export default function DetailAnggaranPemeliharaan() {
     try {
       setLoading(true);
       const res = await AnggaranApi.getDetail(id);
-      // Response structure: { data: { items: { data: [item] }, totals: ... } }
-      // Because getAnalysis returns paginated structure even for single item filter (via repo logic)
+
+
 
       const items = res.data.data?.items?.data;
       if (items && items.length > 0) {
@@ -43,8 +43,8 @@ export default function DetailAnggaranPemeliharaan() {
   };
 
   const formatPercent = (val) => {
-    // Input is decimal (e.g. 0.03 for 3%). Display as 3.00%
-    // Update: Service returns 'inflasi' as decimal e.g. 0.03.
+
+
     return (val * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
   };
 

@@ -41,35 +41,35 @@ export default function MasterNamaAlat() {
   const { showToast } = useToast();
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
-  // Queries
+
   const { data: namaAlatData, isLoading } = useMasterNamaAlat({ all: 1 });
   const { data: kategoriData } = useMasterKategori({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
 
-  // Mutations
+
   const createMutation = useCreateNamaAlat();
   const updateMutation = useUpdateNamaAlat();
   const deleteMutation = useDeleteNamaAlat();
 
-  // Extract data
+
   const dataList = namaAlatData?.data || namaAlatData || [];
   const categories = kategoriData?.data || kategoriData || [];
   const divisions = divisiData?.data || divisiData || [];
 
-  // Filter data
+
   const filteredData = dataList.filter(item =>
     item.nama_nama_alat?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
     item.kategori_alat?.nama_kategori?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  // Pagination
+
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Handlers
+
   const handleOpenCreate = () => {
     setFormData({
       nama_nama_alat: '',
@@ -111,7 +111,7 @@ export default function MasterNamaAlat() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Clean data: convert empty strings to null for nullable fields
+
       const cleanedData = {
         nama_nama_alat: formData.nama_nama_alat,
         standar_usia_pakai: parseInt(formData.standar_usia_pakai) || 0,
@@ -134,7 +134,7 @@ export default function MasterNamaAlat() {
     }
   };
 
-  // Prepare options
+
   const categoryOptions = categories.map(cat => ({
     value: cat.id_kategori_alat || cat.id,
     label: cat.nama_kategori

@@ -1,21 +1,21 @@
 export const ROLES = {
   SUPER_ADMIN: 1,
-  USER_RUANGAN: 2,    // CORRECT per database seeder
+  USER_RUANGAN: 2,
   TEKNISI: 3,
   ADMIN_DIVISI: 4,
-  PIMPINAN: 5         // CORRECT per database seeder
+  PIMPINAN: 5
 };
 
-// Helper for readability
+
 export const ALL_ROLES = Object.values(ROLES);
 
-// Helper to check if role should use mobile interface
+
 export const isMobileRole = (roleId) => {
   const id = parseInt(roleId);
   return id === ROLES.TEKNISI || id === ROLES.USER_RUANGAN;
 };
 
-// Menu Permissions Mapping (strictly whitelist)
+
 export const MENU_PERMISSIONS = {
   'dashboard': ALL_ROLES,
   'inventaris': [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI],

@@ -7,7 +7,7 @@ import Logo3d from '../../assets/img/icon-logo-3d-amanpoll.png';
 const MaintenanceBypass = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying'); // verifying, success, error
+  const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('Verifying bypass token...');
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const MaintenanceBypass = () => {
         setStatus('success');
         setMessage('Access granted! Redirecting to dashboard...');
 
-        // Brief delay to show success, then reload to apply cookie
+
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
@@ -32,7 +32,7 @@ const MaintenanceBypass = () => {
         setStatus('error');
         setMessage(error.response?.data?.message || 'Invalid or expired bypass token.');
 
-        // Redirect back to maintenance after delay
+
         setTimeout(() => {
           navigate('/maintenance');
         }, 3000);

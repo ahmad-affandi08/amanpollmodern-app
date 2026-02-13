@@ -15,7 +15,7 @@ export default function MobilePemeliharaanDetail() {
 
   const { data: pemeliharaan, isLoading } = usePemeliharaanDetail(id);
 
-  // Format currency
+
   const formatRupiah = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -24,7 +24,7 @@ export default function MobilePemeliharaanDetail() {
     }).format(amount || 0);
   };
 
-  // Status badge component
+
   const StatusBadge = ({ status }) => {
     const statusConfig = {
       'Selesai': { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
@@ -42,7 +42,7 @@ export default function MobilePemeliharaanDetail() {
     );
   };
 
-  // Kondisi badge component
+
   const KondisiBadge = ({ kondisi }) => {
     const kondisiConfig = {
       'Baik': { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
@@ -409,7 +409,7 @@ export default function MobilePemeliharaanDetail() {
   );
 }
 
-// Helper Components
+
 const InfoRow = ({ icon, label, value }) => (
   <div className="bg-white rounded-xl p-3 border border-gray-100 flex items-center gap-2">
     <div className="text-gray-400">{icon}</div>

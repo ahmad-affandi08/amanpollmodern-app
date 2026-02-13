@@ -12,11 +12,11 @@ export default function PengaturanAnggaran() {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
 
-  // Data State
+
   const [inflasiList, setInflasiList] = useState([]);
   const [rabData, setRabData] = useState({ persentase: 5.00 });
 
-  // Form State
+
   const [rabInput, setRabInput] = useState('');
   const [inflasiForm, setInflasiForm] = useState({
     tahun: new Date().getFullYear(),
@@ -64,14 +64,14 @@ export default function PengaturanAnggaran() {
     e.preventDefault();
     try {
       setUpdateLoading(true);
-      // Backend expects percentage (e.g. 3.5), it will divide by 100.
+
       await AnggaranApi.createInflasi(inflasiForm);
       showToast('Data inflasi berhasil ditambahkan', 'success');
       setInflasiForm({
         tahun: new Date().getFullYear(),
         tingkat_inflasi: ''
       });
-      fetchData(); // Refresh list
+      fetchData();
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.message || 'Gagal menambahkan inflasi';

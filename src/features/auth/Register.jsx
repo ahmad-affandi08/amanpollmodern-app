@@ -7,7 +7,7 @@ import Logo from '../../assets/img/icon-logo-amanpoll.png';
 import LogoAmanpoll3d from '../../assets/img/icon-logo-3d-amanpoll.png';
 import { Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
 
-// Consistent Style with Login.jsx (Thick, Rounded 20px, large text)
+
 const ThickInput = ({ label, type = "text", suffix, ...props }) => (
   <div className="mb-5">
     <label className="block text-brand-primary font-bold mb-2 ml-1 text-base">{label}</label>
@@ -45,7 +45,7 @@ const ThickSelect = ({ label, children, ...props }) => (
 
 export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Identity, 2: Security
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     kategori_user_id: '',
     nama_lengkap: '',
@@ -93,7 +93,7 @@ export default function Register() {
   const handleNext = (e) => {
     e.preventDefault();
     if (step === 1) {
-      // Manual validation for Step 1
+
       if (!form.kategori_user_id || !form.nama_lengkap || !form.username) {
         setError("Lengkapi data langkah 1 dulu ya!");
         return;

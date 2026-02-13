@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import AlatBaruApi from '../../api/AlatBaruApi';
 
-// Get alat baru list with infinite scroll
+
 export const useAlatBaru = (params = {}) => {
   return useInfiniteQuery({
     queryKey: ['alat-baru', params],
@@ -18,7 +18,7 @@ export const useAlatBaru = (params = {}) => {
   });
 };
 
-// Get single alat baru detail
+
 export const useAlatBaruDetail = (id) => {
   return useQuery({
     queryKey: ['alat-baru', id],
@@ -27,7 +27,7 @@ export const useAlatBaruDetail = (id) => {
   });
 };
 
-// Create alat baru mutation
+
 export const useCreateAlatBaru = () => {
   const queryClient = useQueryClient();
 
@@ -39,7 +39,7 @@ export const useCreateAlatBaru = () => {
   });
 };
 
-// Delete alat baru mutation
+
 export const useDeleteAlatBaru = () => {
   const queryClient = useQueryClient();
 
@@ -51,7 +51,7 @@ export const useDeleteAlatBaru = () => {
   });
 };
 
-// Approve alat baru mutation (admin only)
+
 export const useApproveAlatBaru = () => {
   const queryClient = useQueryClient();
 

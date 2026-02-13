@@ -36,7 +36,7 @@ export const useCreateDisposisiPemeliharaan = () => {
       disposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
-      // Invalidate pemeliharaan queries to refresh data
+
       queryClient.invalidateQueries({ queryKey: ['pemeliharaan'] });
     },
     onError: (error) => {

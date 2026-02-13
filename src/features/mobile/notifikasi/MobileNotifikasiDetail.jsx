@@ -18,12 +18,12 @@ export default function MobileNotifikasiDetail() {
     const fetchNotification = async () => {
       try {
         const response = await NotificationApi.getAll({ page: 1, per_page: 100 });
-        // API returns: response.data = { data: [...], meta: {...} }
+
         const notifications = response.data?.data || [];
         const notification = notifications.find(n => n.id == id);
         setNotifikasi(notification);
 
-        // Auto mark as read if unread
+
         if (notification && !notification.is_read) {
           NotificationApi.markAsRead(id)
             .then(() => {

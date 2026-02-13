@@ -312,7 +312,7 @@ export default function DetailReportAduan() {
   );
 }
 
-// Helper Components
+
 const StatusBadge = ({ status }) => {
   const statusConfig = {
     'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200', icon: Clock },
@@ -486,7 +486,7 @@ const SignatureCard = ({ label, name, image, onPreview }) => (
   </div>
 );
 
-// Modern Skeleton Loading Component
+
 const DetailReportSkeleton = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">

@@ -20,7 +20,7 @@ export default function KonfigurasiData() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Initialize form data when data loads
+
   React.useEffect(() => {
     if (data?.data) {
       setInstitutionName(data.data.institution_name || '');
@@ -32,13 +32,13 @@ export default function KonfigurasiData() {
   const handleFileSelect = (file) => {
     if (!file) return;
 
-    // Validate file type
+
     if (!file.type.startsWith('image/')) {
       showToast('File harus berupa gambar', 'error');
       return;
     }
 
-    // Validate file size (max 10MB)
+
     if (file.size > 10 * 1024 * 1024) {
       showToast('Ukuran file maksimal 10MB', 'error');
       return;
@@ -46,7 +46,7 @@ export default function KonfigurasiData() {
 
     setSelectedFile(file);
 
-    // Create preview
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setLogoPreview(reader.result);
@@ -83,13 +83,13 @@ export default function KonfigurasiData() {
     e.preventDefault();
 
     try {
-      // Upload logo first if there's a new file
+
       if (selectedFile) {
         await uploadLogoMutation.mutateAsync(selectedFile);
         showToast('Logo berhasil diupload', 'success');
       }
 
-      // Update config
+
       await updateMutation.mutateAsync({
         institution_name: institutionName,
         city: city,
@@ -190,7 +190,7 @@ export default function KonfigurasiData() {
                   }`}
               >
                 {logoPreview ? (
-                  // Preview with image
+
                   <div className="relative group">
                     <img
                       src={logoPreview}
@@ -218,7 +218,7 @@ export default function KonfigurasiData() {
                     </div>
                   </div>
                 ) : (
-                  // Empty state - drag & drop area
+
                   <div className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                       <ImageIcon size={32} className="text-gray-400" />

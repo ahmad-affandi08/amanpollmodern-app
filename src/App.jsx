@@ -11,7 +11,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { ROLES } from './features/auth/constants';
 
-// Pages
+
 import MasterKategori from './features/desktop/inventaris/MasterKategori';
 import MasterNamaAlat from './features/desktop/inventaris/MasterNamaAlat';
 import InventarisList from './features/desktop/inventaris/InventarisList';
@@ -33,7 +33,7 @@ import DetailAnggaranPemeliharaan from './features/desktop/pengaturan/DetailAngg
 import BiayaPerbaikan from './features/desktop/pengaturan/BiayaPerbaikan';
 import NotificationCenter from './features/desktop/notifications/NotificationCenter';
 
-// Mobile
+
 import DashboardLayoutMobile from './layouts/DashboardLayoutMobile';
 import MobileDashboard from './features/mobile/dashboard/MobileDashboard';
 import MobileAduan from './features/mobile/aduan/MobileAduan';
@@ -64,19 +64,19 @@ import MaintenanceBypass from './features/system/MaintenanceBypass';
 
 const router = createBrowserRouter(
   [
-    // ... existing routes ...
-    // Public routes
+
+
     { path: '/', element: <LandingPage /> },
     { path: '/login', element: <Login /> },
     { path: '/register', element: <Register /> },
     { path: '/maintenance', element: <MaintenancePage /> },
     { path: '/bypass/:token', element: <MaintenanceBypass /> },
 
-    // Public Disposisi routes - accessible from WhatsApp notifications
+
     { path: '/mobile/aduan/:id/disposisi', element: <MobileDisposisiAduan /> },
     { path: '/mobile/pemeliharaan/:id/disposisi', element: <MobileDisposisiPemeliharaan /> },
 
-    // Protected routes with Dashboard Layout
+
     {
       path: '/dashboard',
       element: (
@@ -87,7 +87,7 @@ const router = createBrowserRouter(
         </ProtectedRoute>
       ),
     },
-    // Inventaris Routes
+
     {
       path: '/inventaris',
       element: <Navigate to="/inventaris/data" replace />
@@ -117,31 +117,31 @@ const router = createBrowserRouter(
       element: <ProtectedRoute><DashboardLayout><InventarisDetail /></DashboardLayout></ProtectedRoute>
     },
 
-    // Aduan Routes
+
     {
       path: '/aduan',
       element: <ProtectedRoute><DashboardLayout><AduanList /></DashboardLayout></ProtectedRoute>
     },
 
-    // Pemeliharaan Routes
+
     {
       path: '/pemeliharaan',
       element: <ProtectedRoute><DashboardLayout><PemeliharaanList /></DashboardLayout></ProtectedRoute>
     },
 
-    // Scanner Route
+
     {
       path: '/scanner',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.TEKNISI, ROLES.PIMPINAN]}><DashboardLayout><QrScanner /></DashboardLayout></ProtectedRoute>
     },
 
-    // Report Routes
+
     {
       path: '/report/aduan',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><ReportAduan /></DashboardLayout></ProtectedRoute>
     },
 
-    // Alat Baru Routes (Desktop)
+
     {
       path: '/alat-baru',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><AlatBaruList /></DashboardLayout></ProtectedRoute>
@@ -159,7 +159,7 @@ const router = createBrowserRouter(
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailReportPemeliharaan /></DashboardLayout></ProtectedRoute>
     },
 
-    // Anggaran Routes
+
     {
       path: '/anggaran/pengaturan',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><PengaturanAnggaran /></DashboardLayout></ProtectedRoute>
@@ -176,12 +176,12 @@ const router = createBrowserRouter(
       path: '/anggaran/biaya-perbaikan',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><BiayaPerbaikan /></DashboardLayout></ProtectedRoute>
     },
-    // Notifications
+
     {
       path: '/notifications',
       element: <ProtectedRoute><DashboardLayout><NotificationCenter /></DashboardLayout></ProtectedRoute>
     },
-    // User Management Routes
+
     {
       path: '/users',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><MasterUser /></DashboardLayout></ProtectedRoute>
@@ -195,7 +195,7 @@ const router = createBrowserRouter(
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><MasterRuangan /></DashboardLayout></ProtectedRoute>
     },
 
-    // Konfigurasi Routes
+
     {
       path: '/konfigurasi/data',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiData /></DashboardLayout></ProtectedRoute>
@@ -209,13 +209,13 @@ const router = createBrowserRouter(
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiSistem /></DashboardLayout></ProtectedRoute>
     },
 
-    // Scanner
+
     {
       path: '/scanner',
       element: <ProtectedRoute><DashboardLayout><div className="bg-white rounded-2xl p-8 shadow-sm"><h1 className="text-2xl font-bold mb-4">Scanner QR Code</h1></div></DashboardLayout></ProtectedRoute>
     },
 
-    // Mobile Routes (User Ruangan & Teknisi)
+
     {
       path: '/mobile',
       element: (
@@ -246,7 +246,7 @@ const router = createBrowserRouter(
       ]
     },
 
-    // Legacy routes - redirect to appropriate dashboard
+
     { path: '/superadmin', element: <Navigate to="/dashboard" replace /> },
     { path: '/userruangan', element: <Navigate to="/mobile/dashboard" replace /> },
     { path: '/teknisi', element: <Navigate to="/mobile/dashboard" replace /> },
@@ -262,12 +262,12 @@ const router = createBrowserRouter(
   }
 );
 
-// Create QueryClient with optimal configuration
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 1,
     },

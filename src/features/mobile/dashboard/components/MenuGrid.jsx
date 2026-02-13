@@ -12,7 +12,7 @@ export default function MenuGrid() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
 
-  // Menu items for USER_RUANGAN (kategori_user_id = 2)
+
   const userRuanganMenuItems = [
     {
       icon: IconAduan,
@@ -44,7 +44,7 @@ export default function MenuGrid() {
     }
   ];
 
-  // Menu items for TEKNISI (kategori_user_id = 3)
+
   const teknisiMenuItems = [
     {
       icon: IconAduan,
@@ -76,7 +76,7 @@ export default function MenuGrid() {
     }
   ];
 
-  // Select menu items based on user role
+
   const menuItems = parseInt(user?.kategori_user_id) === 3 ? teknisiMenuItems : userRuanganMenuItems;
 
   return (

@@ -11,7 +11,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [teknisiOptions, setTeknisiOptions] = useState([]);
-  // Form Data State
+
 
   const [formData, setFormData] = useState({
     jadwal_pemeliharaan: '',
@@ -20,10 +20,10 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
 
   useEffect(() => {
     if (isOpen && pemeliharaan) {
-      // Helper to format date safely to YYYY-MM-DD
+
       const formatDate = (dateString) => {
         if (!dateString) return '';
-        // Handle both "YYYY-MM-DD" and "YYYY-MM-DD HH:mm:ss"
+
         return dateString.split(' ')[0];
       };
 

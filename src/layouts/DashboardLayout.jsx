@@ -14,14 +14,14 @@ import NotificationBell from '../components/NotificationBell';
 import ConfirmDialog from '../components/Alert/Alert';
 
 export default function DashboardLayout({ children }) {
-  // Sidebar State
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile toggle
-  const [collapsed, setCollapsed] = useState(false); // Desktop collapse (minimized)
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [openMenus, setOpenMenus] = useState({}); // State for collapsible menus
-  const [hoverMenu, setHoverMenu] = useState({ item: null, position: null }); // State for hover menu when collapsed
-  const hoverTimeoutRef = useRef(null); // Ref to store timeout ID
+  const [openMenus, setOpenMenus] = useState({});
+  const [hoverMenu, setHoverMenu] = useState({ item: null, position: null });
+  const hoverTimeoutRef = useRef(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,10 +39,10 @@ export default function DashboardLayout({ children }) {
   };
 
   const toggleMenu = (label) => {
-    // If sidebar is collapsed, expand it when user tries to open a submenu
+
     if (collapsed) {
       setCollapsed(false);
-      // Small delay to allow expansion transition before opening menu
+
       setTimeout(() => {
         setOpenMenus(prev => ({
           ...prev,
@@ -59,13 +59,13 @@ export default function DashboardLayout({ children }) {
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
-    // Close all submenus when collapsing to keep it clean
+
     if (!collapsed) {
       setOpenMenus({});
     }
   }
 
-  // Role Constants
+
   const ROLE_SUPER_ADMIN = 1;
   const ROLE_USER_RUANGAN = 2;
   const ROLE_TEKNISI = 3;
@@ -74,13 +74,13 @@ export default function DashboardLayout({ children }) {
 
   const currentRoleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
 
-  // Helper to check access
+
   const hasAccess = (allowedRoles) => {
-    if (!allowedRoles) return true; // Public/All
+    if (!allowedRoles) return true;
     return allowedRoles.includes(currentRoleId);
   };
 
-  // Menu Structure
+
   const menuItems = [
     {
       icon: LayoutDashboard,
@@ -90,12 +90,12 @@ export default function DashboardLayout({ children }) {
     {
       icon: Package,
       label: 'Inventaris',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN], // Pimpinan can view
+      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN],
       children: [
         { icon: Layers, label: 'Master Kategori', path: '/inventaris/kategori', roles: [ROLE_SUPER_ADMIN] },
-        { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] }, // Admin Divisi might need to see names
+        { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] },
         { icon: Server, label: 'Data Alat', path: '/inventaris/data' },
-        { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] }, // Pimpinan cannot add
+        { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] },
       ].filter(child => hasAccess(child.roles))
     },
     {
@@ -157,7 +157,7 @@ export default function DashboardLayout({ children }) {
     },
   ].filter(item => hasAccess(item.roles) && (!item.children || item.children.length > 0));
 
-  // Helper to check if a menu or its children are active
+
   const isActive = (item) => {
     if (item.path) {
       return location.pathname === item.path || location.pathname.startsWith(item.path);
@@ -168,7 +168,7 @@ export default function DashboardLayout({ children }) {
     return false;
   };
 
-  // Helper to check if specific path is active (for child items)
+
   const isPathActive = (path) => location.pathname === path;
 
   return (
@@ -202,7 +202,7 @@ export default function DashboardLayout({ children }) {
                     onClick={() => toggleMenu(item.label)}
                     onMouseEnter={(e) => {
                       if (collapsed) {
-                        // Clear any pending timeout
+
                         if (hoverTimeoutRef.current) {
                           clearTimeout(hoverTimeoutRef.current);
                           hoverTimeoutRef.current = null;
@@ -216,14 +216,14 @@ export default function DashboardLayout({ children }) {
                     }}
                     onMouseLeave={() => {
                       if (collapsed) {
-                        // Clear any existing timeout
+
                         if (hoverTimeoutRef.current) {
                           clearTimeout(hoverTimeoutRef.current);
                         }
-                        // Set new timeout and store its ID
+
                         hoverTimeoutRef.current = setTimeout(() => {
                           setHoverMenu(prev => {
-                            // Only clear if still the same item
+
                             if (prev.item?.label === item.label) {
                               return { item: null, position: null };
                             }
@@ -332,14 +332,14 @@ export default function DashboardLayout({ children }) {
             left: `${hoverMenu.position.left + 8}px`,
           }}
           onMouseEnter={() => {
-            // Clear any pending timeout when hovering over the menu
+
             if (hoverTimeoutRef.current) {
               clearTimeout(hoverTimeoutRef.current);
               hoverTimeoutRef.current = null;
             }
           }}
           onMouseLeave={() => {
-            // Close menu immediately when leaving
+
             setHoverMenu({ item: null, position: null });
           }}
         >
@@ -424,7 +424,7 @@ export default function DashboardLayout({ children }) {
                   const currentPath = location.pathname;
                   let crumbs = [];
 
-                  // Find in menu
+
                   for (const item of menuItems) {
                     if (item.path === currentPath) {
                       crumbs.push({ label: item.label, path: item.path, active: true });
@@ -440,7 +440,7 @@ export default function DashboardLayout({ children }) {
                     }
                   }
 
-                  // Fallback
+
                   if (crumbs.length === 0) {
                     if (currentPath === '/' || currentPath === '/dashboard') {
                       crumbs.push({ label: 'Dashboard', path: '/dashboard', active: true });

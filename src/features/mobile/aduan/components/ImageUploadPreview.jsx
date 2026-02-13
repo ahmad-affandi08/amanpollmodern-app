@@ -19,28 +19,28 @@ export default function ImageUploadPreview({ value, onChange, error }) {
   };
 
   const processFile = (file) => {
-    // Validate file type
+
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
       alert('Format file harus JPG, JPEG, atau PNG');
       return;
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert('Ukuran file maksimal 10MB');
       return;
     }
 
-    // Create preview
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Pass file to parent
+
     onChange(file);
   };
 

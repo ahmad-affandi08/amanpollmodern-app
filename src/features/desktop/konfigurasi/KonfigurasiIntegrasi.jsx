@@ -12,15 +12,15 @@ const KonfigurasiIntegrasi = () => {
     api_token: '',
   });
   const [showToken, setShowToken] = useState(false);
-  const [testStatus, setTestStatus] = useState(null); // null, 'success', 'error'
+  const [testStatus, setTestStatus] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Queries
+
   const { data: config, isLoading } = useFonnteConfig();
   const saveMutation = useSaveFonnteConfig();
   const testMutation = useTestFonnteConnection();
 
-  // Load config data
+
   useEffect(() => {
     if (config) {
       setFormData({

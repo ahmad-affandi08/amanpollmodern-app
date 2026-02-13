@@ -22,16 +22,16 @@ export default function ExportAduanModal({ isOpen, onClose }) {
 
     setLoading(true);
 
-    // Build query params
+
     const params = new URLSearchParams({
       start_date: startDate,
       end_date: endDate,
     });
 
-    // Open export URL in new tab
+
     window.open(`/api/report/aduan/export-excel-teknisi?${params.toString()}`, '_blank');
 
-    // Reset and close
+
     setTimeout(() => {
       setLoading(false);
       setStartDate('');

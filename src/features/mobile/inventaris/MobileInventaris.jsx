@@ -11,7 +11,7 @@ export default function MobileInventaris() {
     nama_alat: ''
   });
 
-  // Infinite query for inventaris list
+
   const {
     data,
     fetchNextPage,
@@ -26,10 +26,10 @@ export default function MobileInventaris() {
       const params = {
         ...filters,
         page: pageParam,
-        limit: 5 // Reduced from 10 for better mobile performance
+        limit: 5
       };
 
-      // Remove empty filters
+
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === null || params[key] === undefined) {
           delete params[key];
@@ -44,10 +44,10 @@ export default function MobileInventaris() {
       const { current_page, last_page } = lastPage.meta;
       return current_page < last_page ? current_page + 1 : undefined;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 
-  // Infinite scroll handler
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
@@ -61,41 +61,41 @@ export default function MobileInventaris() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Flatten pages data
+
   const inventarisList = data?.pages.flatMap(page => page.data || []) || [];
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
 
-  // Export to Excel function - Call backend endpoint
+
   const handleExportCSV = async () => {
     try {
-      // Build query params from filters
+
       const params = new URLSearchParams();
 
       if (filters.kondisi_alat) params.append('kondisi_alat', filters.kondisi_alat);
       if (filters.nama_alat) params.append('nama_alat', filters.nama_alat);
 
-      // Create download URL
+
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       const token = localStorage.getItem('auth_token');
 
-      // Use fetch to download file
+
       const response = await fetch(`${baseURL}/api/inventaris/export?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/vnd.ms-excel',
         },
-        credentials: 'include', // Important: Include cookies for session auth
+        credentials: 'include',
       });
 
       if (!response.ok) {
         throw new Error('Export failed');
       }
 
-      // Get filename from header or use default
+
       const contentDisposition = response.headers.get('Content-Disposition');
       let filename = 'inventaris_export.xls';
       if (contentDisposition) {
@@ -105,7 +105,7 @@ export default function MobileInventaris() {
         }
       }
 
-      // Download file
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -207,7 +207,7 @@ export default function MobileInventaris() {
               )}
             </>
           ) : (
-            // Empty State
+
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-[20px] p-8 text-center border border-gray-200">
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                 <Package size={40} className="text-gray-400" />

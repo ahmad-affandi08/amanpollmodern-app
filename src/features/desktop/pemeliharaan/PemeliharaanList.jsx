@@ -23,7 +23,7 @@ import AddPemeliharaanModal from './AddPemeliharaanModal';
 import EditPemeliharaanModal from './EditPemeliharaanModal';
 import { useToast } from '../../../components/Alert/useToast';
 
-// Column Definitions
+
 const COLUMN_DEFS = [
   { key: 'index', label: 'No.', defaultVisible: true },
   { key: 'no_pemeliharaan', label: 'No. Pemeliharaan', defaultVisible: true },
@@ -48,7 +48,7 @@ export default function PemeliharaanList() {
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const userDivisiId = user?.divisi_id;
 
-  // Column Toggle
+
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
     COLUMN_DEFS,
     'pemeliharaan_columns'

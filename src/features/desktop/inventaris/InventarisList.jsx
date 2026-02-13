@@ -61,19 +61,19 @@ export default function InventarisList() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Role Constants
+
   const ROLE_ADMIN_DIVISI = 4;
   const ROLE_PIMPINAN = 5;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const isPimpinan = user?.kategori_user_id === ROLE_PIMPINAN;
 
-  // Column Toggle
+
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
     COLUMN_DEFS,
     'inventaris_columns'
   );
 
-  // Hooks
+
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
     search: '',
@@ -85,14 +85,14 @@ export default function InventarisList() {
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Alert State
+
   const { showToast } = useToast();
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
-  // Image Preview Modal
+
   const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '' });
 
-  // Queries
+
   const { data: inventarisData, isLoading, refetch } = useInventaris({
     ...filters,
     search: debouncedSearch,
@@ -108,24 +108,24 @@ export default function InventarisList() {
 
   const deleteMutation = useDeleteInventaris();
 
-  // Extract data
+
   const dataList = inventarisData?.data || [];
   const meta = inventarisData?.meta;
 
-  // Update pagination when meta changes
+
   useEffect(() => {
     if (meta) {
       pagination.setMetadata(meta);
     }
   }, [meta]);
 
-  // Prepare options
+
   const categories = kategoriData?.data || [];
   const divisions = divisiData?.data || [];
   const rooms = ruanganData?.data || [];
 
 
-  // Handlers
+
   const handleDelete = (id) => {
     setConfirmDialog({
       isOpen: true,

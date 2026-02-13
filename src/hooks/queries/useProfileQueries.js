@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ProfileApi from '../../api/ProfileApi';
 
-// Keys
+
 export const PROFILE_KEYS = {
   all: ['profile'],
   detail: () => [...PROFILE_KEYS.all, 'detail']
@@ -14,7 +14,7 @@ export const useProfile = () => {
   return useQuery({
     queryKey: PROFILE_KEYS.detail(),
     queryFn: ProfileApi.getProfile,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1
   });
 };

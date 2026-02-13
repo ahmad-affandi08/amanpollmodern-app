@@ -28,10 +28,10 @@ export default function AnggaranPemeliharaan() {
     totalItems: 0
   });
 
-  // Expanded Row State
+
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // Filters
+
   const [filters, setFilters] = useState({
     divisi_id: '',
     kategori_alat_id: '',
@@ -58,7 +58,7 @@ export default function AnggaranPemeliharaan() {
 
   useEffect(() => {
     fetchData(1, { ...filters, search: debouncedSearch });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filters.divisi_id, filters.kategori_alat_id, filters.ruangan_id, filters.tahun_pengadaan, debouncedSearch]);
 
   const fetchOptions = async () => {
@@ -84,7 +84,7 @@ export default function AnggaranPemeliharaan() {
   const fetchData = async (page = 1, currentFilters = filters) => {
     setLoading(true);
     try {
-      // Clean filters: remove empty strings and nulls
+
       const cleanedFilters = Object.fromEntries(
         Object.entries(currentFilters).filter(([_, v]) => v !== '' && v != null)
       );

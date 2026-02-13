@@ -11,7 +11,7 @@ export default function MobileDashboard() {
   usePageTitle('Dashboard');
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
-    tahun_filter: '', // Empty = show all years
+    tahun_filter: '',
     bulan_filter: '',
     kategori_filter: ''
   });
@@ -22,7 +22,7 @@ export default function MobileDashboard() {
     setFilters(newFilters);
   };
 
-  // Show skeleton only on initial load (isPending), not when refetching
+
   if (isLoading && !data) {
     return (
       <div className="max-w-md mx-auto px-4 space-y-4 animate-pulse pt-3">
@@ -98,21 +98,21 @@ export default function MobileDashboard() {
       {/* Charts Grid - Conditional based on Role */}
       <div className="grid grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
         {parseInt(user?.kategori_user_id) === 3 ? (
-          // TEKNISI VIEW - Aduan & Pemeliharaan Charts
+
           <>
             <DonutChart
               title="Aduan"
               data={charts.aduan || []}
-              colors={['var(--color-accent-green)', 'var(--color-accent-yellow-dark)', 'var(--color-danger-600)', 'var(--color-brand-primary-light)']} // Green, Amber, Red, Purple
+              colors={['var(--color-accent-green)', 'var(--color-accent-yellow-dark)', 'var(--color-danger-600)', 'var(--color-brand-primary-light)']}
             />
             <DonutChart
               title="Pemeliharaan"
               data={charts.pemeliharaan || []}
-              colors={['var(--color-accent-cyan-light)', 'var(--color-accent-green)', 'var(--color-brand-primary-light)']} // Cyan, Green, Purple
+              colors={['var(--color-accent-cyan-light)', 'var(--color-accent-green)', 'var(--color-brand-primary-light)']}
             />
           </>
         ) : (
-          // USER RUANGAN VIEW - Inventaris & Kalibrasi Charts
+
           <>
             <DonutChart
               title="Inventaris"

@@ -15,17 +15,17 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
 
-  // Master Data
+
   const [ruanganOptions, setRuanganOptions] = useState([]);
   const [inventarisOptions, setInventarisOptions] = useState([]);
   const [teknisiOptions, setTeknisiOptions] = useState([]);
 
-  // Selection
+
   const [selectedRuangan, setSelectedRuangan] = useState('');
   const [selectedInventaris, setSelectedInventaris] = useState(null);
   const [selectedInventarisId, setSelectedInventarisId] = useState('');
 
-  // State
+
   const [hasActiveSchedule, setHasActiveSchedule] = useState(false);
   const [activeScheduleMessage, setActiveScheduleMessage] = useState('');
   const [schedules, setSchedules] = useState([]);
@@ -56,7 +56,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
         MasterApi.getTeknisi()
       ]);
       setRuanganOptions(ruanganRes.data || ruanganRes);
-      // Ensure teknisiRes is array
+
       const teknisiData = Array.isArray(teknisiRes) ? teknisiRes : (teknisiRes.data || []);
       setTeknisiOptions(teknisiData);
     } catch (error) {
@@ -76,7 +76,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
     if (ruanganId) {
       try {
         setLoading(true);
-        const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 999 });
+        const res = await InventarisApi.getAll({ ruangan_id: ruanganId, per_page: 2000 });
         setInventarisOptions(res.data || []);
       } catch (error) {
         showToast('Gagal memuat inventaris', 'error');
@@ -102,14 +102,14 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
     const inv = inventarisOptions.find(i => String(i.id_inventaris || i.id) === String(invId));
     setSelectedInventaris(inv);
 
-    // Check Active Schedule
+
     setChecking(true);
     try {
       const check = await PemeliharaanApi.checkActiveSchedule(invId);
       if (check.active) {
         setHasActiveSchedule(true);
         setActiveScheduleMessage(check.message);
-        setSchedules([]); // Clear schedules if blocked
+        setSchedules([]);
       } else {
         setHasActiveSchedule(false);
         setActiveScheduleMessage('');
@@ -138,7 +138,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
     const newSchedules = [...schedules];
     newSchedules[index].jadwal_pemeliharaan = value;
 
-    // Auto-calculate subsequent dates
+
     if (index === 0 && value && schedules.length > 1) {
       const baseDate = new Date(value);
       const interval = schedules.length;
@@ -146,8 +146,8 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
 
       for (let i = 1; i < schedules.length; i++) {
         const nextDate = new Date(baseDate);
-        // Calculate offset in months: i * (12/N)
-        // e.g., N=4 -> step=3. i=1->3mo, i=2->6mo...
+
+
         const offsetMonths = Math.floor(i * monthStep);
         nextDate.setMonth(nextDate.getMonth() + offsetMonths);
 

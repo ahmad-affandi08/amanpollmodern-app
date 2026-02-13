@@ -19,7 +19,7 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
     },
   }));
 
-  // Prevent scroll and other gestures when drawing
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -28,7 +28,7 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
       e.preventDefault();
     };
 
-    // Prevent scrolling when touching the signature pad
+
     container.addEventListener('touchstart', preventScroll, { passive: false });
     container.addEventListener('touchmove', preventScroll, { passive: false });
 

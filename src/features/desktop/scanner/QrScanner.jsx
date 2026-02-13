@@ -17,7 +17,7 @@ export default function Scanner() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Wait a bit for video element to be rendered
+
     const timer = setTimeout(() => {
       if (!videoRef.current) {
         setError('Video element tidak ditemukan');
@@ -69,7 +69,7 @@ export default function Scanner() {
         setError(err.message || 'Gagal menginisialisasi scanner');
         setLoading(false);
       }
-    }, 100); // Small delay to ensure video element is rendered
+    }, 100);
 
     return () => {
       clearTimeout(timer);
@@ -89,15 +89,15 @@ export default function Scanner() {
       try {
         setLoading(true);
 
-        // Stop and destroy current scanner
+
         await scannerRef.current.stop();
         scannerRef.current.destroy();
 
-        // Toggle camera mode
+
         const newMode = currentCamera === 'environment' ? 'user' : 'environment';
         setCurrentCamera(newMode);
 
-        // Create new scanner with new camera
+
         const qrScanner = new QrScanner(
           videoRef.current,
           (result) => {
@@ -123,7 +123,7 @@ export default function Scanner() {
 
         scannerRef.current = qrScanner;
 
-        // Start new scanner
+
         await qrScanner.start();
         setLoading(false);
       } catch (err) {

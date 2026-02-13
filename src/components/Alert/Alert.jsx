@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
 
-// Common Styles for Consistency
+
 const DIALOG_OVERLAY = "fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
 const DIALOG_CARD = "bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-in"
 const ICON_CONTAINER = "w-12 h-12 rounded-full flex items-center justify-center mb-4"
@@ -64,7 +64,7 @@ export default function ConfirmDialog({
     </div>
   )
 
-  // Use Portal to render at document.body level
+
   return ReactDOM.createPortal(dialogContent, document.body)
 }
 
@@ -129,6 +129,6 @@ export function ToastDialog({
     </div>
   )
 
-  // Use Portal to render at document.body level
+
   return ReactDOM.createPortal(dialogContent, document.body)
 }

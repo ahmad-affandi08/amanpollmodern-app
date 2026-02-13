@@ -11,7 +11,7 @@ import React from 'react';
  */
 export default function CalibrationBadge({ item }) {
   const getCalibrationStatus = () => {
-    // No certificate = Belum Kalibrasi
+
     if (!item.file_sertifikat_url) {
       return {
         status: 'belum',
@@ -20,7 +20,7 @@ export default function CalibrationBadge({ item }) {
       };
     }
 
-    // Has certificate but no valid expiry date = Expired
+
     if (!item.kadaluwarsa || item.kadaluwarsa === '0000-00-00') {
       return {
         status: 'expired',
@@ -29,7 +29,7 @@ export default function CalibrationBadge({ item }) {
       };
     }
 
-    // Check if expired
+
     const expDate = new Date(item.kadaluwarsa);
     const today = new Date();
     expDate.setHours(0, 0, 0, 0);

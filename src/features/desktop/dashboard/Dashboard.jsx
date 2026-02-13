@@ -25,7 +25,7 @@ export default function Dashboard() {
   const ROLE_ADMIN_DIVISI = 4;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
 
-  // Queries
+
   const { data, isLoading } = useDashboardStats(filters);
   const { data: divisiData } = useMasterDivisi({ all: 1 });
 
@@ -83,15 +83,15 @@ export default function Dashboard() {
     );
   }
 
-  // Correct Data Access (Handle nested 'data.data' or direct 'data')
-  // API Response: { status: 'success', data: { stats: ..., charts: ..., recent_activities: ... } }
+
+
   const dashboardData = data?.data || data || {};
 
   const stats = dashboardData.stats || {};
   const charts = dashboardData.charts || {};
   const recent = dashboardData.recent || dashboardData.recent_activities || [];
 
-  // Greetings based on time
+
   const hour = new Date().getHours();
   let greeting = 'Selamat Pagi';
   if (hour >= 12) greeting = 'Selamat Siang';
@@ -410,8 +410,8 @@ export default function Dashboard() {
           <div className="space-y-5">
             {/* Direct usage of charts.kondisi array */}
             {(charts.kondisi || []).map((item, index) => {
-              const value = item.value || 0; // Using value property
-              const label = item.name || 'Lainnya'; // Using name property
+              const value = item.value || 0;
+              const label = item.name || 'Lainnya';
               const percentage = Math.round((value / (stats.total_inventaris || 1)) * 100);
               const color = index === 0 ? 'bg-green-500' : index === 1 ? 'bg-yellow-400' : index === 2 ? 'bg-orange-400' : 'bg-red-500';
 
@@ -437,7 +437,7 @@ export default function Dashboard() {
   );
 }
 
-// Components
+
 function QuickActionButton({ icon, label, onClick, color }) {
   return (
     <button

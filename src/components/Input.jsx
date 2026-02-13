@@ -10,7 +10,7 @@ export default function Input({
   onChange,
   ...props
 }) {
-  // Format to Rupiah (add dots)
+
   const formatRupiah = (val) => {
     if (val === undefined || val === null || val === '') return '';
     const stringVal = String(val).replace(/\D/g, '');
@@ -19,10 +19,10 @@ export default function Input({
 
   const handleChange = (e) => {
     if (currency) {
-      // Strip non-digits to get raw value
+
       const rawValue = e.target.value.replace(/\./g, '').replace(/\D/g, '');
 
-      // Create synthetic event
+
       const event = {
         ...e,
         target: {

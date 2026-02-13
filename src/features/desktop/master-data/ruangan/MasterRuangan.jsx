@@ -31,7 +31,7 @@ export default function MasterRuangan() {
     kode_ruangan: ''
   });
 
-  // Confirm Dialog State
+
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -39,28 +39,28 @@ export default function MasterRuangan() {
     onConfirm: null
   });
 
-  // Queries
+
   const { data: ruanganData, isLoading } = useMasterRuangan({
     page: pagination.currentPage,
     per_page: pagination.perPage,
     search: debouncedSearch
   });
 
-  // Mutations
+
   const createMutation = useCreateRuangan();
   const updateMutation = useUpdateRuangan();
   const deleteMutation = useDeleteRuangan();
 
-  // Extract data
+
   const data = ruanganData?.data || [];
   const meta = ruanganData?.meta;
 
-  // Update pagination
+
   useEffect(() => {
     if (meta) pagination.setMetadata(meta);
   }, [meta]);
 
-  // Handlers
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

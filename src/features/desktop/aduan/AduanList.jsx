@@ -29,7 +29,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 
-// Column Definitions
+
 const COLUMN_DEFS = [
   { key: 'no_pendaftaran', label: 'No.', defaultVisible: true },
   { key: 'no_aduan', label: 'No. Aduan', defaultVisible: true },
@@ -51,18 +51,18 @@ export default function AduanList() {
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  // Role Constants
+
   const ROLE_ADMIN_DIVISI = 4;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
   const userDivisiId = user?.divisi_id;
 
-  // Column Toggle
+
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
     COLUMN_DEFS,
     'aduan_columns'
   );
 
-  // Hooks
+
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
     search: '',
@@ -73,13 +73,13 @@ export default function AduanList() {
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Modals
+
   const addModal = useModal();
   const assignModal = useModal();
   const detailModal = useModal();
   const imagePreviewModal = useModal();
 
-  // Queries
+
   const { data: aduanData, isLoading, refetch } = useAduan({
     ...filters,
     search: debouncedSearch,
@@ -92,24 +92,24 @@ export default function AduanList() {
 
   const deleteMutation = useDeleteAduan();
 
-  // Extract data
+
   const aduan = aduanData?.data || [];
   const meta = aduanData?.meta;
 
-  // Update pagination when meta changes
+
   useEffect(() => {
     if (meta) {
       pagination.setMetadata(meta);
     }
   }, [meta]);
 
-  // Prepare options
+
   const ruanganOptions = (ruanganData?.data || []).map(r => ({
     label: r.nama_ruangan,
     value: r.id_ruangan
   }));
 
-  // Function to get filtered teknisi options based on equipment's division
+
   const getFilteredTeknisiOptions = (aduanDivisiId) => {
 
     let teknisi = (usersData?.data || []).filter(u => {
@@ -117,7 +117,7 @@ export default function AduanList() {
       return role === 'teknisi';
     });
 
-    // Filter by equipment's division
+
     if (aduanDivisiId) {
       const targetDivisiId = parseInt(aduanDivisiId);
       teknisi = teknisi.filter(u => parseInt(u.divisi_id) === targetDivisiId);
@@ -129,7 +129,7 @@ export default function AduanList() {
     }));
   };
 
-  // Teknisi options for filter section (shows all teknisi)
+
   const allTeknisi = (usersData?.data || []).filter(u => {
     const role = (u.role || '').toLowerCase();
     return role === 'teknisi';
@@ -140,7 +140,7 @@ export default function AduanList() {
     value: u.id_user
   }));
 
-  // Handlers
+
   const handleDelete = async (id) => {
     if (!confirm('Apakah Anda yakin ingin menghapus aduan ini?')) return;
 
@@ -154,7 +154,7 @@ export default function AduanList() {
 
   const handleFilterChange = (key, value) => {
     updateFilter(key, value);
-    pagination.reset(); // Reset to page 1 when filter changes
+    pagination.reset();
   };
 
   const handleResetFilters = () => {

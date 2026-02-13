@@ -14,11 +14,11 @@ export default function MobileAduanListTeknisi() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // all, pending, sedang_dikerjakan, selesai
+  const [statusFilter, setStatusFilter] = useState('all');
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
 
-  // Use dashboard hook for stats
+
   const { data: dashboardData } = useMobileDashboard({});
   const stats = dashboardData?.stats || {};
 
@@ -33,7 +33,7 @@ export default function MobileAduanListTeknisi() {
 
   const aduanList = data?.pages.flatMap(page => page.data) || [];
 
-  // Filter logic - only for active tasks
+
   const filteredList = aduanList.filter(item => {
     const matchesSearch = searchQuery === '' ||
       item.nama_alat_nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,7 +46,7 @@ export default function MobileAduanListTeknisi() {
     return matchesSearch && matchesStatus;
   });
 
-  // Infinite scroll handler matching MobileInventaris.jsx pattern
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {

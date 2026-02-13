@@ -11,13 +11,13 @@ export default function MobileProfile() {
   usePageTitle('Profile');
   const { user: authUser } = useAuth();
 
-  // Use React Query for fresh data, fallback to auth context data
+
   const { data: profileData, isLoading } = useProfile();
   const user = profileData?.data || authUser;
 
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
-  // Loading skeleton
+
   if (isLoading && !user) {
     return (
       <div className="max-w-md mx-auto px-4 pt-4 pb-24 space-y-4 animate-pulse">

@@ -5,10 +5,10 @@ import Button from '../../../../components/Button';
 import Input from '../../../../components/Input';
 import KategoriChecklistApi from '../../../../api/KategoriChecklistApi';
 import ChecklistMaintenanceApi from '../../../../api/ChecklistMaintenanceApi';
-// Toast component removed - using local toast state only
+
 
 export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData }) {
-  const [activeTab, setActiveTab] = useState(null); // Will be set to first category id
+  const [activeTab, setActiveTab] = useState(null);
   const [categories, setCategories] = useState([]);
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
     if (isOpen && toolData) {
       fetchInitialData();
     } else {
-      // Reset state on close
+
       setCategories([]);
       setChecklists([]);
       setNewItemText('');
@@ -31,14 +31,14 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      // Fetch Categories
+
       const cats = await KategoriChecklistApi.getAll();
       setCategories(cats);
       if (cats.length > 0) {
         setActiveTab(cats[0].id_kategori_checklist_maintenance);
       }
 
-      // Fetch Checklists for this tool
+
       const items = await ChecklistMaintenanceApi.getByNamaAlat(toolData.id);
       setChecklists(items);
     } catch (error) {
@@ -61,12 +61,12 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
         keterangan: newItemText
       });
 
-      // Update local state
+
       setChecklists([...checklists, newItem.data]);
       setNewItemText('');
       setToast({ type: 'success', message: 'Item berhasil ditambahkan' });
 
-      // Clear toast after 2s
+
       setTimeout(() => setToast(null), 2000);
     } catch (error) {
       console.error(error);

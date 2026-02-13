@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
 const MasterApi = {
-  // Divisi
+
   getAllDivisi: async (params) => {
     const response = await axiosClient.get('/divisi', { params });
     return response.data;
@@ -23,7 +23,7 @@ const MasterApi = {
     return response.data;
   },
 
-  // Ruangan
+
   getAllRuangan: async (params) => {
     const response = await axiosClient.get('/ruangan', { params });
     return response.data;
@@ -45,13 +45,13 @@ const MasterApi = {
     return response.data;
   },
 
-  // Kategori User
+
   getAllKategoriUser: async () => {
     const response = await axiosClient.get('/kategori-user');
     return response.data;
   },
 
-  // Users
+
   getAllUsers: async (params) => {
     const response = await axiosClient.get('/users', { params });
     return response.data;
@@ -77,9 +77,9 @@ const MasterApi = {
     return response.data;
   },
 
-  // Helpers
+
   getTeknisi: async () => {
-    // Fetch users. Adjust 'per_page' as needed.
+
     const response = await axiosClient.get('/users', {
       params: {
         per_page: 100,

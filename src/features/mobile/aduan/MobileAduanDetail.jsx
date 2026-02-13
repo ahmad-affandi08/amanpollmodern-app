@@ -19,7 +19,7 @@ export default function MobileAduanDetail() {
 
   const { data: aduan, isLoading } = useAduanDetail(id);
 
-  // Format currency
+
   const formatRupiah = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -28,7 +28,7 @@ export default function MobileAduanDetail() {
     }).format(amount || 0);
   };
 
-  // Status badge component
+
   const StatusBadge = ({ status }) => {
     const statusConfig = {
       'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
@@ -47,7 +47,7 @@ export default function MobileAduanDetail() {
     );
   };
 
-  // Kondisi badge component
+
   const KondisiBadge = ({ kondisi }) => {
     const kondisiConfig = {
       'Baik': { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
@@ -366,7 +366,7 @@ export default function MobileAduanDetail() {
   );
 }
 
-// Helper Components
+
 const InfoRow = ({ icon, label, value }) => (
   <div className="bg-white rounded-xl p-3 border border-gray-100 flex items-center gap-2">
     <div className="text-gray-400">{icon}</div>

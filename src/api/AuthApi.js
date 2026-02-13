@@ -1,4 +1,4 @@
-// API wrapper for authentication with Laravel Sanctum
+
 import axiosClient from './axiosClient';
 
 /**
@@ -23,12 +23,12 @@ export async function login(credentials) {
     const res = await axiosClient.post('/login', credentials);
     const data = res.data;
 
-    // Store token in localStorage
+
     if (data.token) {
       localStorage.setItem('auth_token', data.token);
     }
 
-    // Store user data
+
     if (data.user) {
       localStorage.setItem('user_data', JSON.stringify(data.user));
     }
@@ -46,13 +46,13 @@ export async function logout() {
   try {
     const res = await axiosClient.post('/logout');
 
-    // Clear localStorage
+
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
 
     return res.data;
   } catch (err) {
-    // Clear localStorage even if request fails
+
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
     throw err.response?.data || err;
@@ -66,7 +66,7 @@ export async function getUser() {
   try {
     const res = await axiosClient.get('/user');
 
-    // Update user data in localStorage
+
     if (res.data.user) {
       localStorage.setItem('user_data', JSON.stringify(res.data.user));
     }
@@ -83,7 +83,7 @@ export async function getUser() {
 export async function getKategoriUser() {
   try {
     const res = await axiosClient.get('/kategori-user');
-    return res.data.data || res.data; // Handle both formats
+    return res.data.data || res.data;
   } catch (err) {
     throw err.response?.data || err;
   }
@@ -94,8 +94,8 @@ export async function getKategoriUser() {
  */
 export async function getRuangan() {
   try {
-    const res = await axiosClient.get('/ruangan?all=true'); // Get all data without pagination
-    return res.data.data || res.data; // Handle both formats
+    const res = await axiosClient.get('/ruangan?all=true');
+    return res.data.data || res.data;
   } catch (err) {
     throw err.response?.data || err;
   }
@@ -106,8 +106,8 @@ export async function getRuangan() {
  */
 export async function getDivisi() {
   try {
-    const res = await axiosClient.get('/divisi?all=true'); // Get all data without pagination
-    return res.data.data || res.data; // Handle both formats
+    const res = await axiosClient.get('/divisi?all=true');
+    return res.data.data || res.data;
   } catch (err) {
     throw err.response?.data || err;
   }

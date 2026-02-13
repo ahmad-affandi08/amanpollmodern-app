@@ -12,8 +12,8 @@ export const useDashboardStats = (filters = {}) => {
   return useQuery({
     queryKey: queryKeys.dashboard.stats(filters),
     queryFn: () => DashboardApi.getStats(filters),
-    staleTime: 2 * 60 * 1000, // 2 minutes (dashboard data changes frequently)
-    // Backend now returns data in correct format, no transformation needed
+    staleTime: 2 * 60 * 1000,
+
   });
 };
 
@@ -31,7 +31,7 @@ export const useMobileDashboard = (filters = {}) => {
       });
       return response.data.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
   });
 };

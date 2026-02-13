@@ -7,7 +7,7 @@ import LogoAmanpoll3d from '../../assets/img/icon-logo-3d-amanpoll.png';
 import { Eye, EyeOff } from 'lucide-react';
 import { isMobileRole } from './constants';
 
-// Thick Border Input Style (Werdience/Lucu Style)
+
 const ThickInput = ({ label, type = "text", suffix, ...props }) => (
   <div className="mb-6">
     <label className="block text-brand-primary font-bold mb-2 ml-1 text-lg">{label}</label>
@@ -49,13 +49,13 @@ export default function Login() {
 
       const response = await login(payload);
 
-      // Redirect based on role
+
       if (response.user) {
         const roleId = parseInt(response.user.kategori_user_id);
         const redirectPath = isMobileRole(roleId) ? '/mobile/dashboard' : '/dashboard';
         navigate(redirectPath);
       } else {
-        // Fallback to legacy page redirect or default dashboard
+
         navigate(response.page ? `/${response.page}` : '/dashboard');
       }
     } catch (err) {

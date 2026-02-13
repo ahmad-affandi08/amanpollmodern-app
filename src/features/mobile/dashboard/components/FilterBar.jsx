@@ -4,14 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../../api/axiosClient';
 
 export default function FilterBar({ filters, onFilterChange }) {
-  // Fetch kategori list filtered by user's division
+
   const { data: kategoriData, isLoading: isLoadingKategori } = useQuery({
     queryKey: ['kategori-alat-mobile'],
     queryFn: async () => {
       const response = await axiosClient.get('/mobile/kategori-alat');
       return response.data.data;
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const kategoriList = Array.isArray(kategoriData) ? kategoriData : [];
@@ -34,14 +34,14 @@ export default function FilterBar({ filters, onFilterChange }) {
   ];
 
   const handleChange = (key, value) => {
-    // Apply filter immediately on change
+
     const newFilters = { ...filters, [key]: value };
     onFilterChange(newFilters);
   };
 
   const handleReset = () => {
     const resetFilters = {
-      tahun_filter: '', // Reset to placeholder
+      tahun_filter: '',
       bulan_filter: '',
       kategori_filter: ''
     };

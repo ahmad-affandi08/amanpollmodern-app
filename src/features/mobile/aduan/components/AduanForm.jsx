@@ -15,7 +15,7 @@ export default function AduanForm({ scannedInventarisId }) {
   const { showToast } = useContext(ToastContext);
   const createAduan = useCreateAduan();
 
-  // Fetch inventaris details if scanned from QR code
+
   const { data: scannedInventaris, isLoading: isLoadingScanned } = useInventarisDetail(scannedInventarisId);
 
   const [formData, setFormData] = useState({
@@ -25,7 +25,7 @@ export default function AduanForm({ scannedInventarisId }) {
     nama_alat_id: '',
     no_inventaris: '',
     keluhan: '',
-    nama_pengadu: user?.nama_lengkap || '', // Auto-fill with user's full name
+    nama_pengadu: user?.nama_lengkap || '',
     pengadu_id: user?.id_user || '',
   });
 
@@ -36,7 +36,7 @@ export default function AduanForm({ scannedInventarisId }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Wrap in useCallback to prevent infinite loop in InventarisSelect useEffect
+
   const handleInventarisChange = React.useCallback((selected) => {
     if (selected) {
       setFormData(prev => ({
@@ -44,7 +44,7 @@ export default function AduanForm({ scannedInventarisId }) {
         inventaris_id: selected.id_inventaris,
         nama_alat_id: selected.id_nama_alat,
         no_inventaris: selected.no_inventaris,
-        divisi_id: selected.divisi_id || prev.divisi_id, // Auto-fill divisi from selected tool
+        divisi_id: selected.divisi_id || prev.divisi_id,
       }));
       setNamaAlat(selected.nama_alat);
       setMerk(selected.merk);
@@ -55,7 +55,7 @@ export default function AduanForm({ scannedInventarisId }) {
         inventaris_id: '',
         nama_alat_id: '',
         no_inventaris: '',
-        // Don't clear divisi_id when clearing inventaris
+
       }));
       setNamaAlat('');
       setMerk('');
@@ -63,12 +63,12 @@ export default function AduanForm({ scannedInventarisId }) {
     }
   }, []);
 
-  // Auto-populate form when scanned inventaris data arrives
+
   useEffect(() => {
     const inventarisData = scannedInventaris;
 
     if (inventarisData && inventarisData.id) {
-      // Prepare data in the format expected by handleInventarisChange
+
       const formattedData = {
         id_inventaris: inventarisData.id,
         id_nama_alat: inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
@@ -79,7 +79,7 @@ export default function AduanForm({ scannedInventarisId }) {
         nama_divisi: inventarisData.divisi?.nama_divisi || inventarisData.nama_alat?.divisi?.nama_divisi || '',
       };
 
-      // Auto-fill the form
+
       handleInventarisChange(formattedData);
     }
   }, [scannedInventaris, handleInventarisChange]);
@@ -114,16 +114,16 @@ export default function AduanForm({ scannedInventarisId }) {
     setIsSubmitting(true);
 
     try {
-      // Create FormData for file upload
+
       const submitData = new FormData();
 
-      // Append all fields
+
       submitData.append('ruangan_id', formData.ruangan_id);
       submitData.append('divisi_id', formData.divisi_id);
       submitData.append('keluhan', formData.keluhan);
       submitData.append('pengadu_id', formData.pengadu_id);
 
-      // Optional fields
+
       if (formData.inventaris_id) submitData.append('inventaris_id', formData.inventaris_id);
       if (formData.nama_alat_id) submitData.append('nama_alat_id', formData.nama_alat_id);
       if (formData.no_inventaris) submitData.append('no_inventaris', formData.no_inventaris);
@@ -143,7 +143,7 @@ export default function AduanForm({ scannedInventarisId }) {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user types
+
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

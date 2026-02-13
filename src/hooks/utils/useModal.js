@@ -16,7 +16,7 @@ export const useModal = (initialState = false) => {
 
   const close = useCallback(() => {
     setIsOpen(false);
-    // Delay clearing data to allow exit animations
+
     setTimeout(() => setData(null), 200);
   }, []);
 

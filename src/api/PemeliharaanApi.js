@@ -26,7 +26,7 @@ const PemeliharaanApi = {
     return response.data;
   },
   create: async (data) => {
-    // data can be { schedules: [...] } for bulk or single object
+
     const response = await axiosClient.post('/pemeliharaan', data);
     return response.data;
   },
@@ -39,9 +39,9 @@ const PemeliharaanApi = {
     return response.data;
   },
   checkActiveSchedule: async (inventarisId) => {
-    // Check if there are active schedules for this item
+
     const response = await axiosClient.get(`/pemeliharaan/check-active/${inventarisId}`);
-    return response.data; // { active: boolean, message: string }
+    return response.data;
   },
 
   getFormData: async (id) => {
