@@ -19,7 +19,25 @@ export default function SearchableSelect({
   disabled = false,
   className = '',
   variant = 'default',
+  size = 'md',
 }) {
+  const sizeClasses = {
+    sm: "px-2 py-1.5 text-xs rounded-lg",
+    md: "px-3 py-2 text-sm rounded-xl",
+    lg: "px-4 py-3 text-base rounded-xl",
+  };
+
+  const optionSizeClasses = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2.5 text-sm",
+    lg: "px-6 py-4 text-base",
+  };
+
+  const iconSizes = {
+    sm: 14,
+    md: 16,
+    lg: 20,
+  };
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -95,20 +113,20 @@ export default function SearchableSelect({
           disabled={disabled}
           className={`w-full bg-white text-left flex items-center justify-between transition-all ${variant === 'thick'
             ? 'border-[3px] border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[20px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10'
-            : 'border-2 border-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20'
+            : `border border-gray-200 text-gray-700 font-medium ${sizeClasses[size] || sizeClasses.md} focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20`
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${!value ? 'text-gray-400' : ''}`}
         >
           <span className="truncate">{selectedText}</span>
           <div className="flex items-center gap-2 ml-2">
             {value && !disabled && (
               <X
-                size={variant === 'thick' ? 20 : 16}
+                size={variant === 'thick' ? 20 : (iconSizes[size] || 16)}
                 className="text-gray-400 hover:text-red-500 transition-colors"
                 onClick={handleClear}
               />
             )}
             <ChevronDown
-              size={variant === 'thick' ? 20 : 16}
+              size={variant === 'thick' ? 20 : (iconSizes[size] || 16)}
               className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
             />
           </div>
@@ -135,7 +153,7 @@ export default function SearchableSelect({
                   placeholder={searchPlaceholder}
                   className={`w-full font-medium focus:outline-none transition-all placeholder-gray-400 ${variant === 'thick'
                     ? 'bg-indigo-50 text-brand-primary text-base pl-12 pr-4 py-3 rounded-[15px] focus:ring-2 focus:ring-brand-primary/20'
-                    : 'bg-gray-50 text-gray-700 text-sm pl-10 pr-4 py-2 rounded-lg focus:ring-1 focus:ring-brand-primary/30'
+                    : `bg-gray-50 text-gray-700 ${sizeClasses[size]} pl-10 pr-4 focus:ring-1 focus:ring-brand-primary/30`
                     }`}
                 />
               </div>
@@ -151,7 +169,7 @@ export default function SearchableSelect({
                       key={option[valueKey] || index}
                       type="button"
                       onClick={() => handleSelect(option)}
-                      className={`w-full text-left transition-colors ${variant === 'thick' ? 'px-6 py-4' : 'px-4 py-2.5'
+                      className={`w-full text-left transition-colors ${variant === 'thick' ? 'px-6 py-4' : (optionSizeClasses[size] || optionSizeClasses.md)
                         } ${isSelected
                           ? 'bg-brand-primary text-white hover:bg-brand-primary/90'
                           : variant === 'thick'

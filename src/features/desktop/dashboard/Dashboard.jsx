@@ -103,18 +103,18 @@ export default function Dashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">Dashboard Overview</h1>
-          <p className="text-[#808191] text-sm mt-1">
+          <h1 className="text-xl font-bold text-text-dark">Dashboard Overview</h1>
+          <p className="text-[#808191] text-xs mt-1">
             Monitoring real-time aset dan kinerja pemeliharaan.
           </p>
         </div>
 
         {/* Simple Filter Row */}
-        <div className="flex bg-white rounded-xl p-1 shadow-sm border border-gray-100">
+        <div className="flex bg-white rounded-lg p-0.5 shadow-sm border border-gray-100">
           <select
             value={filters.tahun_filter}
             onChange={(e) => updateFilter('tahun_filter', e.target.value)}
-            className="bg-transparent border-none text-sm font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-lg py-2 pl-3 pr-8"
+            className="bg-transparent border-none text-xs font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-md py-1.5 pl-2.5 pr-6"
           >
             <option value="">Semua Tahun</option>
             {[...Array(5)].map((_, i) => {
@@ -126,11 +126,11 @@ export default function Dashboard() {
           {/* Hide divisi filter for Admin Divisi */}
           {!isAdminDivisi && (
             <>
-              <div className="w-px bg-gray-200 my-2 mx-1"></div>
+              <div className="w-px bg-gray-200 my-1.5 mx-0.5"></div>
               <select
                 value={filters.divisi_id}
                 onChange={(e) => updateFilter('divisi_id', e.target.value)}
-                className="bg-transparent border-none text-sm font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-lg py-2 pl-3 pr-8 max-w-[150px]"
+                className="bg-transparent border-none text-xs font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-md py-1.5 pl-2.5 pr-6 max-w-[150px]"
               >
                 <option value="">Semua Divisi</option>
                 {divisions.map((d) => (
@@ -143,9 +143,9 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={<Package size={24} />}
+          icon={<Package size={20} />}
           title="Total Aset Inventaris"
           value={stats.total_inventaris || 0}
           trend="+2.5% vs bulan lalu"
@@ -155,7 +155,7 @@ export default function Dashboard() {
           cardBgColor="bg-gradient-to-br from-purple-50/50 via-white to-purple-50/30"
         />
         <StatCard
-          icon={<DollarSign size={24} />}
+          icon={<DollarSign size={20} />}
           title="Nilai Aset Keseluruhan"
           value={`Rp ${(stats.total_nilai || 0).toLocaleString('id-ID', { notation: 'compact' })}`}
           subValue={`Rp ${(stats.total_nilai || 0).toLocaleString('id-ID')}`}
@@ -166,7 +166,7 @@ export default function Dashboard() {
           cardBgColor="bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/30"
         />
         <StatCard
-          icon={<CheckCircle2 size={24} />}
+          icon={<CheckCircle2 size={20} />}
           title="Alat Terkalibrasi"
           value={`${stats.total_kalibrasi || 0} Unit`}
           trend="Wajib Kalibrasi"
@@ -176,7 +176,7 @@ export default function Dashboard() {
           cardBgColor="bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30"
         />
         <StatCard
-          icon={<Activity size={24} />}
+          icon={<Activity size={20} />}
           title="Konsumsi Daya Total"
           value={`${(stats.total_daya / 1000).toFixed(1)} kVA`}
           trend="Stabil"
@@ -188,11 +188,11 @@ export default function Dashboard() {
       </div>
 
       {/* Middle Section: Charts & Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Both Charts Stacked */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           {/* Aduan Chart */}
-          <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
@@ -251,7 +251,7 @@ export default function Dashboard() {
           </div>
 
           {/* Pemeliharaan Chart */}
-          <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Pemeliharaan</h3>
@@ -295,9 +295,9 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column: Activity Feed */}
-        <div className="lg:col-span-1 bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 h-full flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg text-text-dark">Aktivitas Terbaru</h3>
+        <div className="lg:col-span-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 h-full flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-base text-text-dark">Aktivitas Terbaru</h3>
             <button className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</button>
           </div>
 
@@ -339,10 +339,10 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom Section: Categories, Quick Actions, Conditions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 1. Category Distribution (Radial/Donut) */}
-        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 flex flex-col">
-          <h3 className="font-bold text-text-dark mb-4">Distribusi Kategori</h3>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col">
+          <h3 className="font-bold text-text-dark mb-4 text-sm">Distribusi Kategori</h3>
           <div className="flex-1 relative min-h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -378,9 +378,9 @@ export default function Dashboard() {
         </div>
 
         {/* 2. Quick Actions (Dark Card) */}
-        <div className="bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-brand-primary/20 rounded-[20px] p-6 text-white flex flex-col justify-between shadow-xl shadow-brand-primary/20">
+        <div className="bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-brand-primary/20 rounded-2xl p-4 text-white flex flex-col justify-between shadow-xl shadow-brand-primary/20">
           <div>
-            <h3 className="font-bold text-lg">Quick Actions</h3>
+            <h3 className="font-bold text-base">Quick Actions</h3>
             <p className="text-indigo-100 text-xs mt-1">Akses cepat menu yang sering digunakan.</p>
           </div>
 
@@ -405,8 +405,8 @@ export default function Dashboard() {
         </div>
 
         {/* 3. Asset Conditions (Progress Bars) */}
-        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 flex flex-col">
-          <h3 className="font-bold text-text-dark mb-6">Kondisi Aset</h3>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col">
+          <h3 className="font-bold text-text-dark mb-4 text-sm">Kondisi Aset</h3>
           <div className="space-y-5">
             {/* Direct usage of charts.kondisi array */}
             {(charts.kondisi || []).map((item, index) => {
@@ -442,7 +442,7 @@ function QuickActionButton({ icon, label, onClick, color }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold shadow-sm hover:-translate-y-1 transition-all whitespace-nowrap ${color}`}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm hover:-translate-y-1 transition-all whitespace-nowrap ${color}`}
     >
       {icon}
       <span>{label}</span>
@@ -452,21 +452,21 @@ function QuickActionButton({ icon, label, onClick, color }) {
 
 function StatCard({ icon, title, value, subValue, trend, trendUp, bgColor, iconColor, cardBgColor }) {
   return (
-    <div className={`${cardBgColor || 'bg-gradient-to-br from-white via-white to-gray-50/30'} rounded-[20px] p-6 shadow-lg shadow-gray-200/50 border border-gray-100/50 hover:shadow-xl hover:shadow-gray-300/30 transition-all duration-300 backdrop-blur-sm`}>
-      <div className="flex justify-between items-start mb-6">
-        <div className={`${bgColor} ${iconColor} p-3 rounded-2xl shadow-inner border border-white/60`}>
+    <div className={`${cardBgColor || 'bg-gradient-to-br from-white via-white to-gray-50/30'} rounded-2xl p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50 hover:shadow-xl hover:shadow-gray-300/30 transition-all duration-300 backdrop-blur-sm`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className={`${bgColor} ${iconColor} p-2.5 rounded-xl shadow-inner border border-white/60`}>
           {icon}
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg ${trendUp ? 'bg-[#EFFFF6] text-[#34D399]' : 'bg-red-50 text-red-500'}`}>
+          <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md ${trendUp ? 'bg-[#EFFFF6] text-[#34D399]' : 'bg-red-50 text-red-500'}`}>
             {trendUp && <TrendingUp size={10} />}
             {trend}
           </div>
         )}
       </div>
       <div>
-        <p className="text-[#92929D] text-sm font-medium mb-1">{title}</p>
-        <h4 className="text-[28px] font-bold text-[#11142D] tracking-tight">{value}</h4>
+        <p className="text-[#92929D] text-xs font-medium mb-1">{title}</p>
+        <h4 className="text-2xl font-bold text-[#11142D] tracking-tight">{value}</h4>
         {subValue && (
           <p className="text-[10px] text-gray-400 mt-1 font-mono tracking-wide">{subValue}</p>
         )}

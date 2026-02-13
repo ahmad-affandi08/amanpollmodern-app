@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, FileText, Download, User, Calendar, Clock, MapPin,
-  Building2, Wrench, CheckCircle, AlertCircle, Package, AlertTriangle, HelpCircle
+  Building2, Wrench, CheckCircle, Package
 } from 'lucide-react';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
@@ -72,12 +72,12 @@ export default function DetailReportPemeliharaan() {
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-        <FileText size={64} className="text-gray-300 mb-4" />
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Data Tidak Ditemukan</h3>
-        <p className="text-gray-500 mb-6">Laporan yang Anda cari tidak tersedia.</p>
+        <FileText size={48} className="text-gray-300 mb-2" />
+        <h3 className="text-lg font-bold text-gray-800 mb-1">Data Tidak Ditemukan</h3>
+        <p className="text-sm text-gray-500 mb-4">Laporan yang Anda cari tidak tersedia.</p>
         <button
           onClick={() => navigate('/report/pemeliharaan')}
-          className="px-6 py-2 bg-brand-primary text-white rounded-xl hover:bg-brand-primary/90 transition-colors"
+          className="px-4 py-2 bg-brand-primary text-white text-sm rounded-lg hover:bg-brand-primary/90 transition-colors"
         >
           Kembali ke List
         </button>
@@ -86,23 +86,22 @@ export default function DetailReportPemeliharaan() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+    <div className="space-y-4 animate-fade-in pb-8">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/report/pemeliharaan')}
-            className="p-2 hover:bg-white rounded-xl transition-colors hover:shadow-sm group"
+            className="p-1.5 hover:bg-white rounded-lg transition-colors hover:shadow-sm group"
           >
-            <ArrowLeft size={24} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
+            <ArrowLeft size={20} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text-dark">Detail Laporan Pemeliharaan</h1>
-            <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-lg font-bold text-text-dark">Detail Laporan Pemeliharaan</h1>
+            <div className="flex items-center gap-2 mt-0.5">
               {data.no_pemeliharaan && (
                 <>
-                  <span className="text-sm text-gray-500">No. Pemeliharaan:</span>
-                  <span className="px-3 py-1 bg-purple-50 text-brand-primary text-xs font-bold rounded-lg border border-purple-200">
+                  <span className="text-xs text-gray-500">No. Pemeliharaan:</span>
+                  <span className="px-2 py-0.5 bg-purple-50 text-brand-primary text-[10px] font-bold rounded border border-purple-200">
                     {data.no_pemeliharaan}
                   </span>
                 </>
@@ -113,84 +112,80 @@ export default function DetailReportPemeliharaan() {
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-lg shadow-sm hover:shadow text-xs transition-all duration-300"
         >
-          <Download size={20} />
+          <Download size={14} />
           Export PDF
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Main Info */}
-        <div className="space-y-6">
-          {/* Device Info Card */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <Package className="text-brand-primary" size={20} />
-              <h2 className="text-lg font-bold text-gray-800">Informasi Alat</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-100">
+              <Package className="text-brand-primary" size={16} />
+              <h2 className="text-sm font-bold text-gray-800">Informasi Alat</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Alat</label>
-                <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl text-gray-800 font-bold">
+                <label className="block text-[10px] font-semibold text-gray-600 mb-1">Nama Alat</label>
+                <div className="px-3 py-2 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg text-gray-800 font-bold text-xs">
                   {data.nama_alat_nama || '-'}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">No Inventaris</label>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-mono font-medium">
+                <label className="block text-[10px] font-semibold text-gray-600 mb-1">No Inventaris</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-mono font-medium text-[10px]">
                   {data.no_inventaris || '-'}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Merk</label>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-medium">
+                <label className="block text-[10px] font-semibold text-gray-600 mb-1">Merk</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium text-xs">
                   {data.merk || '-'}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Location Info */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <MapPin className="text-green-500" size={20} />
-              <h2 className="text-lg font-bold text-gray-800">Informasi Lokasi</h2>
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-100">
+              <MapPin className="text-green-500" size={16} />
+              <h2 className="text-sm font-bold text-gray-800">Informasi Lokasi</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InfoCard icon={<Building2 size={16} />} label="Divisi" value={data.divisi_nama} />
-              <InfoCard icon={<MapPin size={16} />} label="Ruangan" value={data.ruangan_nama} />
-              {data.gedung && <InfoCard icon={<Building2 size={16} />} label="Gedung" value={data.gedung} />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <InfoCard icon={<Building2 size={12} />} label="Divisi" value={data.divisi_nama} />
+              <InfoCard icon={<MapPin size={12} />} label="Ruangan" value={data.ruangan_nama} />
+              {data.gedung && <InfoCard icon={<Building2 size={12} />} label="Gedung" value={data.gedung} />}
             </div>
           </div>
 
-          {/* Schedule Info */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-[24px] p-6 border border-blue-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="text-blue-600" size={20} />
-              <h2 className="text-lg font-bold text-gray-800">Jadwal & Pelaksanaan</h2>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Calendar className="text-blue-600" size={16} />
+              <h2 className="text-sm font-bold text-gray-800">Jadwal & Pelaksanaan</h2>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-blue-200 shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg">
-                  <Calendar size={20} />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-blue-200 shadow-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white shadow-md">
+                  <Calendar size={14} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Jadwal Pemeliharaan</p>
-                  <p className="text-sm font-bold text-gray-900">{formatDate(data.jadwal_pemeliharaan)}</p>
+                  <p className="text-[10px] text-gray-600 font-medium">Jadwal Pemeliharaan</p>
+                  <p className="text-xs font-bold text-gray-900">{formatDate(data.jadwal_pemeliharaan)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-blue-200 shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg">
-                  <Clock size={20} />
+              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-blue-200 shadow-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white shadow-md">
+                  <Clock size={14} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Tanggal Pemeriksaan</p>
-                  <p className="text-sm font-bold text-gray-900">
+                  <p className="text-[10px] text-gray-600 font-medium">Tanggal Pemeriksaan</p>
+                  <p className="text-xs font-bold text-gray-900">
                     {data.tanggal_pemeriksaan ? formatDateTime(data.tanggal_pemeriksaan) : 'Belum Dilakukan'}
                   </p>
                 </div>
@@ -198,33 +193,14 @@ export default function DetailReportPemeliharaan() {
             </div>
           </div>
 
-          {/* Technician Assignment */}
-          {data.teknisi_nama && (
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-[24px] p-6 border border-purple-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Wrench className="text-purple-600" size={20} />
-                <h2 className="text-lg font-bold text-gray-800">Teknisi Penanggung Jawab</h2>
-              </div>
-              <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-purple-200 shadow-sm">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white shadow-lg">
-                  <User size={24} />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-lg">{data.teknisi_nama}</p>
-                  <p className="text-sm text-gray-600">{data.divisi_nama}</p>
-                </div>
-              </div>
-            </div>
-          )}
+
         </div>
 
-        {/* Right Column - Results & Summary */}
-        <div className="space-y-6">
-          {/* Inspection Results */}
+        <div className="space-y-4">
           {data.tanggal_pemeriksaan && (
             <InspectionCard
               title="HASIL PEMERIKSAAN"
-              icon={<CheckCircle size={20} className="text-green-600" />}
+              icon={<CheckCircle size={16} className="text-green-600" />}
               bgColor="from-green-50 to-emerald-50"
               borderColor="border-green-200"
               data={{
@@ -242,17 +218,33 @@ export default function DetailReportPemeliharaan() {
             />
           )}
 
-          {/* Kondisi Alat */}
           {data.kondisi_alat && (
-            <div className="bg-white rounded-[24px] p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-700 mb-3">Kondisi Alat Terakhir</h3>
+            <div className="bg-white rounded-xl p-4 shadow-sm">
+              <h3 className="text-xs font-bold text-gray-700 mb-2">Kondisi Alat Terakhir</h3>
               <KondisiBadge kondisi={data.kondisi_alat} large />
+            </div>
+          )}
+
+          {data.teknisi_nama && (
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100 shadow-sm">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Wrench className="text-purple-600" size={16} />
+                <h2 className="text-sm font-bold text-gray-800">Teknisi Penanggung Jawab</h2>
+              </div>
+              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-purple-200 shadow-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white shadow-md">
+                  <User size={14} />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-xs">{data.teknisi_nama}</p>
+                  <p className="text-[10px] text-gray-600">{data.divisi_nama}</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Image Preview Modal */}
       <ImagePreviewModal
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
@@ -262,7 +254,6 @@ export default function DetailReportPemeliharaan() {
     </div>
   );
 }
-
 
 const StatusBadge = ({ status }) => {
   const statusConfig = {
@@ -274,8 +265,8 @@ const StatusBadge = ({ status }) => {
   const Icon = config.icon;
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${config.bg} ${config.text} ${config.border} text-xs font-bold`}>
-      <Icon size={14} />
+    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border ${config.bg} ${config.text} ${config.border} text-[10px] font-bold`}>
+      <Icon size={10} />
       {status}
     </div>
   );
@@ -290,19 +281,19 @@ const KondisiBadge = ({ kondisi, large = false }) => {
   const config = kondisiConfig[kondisi] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
 
   return (
-    <div className={`inline-flex items-center justify-center px-4 py-2 rounded-xl border-2 ${config.bg} ${config.text} ${config.border} ${large ? 'text-base font-bold w-full' : 'text-sm font-medium'}`}>
+    <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border ${config.bg} ${config.text} ${config.border} ${large ? 'text-sm font-bold w-full' : 'text-xs font-medium'}`}>
       {kondisi || 'Belum Ditentukan'}
     </div>
   );
 };
 
 const InfoCard = ({ icon, label, value }) => (
-  <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-    <div className="flex items-center gap-2 mb-2 text-gray-500">
+  <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
+    <div className="flex items-center gap-1 mb-0.5 text-gray-500">
       {icon}
-      <span className="text-xs font-medium">{label}</span>
+      <span className="text-[10px] font-medium">{label}</span>
     </div>
-    <p className="text-sm font-bold text-gray-800 truncate">{value || '-'}</p>
+    <p className="text-xs font-bold text-gray-800 truncate">{value || '-'}</p>
   </div>
 );
 
@@ -320,34 +311,33 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
   };
 
   return (
-    <div className={`bg-gradient-to-br ${bgColor} rounded-[24px] p-6 border ${borderColor} shadow-sm`}>
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+    <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 border ${borderColor} shadow-sm`}>
+      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-200">
         {icon}
-        <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+        <h2 className="text-sm font-bold text-gray-800">{title}</h2>
       </div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
           {data.kondisi && (
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-2">Kondisi Alat</label>
+              <label className="block text-[10px] font-bold text-gray-600 mb-1">Kondisi Alat</label>
               <KondisiBadge kondisi={data.kondisi} />
             </div>
           )}
 
           {data.tanggal && (
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-2">Tanggal Pemeriksaan</label>
-              <div className="px-3 py-2 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-xs font-semibold">
+              <label className="block text-[10px] font-bold text-gray-600 mb-1">Tanggal Pemeriksaan</label>
+              <div className="px-2.5 py-1.5 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-[10px] font-semibold">
                 {formatDateTime(data.tanggal)}
               </div>
             </div>
           )}
         </div>
 
-        {/* Signatures */}
         {(data.ttd_teknisi || data.ttd_kepala_ruang) && (
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
             {data.ttd_teknisi && (
               <SignatureCard
                 label="TTD Teknisi"
@@ -374,9 +364,9 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
 
 const SignatureCard = ({ label, name, image, onPreview }) => (
   <div>
-    <label className="block text-xs font-bold text-gray-600 mb-2">{label}</label>
+    <label className="block text-[10px] font-bold text-gray-600 mb-1">{label}</label>
     <div
-      className="w-full h-28 bg-white border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-primary transition-colors overflow-hidden group"
+      className="w-full h-20 bg-white border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-brand-primary transition-colors overflow-hidden group"
       onClick={onPreview}
     >
       <img
@@ -386,91 +376,81 @@ const SignatureCard = ({ label, name, image, onPreview }) => (
         onError={(e) => { e.target.src = noImage; }}
       />
     </div>
-    {name && <p className="text-xs text-gray-600 mt-1 text-center font-medium">{name}</p>}
+    {name && <p className="text-[10px] text-gray-600 mt-0.5 text-center font-medium">{name}</p>}
   </div>
 );
 
-
 const DetailReportSkeleton = () => {
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+    <div className="space-y-4 animate-fade-in pb-8">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
           <div>
-            <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
-            <div className="flex items-center gap-3">
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-40 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-1"></div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
             </div>
           </div>
         </div>
-        <div className="h-12 w-40 bg-gray-200 rounded-2xl animate-pulse"></div>
+        <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column Skeleton */}
-        <div className="space-y-6">
-          {/* Device Info Card Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="md:col-span-2">
-                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
+                <div className="h-3 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded-lg animate-pulse"></div>
               </div>
 
               {[1, 2].map((i) => (
                 <div key={i}>
-                  <div className="h-4 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                  <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                  </div>
+                  <div className="h-3 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                  <div className="h-8 bg-gray-200 rounded-lg animate-pulse"></div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Location Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className="w-3 h-3 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-2 w-12 bg-gray-200 rounded animate-pulse"></div>
                   </div>
-                  <div className="h-5 w-32 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-3 w-24 bg-gray-300 rounded animate-pulse"></div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Schedule Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                <div key={i} className="flex items-center gap-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
                   <div className="flex-1">
-                    <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                    <div className="h-4 w-40 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="h-2 w-20 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                    <div className="h-3 w-24 bg-gray-300 rounded animate-pulse"></div>
                   </div>
                 </div>
               ))}
@@ -478,34 +458,28 @@ const DetailReportSkeleton = () => {
           </div>
         </div>
 
-        {/* Right Column Skeleton */}
-        <div className="space-y-6">
-          {/* Inspection Card Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
             </div>
 
-            <div className="space-y-4">
-              {/* Grid Items */}
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[1, 2].map((i) => (
                   <div key={i}>
-                    <div className="h-3 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                    <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="h-2 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                    <div className="h-6 bg-gray-200 rounded-lg animate-pulse"></div>
                   </div>
                 ))}
               </div>
 
-              {/* Signatures */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                 {[1, 2].map((i) => (
                   <div key={i}>
-                    <div className="h-3 w-16 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                    <div className="h-28 bg-gray-100 rounded-xl relative overflow-hidden">
-                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                    </div>
+                    <div className="h-2 w-12 bg-gray-200 rounded mb-1 animate-pulse"></div>
+                    <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
                   </div>
                 ))}
               </div>
@@ -513,15 +487,6 @@ const DetailReportSkeleton = () => {
           </div>
         </div>
       </div>
-
-      {/* Add shimmer keyframe to global styles if not already present */}
-      <style>{`
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
     </div>
   );
 };

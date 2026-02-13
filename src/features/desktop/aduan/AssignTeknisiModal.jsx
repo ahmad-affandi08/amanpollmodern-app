@@ -33,11 +33,11 @@ export default function AssignTeknisiModal({ isOpen, onClose, aduan, teknisiOpti
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Pilih Teknisi">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-gray-50 p-4 rounded-xl mb-4">
-          <p className="text-sm text-gray-500 mb-1">Keluhan:</p>
-          <p className="font-semibold text-gray-800">{aduan?.keluhan}</p>
-          <div className="flex gap-4 mt-2 text-xs text-gray-500">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="bg-gray-50 p-3 rounded-xl mb-3 border border-gray-100">
+          <p className="text-xs text-gray-500 mb-1">Keluhan:</p>
+          <p className="font-semibold text-sm text-gray-800">{aduan?.keluhan}</p>
+          <div className="flex gap-3 mt-2 text-[10px] text-gray-500">
             <span>🏠 {aduan?.ruangan_nama}</span>
             <span>🛠 {aduan?.nama_alat_nama}</span>
             {aduan?.divisi_nama && <span>🏢 {aduan?.divisi_nama}</span>}
@@ -51,11 +51,12 @@ export default function AssignTeknisiModal({ isOpen, onClose, aduan, teknisiOpti
           value={teknisiId}
           onChange={(e) => setTeknisiId(e.target.value)}
           required
+          size="sm"
         />
 
-        <div className="pt-4 flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose}>Batal</Button>
-          <Button type="submit" loading={loading}>Simpan</Button>
+        <div className="pt-2 flex justify-end gap-2">
+          <Button type="button" variant="secondary" size="sm" onClick={onClose}>Batal</Button>
+          <Button type="submit" loading={loading} size="sm">Simpan</Button>
         </div>
       </form>
     </Modal>

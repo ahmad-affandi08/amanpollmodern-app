@@ -16,8 +16,20 @@ export default function Pagination({
   onPageChange,
   showFirstLast = true,
   className = '',
-  totalData
+  totalData,
+  size = 'md'
 }) {
+  const sizeClasses = {
+    sm: "min-w-[32px] h-8 px-2 text-xs",
+    md: "min-w-[36px] h-9 px-3 text-sm",
+    lg: "min-w-[40px] h-10 px-4 text-base",
+  };
+
+  const iconSizes = {
+    sm: 14,
+    md: 18,
+    lg: 20,
+  };
 
 
   if (totalPages <= 1 && (totalData === undefined || totalData === null)) {
@@ -72,7 +84,7 @@ export default function Pagination({
               className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               title="First Page"
             >
-              <ChevronsLeft size={18} />
+              <ChevronsLeft size={iconSizes[size]} />
             </button>
           )}
 
@@ -83,7 +95,7 @@ export default function Pagination({
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             title="Previous"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={iconSizes[size]} />
           </button>
 
           {/* Page Numbers */}
@@ -107,13 +119,13 @@ export default function Pagination({
                     <button
                       onClick={() => onPageChange(page)}
                       className={`
-                        min-w-[36px] h-9 px-3 rounded-lg text-sm font-bold transition-all
-                        ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
-                        ${currentPage === page
+                          ${sizeClasses[size]} rounded-lg font-bold transition-all
+                          ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
+                          ${currentPage === page
                           ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
                           : 'text-gray-600 hover:bg-gray-100'
                         }
-                      `}
+                        `}
                     >
                       {page}
                     </button>
@@ -130,7 +142,7 @@ export default function Pagination({
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             title="Next"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={iconSizes[size]} />
           </button>
 
           {/* Last Page */}
@@ -141,7 +153,7 @@ export default function Pagination({
               className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               title="Last Page"
             >
-              <ChevronsRight size={18} />
+              <ChevronsRight size={iconSizes[size]} />
             </button>
           )}
         </>

@@ -8,8 +8,14 @@ export default function Input({
   currency = false,
   value,
   onChange,
+  size = 'md',
   ...props
 }) {
+  const sizes = {
+    sm: "px-2 py-1.5 text-xs rounded-lg",
+    md: "px-3 py-2 text-sm rounded-xl",
+    lg: "px-4 py-3 text-base rounded-xl",
+  };
 
   const formatRupiah = (val) => {
     if (val === undefined || val === null || val === '') return '';
@@ -58,7 +64,7 @@ export default function Input({
 
         <input
           className={`
-            w-full px-3 py-2 bg-[#F8F9FB] border border-gray-200 rounded-xl text-sm font-medium 
+            w-full ${sizes[size]} bg-[#F8F9FB] border border-gray-200 font-medium 
             outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all
             placeholder:text-[#B0B3C7]
             disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60

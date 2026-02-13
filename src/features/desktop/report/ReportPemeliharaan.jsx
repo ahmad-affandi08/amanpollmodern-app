@@ -139,8 +139,8 @@ export default function ReportPemeliharaan() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">Laporan Pemeliharaan</h1>
-          <p className="text-text-gray text-sm mt-1">Rekapitulasi jadwal dan hasil pemeliharaan alat</p>
+          <h1 className="text-xl font-bold text-text-dark">Laporan Pemeliharaan</h1>
+          <p className="text-text-gray text-xs mt-1">Rekapitulasi jadwal dan hasil pemeliharaan alat</p>
         </div>
         <Button
           onClick={() => {
@@ -157,6 +157,7 @@ export default function ReportPemeliharaan() {
             window.open(`/api/pemeliharaan/export-excel?${params.toString()}`, '_blank');
           }}
           className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
+          size="md"
         >
           <Download className="w-4 h-4" />
           Export Data
@@ -170,11 +171,11 @@ export default function ReportPemeliharaan() {
             {/* Search */}
             <div className="lg:col-span-1">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="text"
                   placeholder="Cari laporan..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
@@ -182,6 +183,7 @@ export default function ReportPemeliharaan() {
             </div>
 
             <SearchableSelect
+              size="sm"
               name="ruangan_id"
               value={filters.ruangan_id}
               onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
@@ -193,6 +195,7 @@ export default function ReportPemeliharaan() {
             {/* Hide divisi filter for Admin Divisi */}
             {!isAdminDivisi && (
               <SearchableSelect
+                size="sm"
                 name="divisi_id"
                 value={filters.divisi_id}
                 onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
@@ -203,6 +206,7 @@ export default function ReportPemeliharaan() {
             )}
 
             <SearchableSelect
+              size="sm"
               name="teknisi_id"
               value={filters.teknisi_id}
               onChange={(e) => handleFilterChange('teknisi_id', e.target.value)}
@@ -214,6 +218,7 @@ export default function ReportPemeliharaan() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Select
+              size="sm"
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
               options={[{ label: 'Semua Status', value: '' }, ...statusOptions]}
@@ -221,12 +226,14 @@ export default function ReportPemeliharaan() {
               className="bg-bg-light border-none"
             />
             <Input
+              size="sm"
               type="date"
               value={filters.start_date}
               onChange={(e) => handleFilterChange('start_date', e.target.value)}
               className="bg-bg-light border-none"
             />
             <Input
+              size="sm"
               type="date"
               value={filters.end_date}
               onChange={(e) => handleFilterChange('end_date', e.target.value)}
@@ -234,8 +241,9 @@ export default function ReportPemeliharaan() {
             />
             <Button
               variant="outline"
+              size="sm"
               onClick={resetFilters}
-              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
             >
               Reset Filter
             </Button>
@@ -247,19 +255,19 @@ export default function ReportPemeliharaan() {
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Pemeliharaan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Divisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Inv</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Merk</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Jadwal</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tanggal</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Kondisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Pemeliharaan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Divisi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Inv</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Merk</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Jadwal</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
@@ -276,50 +284,50 @@ export default function ReportPemeliharaan() {
               ) : (
                 data.map((item, index) => (
                   <tr key={item.id_pemeliharaan} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6 font-bold text-text-dark">
+                    <td className="py-3 px-4 font-bold text-text-dark text-xs">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="px-2 py-1 text-xs font-bold rounded-md bg-purple-50 text-brand-primary">
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 text-brand-primary">
                         {item.no_pemeliharaan || '-'}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-gray-600">{item.divisi_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{item.ruangan_nama || '-'}</td>
-                    <td className="py-4 px-6 text-text-dark font-medium">{item.nama_alat_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600 font-mono text-xs">{item.no_inventaris || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{item.merk || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.divisi_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 font-medium text-xs">{item.ruangan_nama || '-'}</td>
+                    <td className="py-3 px-4 text-text-dark font-medium text-xs">{item.nama_alat_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 font-mono text-[10px]">{item.no_inventaris || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.merk || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.jadwal_pemeliharaan ? new Date(item.jadwal_pemeliharaan).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-brand-primary font-medium">{item.teknisi_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-brand-primary font-medium text-xs">{item.teknisi_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.kondisi_alat || 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-4">
                       {getStatusBadge(item.status)}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2 text-xs">
                         <button
                           onClick={() => navigate(`/report/pemeliharaan/${item.id_pemeliharaan}`)}
-                          className="p-3 bg-blue-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          className="p-2 bg-blue-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                           title="Detail"
                         >
-                          <Eye size={20} />
+                          <Eye size={16} />
                         </button>
 
                         {canDelete(item) && (
                           <button
                             onClick={() => handleDelete(item)}
                             disabled={deleteMutation.isPending}
-                            className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+                            className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                             title="Hapus"
                           >
-                            <Trash2 size={20} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>
@@ -334,6 +342,7 @@ export default function ReportPemeliharaan() {
         {pagination.totalPages > 1 && (
           <div className="mt-6">
             <Pagination
+              size="sm"
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
               onPageChange={pagination.goToPage}

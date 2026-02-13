@@ -93,8 +93,8 @@ export default function AlatBaruList() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">Pengajuan Alat Baru</h1>
-          <p className="text-[#808191] text-sm mt-1">Daftar alat yang diajukan oleh user ruangan</p>
+          <h1 className="text-xl font-bold text-text-dark">Pengajuan Alat Baru</h1>
+          <p className="text-[#808191] text-xs mt-1">Daftar alat yang diajukan oleh user ruangan</p>
         </div>
       </div>
 
@@ -104,11 +104,11 @@ export default function AlatBaruList() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Search */}
             <div className="relative col-span-1 md:col-span-2 lg:col-span-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#808191] w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#808191] w-4 h-4" />
               <input
                 type="text"
                 placeholder="Cari nama alat..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
               />
@@ -121,11 +121,11 @@ export default function AlatBaruList() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Foto</th>
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Nama Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Ruangan</th>
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider">Tgl Pengajuan</th>
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase tracking-wider text-right">Aksi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Foto</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Nama Alat</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Ruangan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Tgl Pengajuan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -142,10 +142,10 @@ export default function AlatBaruList() {
               ) : (
                 items.map((item) => (
                   <tr key={item.id || item.id_alat_baru} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-center">
                         {item.img_alat_baru_url ? (
-                          <div className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary" style={{ minWidth: '80px', minHeight: '80px', width: '80px', height: '80px' }}>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}>
                             <img
                               src={item.img_alat_baru_url}
                               alt="alat"
@@ -159,7 +159,7 @@ export default function AlatBaruList() {
                             />
                           </div>
                         ) : (
-                          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '80px', minHeight: '80px' }}>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
                             <img
                               src={noImage}
                               alt="No Image"
@@ -169,42 +169,42 @@ export default function AlatBaruList() {
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm font-bold text-text-dark">{item.nama_alat?.nama_nama_alat || '-'}</div>
-                      <div className="text-xs text-text-gray">{item.merk} - {item.model}</div>
+                    <td className="py-3 px-4">
+                      <div className="text-xs font-bold text-text-dark">{item.nama_alat?.nama_nama_alat || '-'}</div>
+                      <div className="text-[10px] text-text-gray">{item.merk} - {item.model}</div>
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700">
                         {item.ruangan?.nama_ruangan || '-'}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-sm text-text-gray">
+                    <td className="py-3 px-4 text-xs text-text-gray">
                       {item.create_date
                         ? new Date(item.create_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
                         : '-'}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleDetail(item)}
-                          className="p-3 bg-blue-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          className="p-2 bg-blue-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                           title="Lihat Detail"
                         >
-                          <Eye size={20} />
+                          <Eye size={16} />
                         </button>
                         <button
                           onClick={() => handleApproveClick(item)}
-                          className="p-3 bg-green-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                           title="Setujui"
                         >
-                          <CheckCircle size={20} />
+                          <CheckCircle size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(item.id || item.id_alat_baru)}
-                          className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                           title="Hapus"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -216,6 +216,7 @@ export default function AlatBaruList() {
         </div>
 
         <Pagination
+          size="sm"
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={pagination.goToPage}

@@ -396,28 +396,29 @@ export default function InventarisForm() {
     <div className="animate-fade-in space-y-6">
 
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate('/inventaris/data')} className="p-2">
-          <ArrowLeft size={24} />
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/inventaris/data')} className="p-1.5">
+          <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">
+          <h1 className="text-xl font-bold text-text-dark">
             {isEdit ? 'Edit Data Alat' : 'Tambah Alat Baru'}
           </h1>
-          <p className="text-gray-500 text-sm">Lengkapi data inventaris alat di bawah ini</p>
+          <p className="text-gray-500 text-xs">Lengkapi data inventaris alat di bawah ini</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="bg-white rounded-[20px] p-5 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+        <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Section 1: Informasi Utama */}
           <div>
-            <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Informasi Utama</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-base font-bold text-text-dark mb-3 border-b pb-1.5">Informasi Utama</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SearchableSelect
                 label="Divisi"
                 name="divisi_id"
+                size="sm"
                 options={divisiOptions}
                 value={formData.divisi_id}
                 onChange={handleChange}
@@ -429,6 +430,7 @@ export default function InventarisForm() {
               <SearchableSelect
                 label="Nama Alat (Master)"
                 name="nama_alat_id"
+                size="sm"
                 options={namaAlatOptions}
                 value={formData.nama_alat_id}
                 onChange={handleChange}
@@ -443,6 +445,7 @@ export default function InventarisForm() {
                   <SearchableSelect
                     label="Ruangan"
                     name="ruangan_id"
+                    size="sm"
                     options={ruanganOptions}
                     value={formData.ruangan_id}
                     onChange={handleChange}
@@ -453,6 +456,7 @@ export default function InventarisForm() {
                   <SearchableSelect
                     label="Ruang Sekarang"
                     name="ruang_sekarang"
+                    size="sm"
                     options={ruanganOptions}
                     value={formData.ruang_sekarang}
                     onChange={handleChange}
@@ -466,6 +470,7 @@ export default function InventarisForm() {
               <Input
                 label="No Inventaris"
                 name="no_inventaris"
+                size="sm"
                 value={formData.no_inventaris}
                 onChange={handleChange}
                 placeholder="Auto-generated"
@@ -477,6 +482,7 @@ export default function InventarisForm() {
               <Input
                 label="Gedung"
                 name="gedung"
+                size="sm"
                 value={formData.gedung}
                 onChange={handleChange}
                 placeholder="Contoh: Gedung A"
@@ -487,11 +493,12 @@ export default function InventarisForm() {
 
           {/* Section 2: Detail Spesifikasi */}
           <div>
-            <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Spesifikasi Alat</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <h3 className="text-base font-bold text-text-dark mb-3 border-b pb-1.5">Spesifikasi Alat</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 label="Merk"
                 name="merk"
+                size="sm"
                 value={formData.merk}
                 onChange={handleChange}
                 required
@@ -499,6 +506,7 @@ export default function InventarisForm() {
               <Input
                 label="Tipe / Model"
                 name="model"
+                size="sm"
                 value={formData.model}
                 onChange={handleChange}
                 required
@@ -506,6 +514,7 @@ export default function InventarisForm() {
               <Input
                 label="Nomor Seri (SN)"
                 name="seri"
+                size="sm"
                 value={formData.seri}
                 onChange={handleChange}
                 required
@@ -513,12 +522,14 @@ export default function InventarisForm() {
               <Input
                 label="Daya (Watt/Volt)"
                 name="daya"
+                size="sm"
                 value={formData.daya}
                 onChange={handleChange}
               />
               <SearchableSelect
                 label="Tahun Pengadaan"
                 name="tahun_pengadaan"
+                size="sm"
                 value={formData.tahun_pengadaan}
                 onChange={handleChange}
                 options={generateYearOptions()}
@@ -529,6 +540,7 @@ export default function InventarisForm() {
               <Input
                 label="Harga Perolehan (Rp)"
                 name="harga"
+                size="sm"
                 currency
                 value={formData.harga}
                 onChange={handleChange}
@@ -539,45 +551,46 @@ export default function InventarisForm() {
 
           {/* Section 3: Status & Kondisi */}
           <div>
-            <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Status & Kondisi</h3>
+            <h3 className="text-base font-bold text-text-dark mb-3 border-b pb-1.5">Status & Kondisi</h3>
 
             {/* Logic Toggle Alat Kesehatan */}
-            <div className="mb-6 flex items-center gap-2 bg-purple-50 p-4 rounded-xl border border-purple-100">
+            <div className="mb-4 flex items-center gap-2 bg-purple-50 p-3 rounded-xl border border-purple-100">
               <input
                 type="checkbox"
                 id="alat_kesehatan"
                 name="alat_kesehatan"
                 checked={formData.alat_kesehatan}
                 onChange={handleChange}
-                className="w-5 h-5 text-brand-primary rounded border-gray-300 focus:ring-brand-primary"
+                className="w-4 h-4 text-brand-primary rounded border-gray-300 focus:ring-brand-primary"
               />
-              <label htmlFor="alat_kesehatan" className="font-bold text-text-dark cursor-pointer selection:bg-none">
+              <label htmlFor="alat_kesehatan" className="font-bold text-sm text-text-dark cursor-pointer selection:bg-none">
                 Apakah termasuk alat kesehatan?
               </label>
             </div>
 
             {/* Checkbox Perlu Kalibrasi */}
-            <div className="mb-6 flex items-center gap-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <div className="mb-4 flex items-center gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
               <input
                 type="checkbox"
                 id="perlu_kalibrasi"
                 name="perlu_kalibrasi"
                 checked={formData.perlu_kalibrasi}
                 onChange={handleChange}
-                className="w-5 h-5 text-brand-primary rounded border-gray-300 focus:ring-brand-primary"
+                className="w-4 h-4 text-brand-primary rounded border-gray-300 focus:ring-brand-primary"
               />
-              <label htmlFor="perlu_kalibrasi" className="font-bold text-text-dark cursor-pointer selection:bg-none">
+              <label htmlFor="perlu_kalibrasi" className="font-bold text-sm text-text-dark cursor-pointer selection:bg-none">
                 Apakah alat perlu di kalibrasi?
               </label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Conditional Rendering Kategori Alkes */}
               {formData.alat_kesehatan && (
                 <div className="animate-fade-in-down">
                   <SearchableSelect
                     label="Kategori Alat Kesehatan"
                     name="kategori_alkes"
+                    size="sm"
                     value={formData.kategori_alkes}
                     onChange={handleChange}
                     options={[
@@ -595,6 +608,7 @@ export default function InventarisForm() {
               <SearchableSelect
                 label="Kondisi Alat"
                 name="kondisi_alat"
+                size="sm"
                 value={formData.kondisi_alat}
                 onChange={handleChange}
                 options={[
@@ -611,6 +625,7 @@ export default function InventarisForm() {
                 label="Interval Maintenance (Tahun)"
                 name="interval_maintenance"
                 type="number"
+                size="sm"
                 value={formData.interval_maintenance}
                 onChange={handleChange}
                 placeholder="Masukkan Interval Maintenance"
@@ -625,6 +640,7 @@ export default function InventarisForm() {
                       label="Awal Kalibrasi"
                       name="awal_kalibrasi"
                       type="date"
+                      size="sm"
                       value={formData.awal_kalibrasi}
                       onChange={handleChange}
                     />
@@ -634,6 +650,7 @@ export default function InventarisForm() {
                       label="Kadaluwarsa"
                       name="kadaluwarsa"
                       type="date"
+                      size="sm"
                       value={formData.kadaluwarsa}
                       onChange={handleChange}
                     />
@@ -645,35 +662,35 @@ export default function InventarisForm() {
 
           {/* Section 4: File Uploads */}
           <div>
-            <h3 className="text-lg font-bold text-text-dark mb-4 border-b pb-2">Berkas & Foto</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors">
+            <h3 className="text-base font-bold text-text-dark mb-3 border-b pb-1.5">Berkas & Foto</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors">
                 <input type="file" name="img_alat" id="img_alat" className="hidden" onChange={handleChange} accept="image/*" />
                 <label htmlFor="img_alat" className="cursor-pointer block">
                   {previews.img_alat ? (
-                    <img src={previews.img_alat} alt="Preview" className="h-32 mx-auto object-contain mb-2" />
+                    <img src={previews.img_alat} alt="Preview" className="h-24 mx-auto object-contain mb-2" />
                   ) : (
-                    <Upload className="mx-auto h-10 w-10 text-gray-400 mb-2" />
+                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                   )}
-                  <span className="font-bold text-brand-primary">Upload Foto Alat</span>
-                  <p className="text-xs text-gray-400 mt-1">.jpg, .png (Max 2MB)</p>
+                  <span className="font-bold text-sm text-brand-primary">Upload Foto Alat</span>
+                  <p className="text-[10px] text-gray-400 mt-1">.jpg, .png (Max 2MB)</p>
                   {formData.img_alat && typeof formData.img_alat === 'object' && (
-                    <p className="text-sm text-green-600 mt-2 font-medium">{formData.img_alat.name}</p>
+                    <p className="text-xs text-green-600 mt-2 font-medium">{formData.img_alat.name}</p>
                   )}
                 </label>
               </div>
 
               {formData.perlu_kalibrasi && (
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors animate-fade-in-down">
+                <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors animate-fade-in-down">
                   <input type="file" name="file_sertifikat" id="file_sertifikat" className="hidden" onChange={handleChange} accept=".pdf" />
                   <label htmlFor="file_sertifikat" className="cursor-pointer block">
-                    <FileText className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                    <span className="font-bold text-brand-primary">Upload Sertifikat</span>
-                    <p className="text-xs text-gray-400 mt-1">.pdf (Max 5MB)</p>
+                    <FileText className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <span className="font-bold text-sm text-brand-primary">Upload Sertifikat</span>
+                    <p className="text-[10px] text-gray-400 mt-1">.pdf (Max 5MB)</p>
 
                     {/* Show new file name */}
                     {formData.file_sertifikat && (
-                      <p className="text-sm text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
+                      <p className="text-xs text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
                         {formData.file_sertifikat.name}
                       </p>
                     )}
@@ -697,16 +714,16 @@ export default function InventarisForm() {
                 </div>
               )}
 
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors">
+              <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors">
                 <input type="file" name="file_sop" id="file_sop" className="hidden" onChange={handleChange} accept=".pdf" />
                 <label htmlFor="file_sop" className="cursor-pointer block">
-                  <FileText className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                  <span className="font-bold text-brand-primary">Upload Manual Book / SOP</span>
-                  <p className="text-xs text-gray-400 mt-1">.pdf (Max 5MB)</p>
+                  <FileText className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                  <span className="font-bold text-sm text-brand-primary">Upload Manual Book / SOP</span>
+                  <p className="text-[10px] text-gray-400 mt-1">.pdf (Max 5MB)</p>
 
                   {/* Show new file name */}
                   {formData.file_sop && (
-                    <p className="text-sm text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
+                    <p className="text-xs text-green-600 mt-2 font-medium bg-green-50 py-1 px-2 rounded-lg inline-block">
                       {formData.file_sop.name}
                     </p>
                   )}
@@ -732,11 +749,11 @@ export default function InventarisForm() {
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button variant="ghost" onClick={() => navigate('/inventaris/data')} type="button">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/inventaris/data')} type="button">
               Batal
             </Button>
-            <Button variant="primary" type="submit" loading={loading} className="px-8 shadow-xl shadow-brand-primary/20">
-              <Save size={18} className="mr-2" />
+            <Button variant="primary" size="sm" type="submit" loading={loading} className="px-6 shadow-xl shadow-brand-primary/20">
+              <Save size={16} className="mr-2" />
               {isEdit ? 'Simpan Perubahan' : 'Simpan Data'}
             </Button>
           </div>

@@ -209,7 +209,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
           <p className="text-gray-500 text-sm mb-4">Masukan jadwal maintenance alat berdasarkan interval</p>
 
           {/* Section 1: Selection */}
-          <div className="grid grid-cols-2 gap-4 p-4 border rounded-xl border-gray-100 bg-white shadow-sm" style={{ overflow: 'visible' }}>
+          <div className="grid grid-cols-2 gap-3 p-3 border rounded-xl border-gray-100 bg-white shadow-sm" style={{ overflow: 'visible' }}>
             <SearchableSelect
               label="Ruangan"
               name="ruangan_id"
@@ -218,6 +218,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
               options={ruanganOptions.map(r => ({ value: r.id_ruangan || r.id, label: r.nama_ruangan }))}
               placeholder="-- Pilih Ruangan --"
               searchPlaceholder="Cari ruangan..."
+              size="sm"
             />
             <SearchableSelect
               label="Inventaris"
@@ -231,6 +232,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
               placeholder={loading ? 'Memuat...' : '-- Pilih Inventaris --'}
               searchPlaceholder="Cari inventaris..."
               disabled={!selectedRuangan || loading}
+              size="sm"
             />
           </div>
         </div>
@@ -245,27 +247,27 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
 
         {/* Info Block (Only show if Selected and NOT blocked) */}
         {selectedInventaris && !hasActiveSchedule && !checking && (
-          <div className="bg-[#F8F9FA] p-5 rounded-xl border border-gray-200">
-            <h6 className="font-bold text-text-dark border-b border-gray-200 pb-2 mb-4">Informasi Alat</h6>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#F8F9FA] p-3 rounded-xl border border-gray-200">
+            <h6 className="font-bold text-text-dark border-b border-gray-200 pb-2 mb-3 text-sm">Informasi Alat</h6>
+            <div className="grid grid-cols-2 gap-3">
               <div className="form-group">
-                <label className="block text-xs text-gray-500 mb-1">Nama Alat</label>
-                <input type="text" className="w-full text-sm font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-3 py-1.5"
+                <label className="block text-[10px] text-gray-500 mb-1">Nama Alat</label>
+                <input type="text" className="w-full text-xs font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-2 py-1"
                   value={selectedInventaris.namaAlat?.nama_nama_alat || selectedInventaris.nama_alat?.nama_nama_alat || ''} readOnly />
               </div>
               <div className="form-group">
-                <label className="block text-xs text-gray-500 mb-1">Merk</label>
-                <input type="text" className="w-full text-sm font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-3 py-1.5"
+                <label className="block text-[10px] text-gray-500 mb-1">Merk</label>
+                <input type="text" className="w-full text-xs font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-2 py-1"
                   value={selectedInventaris.merk || ''} readOnly />
               </div>
               <div className="form-group">
-                <label className="block text-xs text-gray-500 mb-1">Kategori Alat</label>
-                <input type="text" className="w-full text-sm font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-3 py-1.5"
+                <label className="block text-[10px] text-gray-500 mb-1">Kategori Alat</label>
+                <input type="text" className="w-full text-xs font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-2 py-1"
                   value={selectedInventaris.namaAlat?.kategoriAlat?.nama_kategori || '-'} readOnly />
               </div>
               <div className="form-group">
-                <label className="block text-xs text-gray-500 mb-1">Interval Maintenance</label>
-                <input type="text" className="w-full text-sm font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-3 py-1.5"
+                <label className="block text-[10px] text-gray-500 mb-1">Interval Maintenance</label>
+                <input type="text" className="w-full text-xs font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-2 py-1"
                   value={`${selectedInventaris.interval_maintenance || 0} Kali / Tahun`} readOnly />
               </div>
             </div>
@@ -289,19 +291,20 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {schedules.map((sch, idx) => (
-                <div key={idx} className="flex gap-4 items-center bg-white border border-gray-100 p-3 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                <div key={idx} className="flex gap-3 items-center bg-white border border-gray-100 p-2 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-6 h-6 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {idx + 1}
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-4">
+                  <div className="flex-1 grid grid-cols-2 gap-3">
                     <Input
                       type="date"
                       label={`Jadwal Pemeliharaan ${idx + 1}`}
                       value={sch.jadwal_pemeliharaan}
                       onChange={(e) => handleDateChange(idx, e.target.value)}
                       required
+                      size="sm"
                     />
                     <SearchableSelect
                       label="Teknisi"
@@ -311,6 +314,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
                       options={teknisiOptions.map(t => ({ value: t.id_user, label: t.nama_lengkap }))}
                       placeholder="-- Pilih Teknisi --"
                       searchPlaceholder="Cari teknisi..."
+                      size="sm"
                     />
                   </div>
                 </div>
@@ -327,10 +331,10 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
         )}
 
         {/* Footer Actions */}
-        <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-          <Button variant="secondary" onClick={onClose}>Batal</Button>
+        <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
+          <Button variant="secondary" size="sm" onClick={onClose}>Batal</Button>
           {!hasActiveSchedule && schedules.length > 0 && (
-            <Button onClick={handleSubmit} loading={loading}>
+            <Button onClick={handleSubmit} loading={loading} size="sm">
               Simpan Semua Jadwal
             </Button>
           )}

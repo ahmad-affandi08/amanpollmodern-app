@@ -39,10 +39,8 @@ export default function DashboardLayout({ children }) {
   };
 
   const toggleMenu = (label) => {
-
     if (collapsed) {
       setCollapsed(false);
-
       setTimeout(() => {
         setOpenMenus(prev => ({
           ...prev,
@@ -59,12 +57,10 @@ export default function DashboardLayout({ children }) {
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
-
     if (!collapsed) {
       setOpenMenus({});
     }
   }
-
 
   const ROLE_SUPER_ADMIN = 1;
   const ROLE_USER_RUANGAN = 2;
@@ -74,12 +70,10 @@ export default function DashboardLayout({ children }) {
 
   const currentRoleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
 
-
   const hasAccess = (allowedRoles) => {
     if (!allowedRoles) return true;
     return allowedRoles.includes(currentRoleId);
   };
-
 
   const menuItems = [
     {
@@ -178,22 +172,22 @@ export default function DashboardLayout({ children }) {
         fixed inset-y-0 left-0 z-50 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white transition-all duration-300 ease-in-out
         lg:translate-x-0 lg:fixed lg:inset-y-0 lg:left-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${collapsed ? 'lg:w-[90px]' : 'lg:w-72'}
-        w-72
+        ${collapsed ? 'lg:w-[70px]' : 'lg:w-56'}
+        w-56
         shadow-2xl shadow-brand-primary/20
       `}>
         <div className="flex flex-col h-full">
           {/* Logo area */}
-          <div className={`p-8 flex items-center justify-center transition-all duration-300 min-h-[100px] ${collapsed ? 'px-2' : ''}`}>
+          <div className={`p-4 flex items-center justify-center transition-all duration-300 min-h-[64px] ${collapsed ? 'px-2' : ''}`}>
             {!collapsed ? (
-              <img src={Logo} alt="AmanPoll Logo" className="h-16 w-auto object-contain transition-all duration-300 drop-shadow-md" />
+              <img src={Logo} alt="AmanPoll Logo" className="h-10 w-auto object-contain transition-all duration-300 drop-shadow-md" />
             ) : (
-              <img src={IconLogo} alt="AmanPoll Icon" className="h-12 w-12 object-contain transition-all duration-300 drop-shadow-lg" />
+              <img src={IconLogo} alt="AmanPoll Icon" className="h-8 w-8 object-contain transition-all duration-300 drop-shadow-lg" />
             )}
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 space-y-2 py-4 overflow-y-auto custom-scrollbar overflow-x-hidden">
+          <nav className="flex-1 px-3 space-y-1 py-2 overflow-y-auto custom-scrollbar overflow-x-hidden">
             {menuItems.map((item, index) => (
               <div key={index}>
                 {/* Parent Menu Item */}
@@ -202,7 +196,6 @@ export default function DashboardLayout({ children }) {
                     onClick={() => toggleMenu(item.label)}
                     onMouseEnter={(e) => {
                       if (collapsed) {
-
                         if (hoverTimeoutRef.current) {
                           clearTimeout(hoverTimeoutRef.current);
                           hoverTimeoutRef.current = null;
@@ -216,14 +209,11 @@ export default function DashboardLayout({ children }) {
                     }}
                     onMouseLeave={() => {
                       if (collapsed) {
-
                         if (hoverTimeoutRef.current) {
                           clearTimeout(hoverTimeoutRef.current);
                         }
-
                         hoverTimeoutRef.current = setTimeout(() => {
                           setHoverMenu(prev => {
-
                             if (prev.item?.label === item.label) {
                               return { item: null, position: null };
                             }
@@ -234,7 +224,7 @@ export default function DashboardLayout({ children }) {
                       }
                     }}
                     className={`
-                      w-full flex items-center px-4 py-3.5 rounded-2xl transition-all duration-300 relative group border border-transparent
+                      w-full flex items-center px-3 py-2 rounded-xl transition-all duration-300 relative group border border-transparent text-sm
                       ${isActive(item)
                         ? 'bg-white text-brand-primary shadow-[0_4px_20px_rgba(0,0,0,0.1)] font-bold'
                         : 'text-white/70 hover:text-white hover:bg-white/10 hover:border-white/5'
@@ -243,14 +233,14 @@ export default function DashboardLayout({ children }) {
                     `}
                     title={collapsed ? item.label : ''}
                   >
-                    <div className={`flex items-center gap-4 ${collapsed ? 'justify-center w-full' : ''}`}>
-                      <item.icon size={22} className={`min-w-[22px] transition-colors duration-300 ${isActive(item) ? 'text-brand-primary' : 'text-current'}`} />
+                    <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
+                      <item.icon size={18} className={`min-w-[18px] transition-colors duration-300 ${isActive(item) ? 'text-brand-primary' : 'text-current'}`} />
                       {!collapsed && <span className="truncate">{item.label}</span>}
                     </div>
 
                     {!collapsed && (
                       <div className={`transition-transform duration-300 ${openMenus[item.label] ? 'rotate-90' : ''}`}>
-                        <ChevronRight size={18} strokeWidth={2.5} />
+                        <ChevronRight size={16} strokeWidth={2.5} />
                       </div>
                     )}
                   </button>
@@ -258,17 +248,17 @@ export default function DashboardLayout({ children }) {
                   <Link
                     to={item.path}
                     className={`
-                      flex items-center px-4 py-3.5 rounded-2xl transition-all duration-300 group border border-transparent
+                      flex items-center px-3 py-2 rounded-xl transition-all duration-300 group border border-transparent text-sm
                       ${isActive(item)
                         ? 'bg-white text-brand-primary shadow-[0_4px_20px_rgba(0,0,0,0.1)] font-bold'
                         : 'text-white/70 hover:text-white hover:bg-white/10 hover:border-white/5'
                       }
-                       ${collapsed ? 'justify-center' : 'gap-4'}
+                       ${collapsed ? 'justify-center' : 'gap-3'}
                     `}
                     onClick={() => setSidebarOpen(false)}
                     title={collapsed ? item.label : ''}
                   >
-                    <item.icon size={22} className={`min-w-[22px] transition-colors duration-300 ${isActive(item) ? 'text-brand-primary' : 'text-current'}`} />
+                    <item.icon size={18} className={`min-w-[18px] transition-colors duration-300 ${isActive(item) ? 'text-brand-primary' : 'text-current'}`} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 )}
@@ -282,13 +272,13 @@ export default function DashboardLayout({ children }) {
                     `}
                   >
                     <div className="overflow-hidden">
-                      <div className="ml-6 mt-2 pl-4 py-2 space-y-1 border-l-2 border-white/20">
+                      <div className="ml-5 mt-1 pl-3 py-1 space-y-0.5 border-l border-white/20">
                         {item.children.map((child, childIndex) => (
                           <Link
                             key={childIndex}
                             to={child.path}
                             className={`
-                              flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium
+                              flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-xs font-medium
                               ${isPathActive(child.path)
                                 ? 'bg-white/20 text-white shadow-inner backdrop-blur-sm border border-white/10'
                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -296,7 +286,7 @@ export default function DashboardLayout({ children }) {
                             `}
                             onClick={() => setSidebarOpen(false)}
                           >
-                            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPathActive(child.path) ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-110' : 'bg-white/40'}`}></div>
+                            <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${isPathActive(child.path) ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-110' : 'bg-white/40'}`}></div>
                             <span>{child.label}</span>
                           </Link>
                         ))}
@@ -332,14 +322,12 @@ export default function DashboardLayout({ children }) {
             left: `${hoverMenu.position.left + 8}px`,
           }}
           onMouseEnter={() => {
-
             if (hoverTimeoutRef.current) {
               clearTimeout(hoverTimeoutRef.current);
               hoverTimeoutRef.current = null;
             }
           }}
           onMouseLeave={() => {
-
             setHoverMenu({ item: null, position: null });
           }}
         >
@@ -391,31 +379,31 @@ export default function DashboardLayout({ children }) {
       )}
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ml-0 ${collapsed ? 'lg:ml-[90px]' : 'lg:ml-72'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ml-0 ${collapsed ? 'lg:ml-[70px]' : 'lg:ml-56'}`}>
         {/* Header */}
-        <header className="bg-bg-light/90 backdrop-blur-sm sticky top-0 z-30 px-4 md:px-6 lg:px-8 py-4 md:py-5 lg:py-6 transition-all duration-300">
+        <header className="bg-bg-light/90 backdrop-blur-sm sticky top-0 z-30 px-4 md:px-6 lg:px-6 py-2 md:py-3 lg:py-3 transition-all duration-300">
           <div className="flex items-center justify-between">
             {/* Title & Toggle */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Mobile Toggle */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 bg-white rounded-xl shadow-sm text-gray-600"
+                className="lg:hidden p-1.5 bg-white rounded-lg shadow-sm text-gray-600"
               >
-                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
 
               {/* Desktop Toggle */}
               <button
                 onClick={toggleSidebar}
-                className="hidden lg:flex p-2 bg-white rounded-xl shadow-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+                className="hidden lg:flex p-1.5 bg-white rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <AlignLeft size={24} className={`transform transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
+                <AlignLeft size={20} className={`transform transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Mobile Logo */}
               <div className="block md:hidden">
-                <img src={Logo3} alt="AmanPoll Logo" className="h-8 w-auto object-contain" />
+                <img src={Logo3} alt="AmanPoll Logo" className="h-6 w-auto object-contain" />
               </div>
 
               {/* Breadcrumbs Replaces Static Title */}
@@ -423,7 +411,6 @@ export default function DashboardLayout({ children }) {
                 {(() => {
                   const currentPath = location.pathname;
                   let crumbs = [];
-
 
                   for (const item of menuItems) {
                     if (item.path === currentPath) {
@@ -439,7 +426,6 @@ export default function DashboardLayout({ children }) {
                       }
                     }
                   }
-
 
                   if (crumbs.length === 0) {
                     if (currentPath === '/' || currentPath === '/dashboard') {
@@ -457,8 +443,8 @@ export default function DashboardLayout({ children }) {
 
                   return crumbs.map((crumb, index) => (
                     <React.Fragment key={index}>
-                      {index > 0 && <ChevronRight size={18} className="text-gray-400 mx-2" />}
-                      <span className={`${crumb.active ? 'text-text-dark font-bold text-lg md:text-xl lg:text-2xl' : 'text-gray-500 text-sm md:text-base lg:text-lg font-medium'}`}>
+                      {index > 0 && <ChevronRight size={16} className="text-gray-400 mx-2" />}
+                      <span className={`${crumb.active ? 'text-text-dark font-bold text-sm md:text-base lg:text-lg' : 'text-gray-500 text-xs md:text-sm lg:text-base font-medium'}`}>
                         {crumb.label}
                       </span>
                     </React.Fragment>
@@ -468,39 +454,39 @@ export default function DashboardLayout({ children }) {
             </div>
 
             {/* Header Actions */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               {/* Search (Optional) */}
-              <div className="hidden md:flex items-center bg-white px-4 py-2.5 rounded-xl shadow-sm w-64">
+              <div className="hidden md:flex items-center bg-white px-3 py-2 rounded-lg shadow-sm w-56">
                 <span className="text-gray-400 mr-2">🔍</span>
-                <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-sm w-full" />
+                <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-xs w-full" />
               </div>
 
               {/* Notifications */}
-              <NotificationBell className="bg-white rounded-xl p-1 shadow-sm text-gray-600" />
+              <NotificationBell className="bg-white rounded-lg p-1 shadow-sm text-gray-600 scale-90" />
 
               {/* User Dropdown */}
-              <div className="relative bg-white rounded-xl p-1 shadow-sm text-gray-600">
+              <div className="relative bg-white rounded-lg p-0.5 shadow-sm text-gray-600">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-white/50 transition-colors"
+                  className="flex items-center gap-2 pl-2 pr-1 py-0.5 rounded-lg hover:bg-white/50 transition-colors"
                 >
                   <div className="text-right hidden md:block">
-                    <p className="text-sm font-bold text-text-dark leading-tight">{user?.nama_lengkap || 'John Doe'}</p>
-                    <p className="text-xs text-text-gray">{user?.role || 'Admin'}</p>
+                    <p className="text-xs font-bold text-text-dark leading-tight">{user?.nama_lengkap || 'John Doe'}</p>
+                    <p className="text-[10px] text-text-gray">{user?.role || 'Admin'}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-danger-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-accent-orange/20">
+                  <div className="w-8 h-8 rounded-full bg-danger-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-accent-orange/20">
                     {user?.nama_lengkap?.charAt(0) || 'U'}
                   </div>
-                  <ChevronDown size={16} className="text-text-gray" />
+                  <ChevronDown size={14} className="text-text-gray" />
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-4 w-48 bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2 z-50 animate-fade-in border border-gray-100">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-1 z-50 animate-fade-in border border-gray-100">
                     <button
                       onClick={handleLogoutClick}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-accent-orange font-semibold hover:bg-danger-500/5 transition-colors text-sm"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-accent-orange font-semibold hover:bg-danger-500/5 transition-colors text-xs"
                     >
-                      <LogOut size={16} />
+                      <LogOut size={14} />
                       <span>Logout</span>
                     </button>
                   </div>

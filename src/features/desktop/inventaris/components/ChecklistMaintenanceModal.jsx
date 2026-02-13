@@ -103,18 +103,18 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-3 border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-bold text-text-dark text-left">Checklist Maintenance</h2>
-            <p className="text-sm text-gray-500 mt-1">Atur poin pengecekan untuk <span className="font-semibold text-brand-primary">{toolData?.nama_nama_alat}</span></p>
+            <h2 className="text-base font-bold text-text-dark text-left">Checklist Maintenance</h2>
+            <p className="text-xs text-gray-500 mt-1">Atur poin pengecekan untuk <span className="font-semibold text-brand-primary">{toolData?.nama_nama_alat}</span></p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={24} />
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="px-6 pt-6 flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-3 pt-3 flex gap-2 overflow-x-auto no-scrollbar">
           {categories.map(cat => {
             const isActive = activeTab === cat.id_kategori_checklist_maintenance;
             return (
@@ -122,7 +122,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
                 key={cat.id_kategori_checklist_maintenance}
                 onClick={() => setActiveTab(cat.id_kategori_checklist_maintenance)}
                 className={`
-                   px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all
+                   px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all
                    ${isActive
                     ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
                     : 'bg-[#F4F5F9] text-gray-500 hover:bg-gray-200'
@@ -136,7 +136,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
         </div>
 
         {/* Content */}
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className="p-3 flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6C5DD3] mb-4"></div>
@@ -152,14 +152,14 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
                 </div>
               ) : (
                 filteredItems.map(item => (
-                  <div key={item.id} className="group flex items-center justify-between p-4 bg-[#F0F9FA] rounded-xl border border-transparent hover:border-brand-primary/20 transition-all">
-                    <span className="font-medium text-text-dark text-left">{item.keterangan}</span>
+                  <div key={item.id} className="group flex items-center justify-between p-3 bg-[#F0F9FA] rounded-xl border border-transparent hover:border-brand-primary/20 transition-all">
+                    <span className="font-medium text-text-dark text-left text-sm">{item.keterangan}</span>
                     <button
                       onClick={() => handleDeleteItem(item.id)}
-                      className="p-2 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all transform hover:scale-105 shadow-sm"
+                      className="p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white transition-all transform hover:scale-105 shadow-sm"
                       title="Hapus item"
                     >
-                      <X size={16} />
+                      <X size={14} />
                     </button>
                   </div>
                 ))
@@ -169,11 +169,11 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
         </div>
 
         {/* Footer / Add New */}
-        <div className="p-6 border-t border-gray-100 bg-white rounded-b-2xl">
+        <div className="p-3 border-t border-gray-100 bg-white rounded-b-2xl">
           <form onSubmit={handleAddItem} className="flex gap-2">
             <input
               type="text"
-              className="flex-1 px-4 py-3 bg-bg-light rounded-xl border-none focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-dark font-medium placeholder:text-gray-400"
+              className="flex-1 px-3 py-2 bg-bg-light rounded-xl border-none focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-dark font-medium placeholder:text-gray-400 text-sm"
               placeholder={`Tambah checklist untuk ${categories.find(c => c.id_kategori_checklist_maintenance === activeTab)?.display_kategori || 'kategori ini'}...`}
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
@@ -181,9 +181,9 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
             <button
               type="submit"
               disabled={submitting || !newItemText.trim()}
-              className="bg-brand-primary hover:bg-brand-primary-light text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-brand-primary/25 disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center min-w-[50px]"
+              className="bg-brand-primary hover:bg-brand-primary-light text-white px-3 py-2 rounded-xl font-bold shadow-lg shadow-brand-primary/25 disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center min-w-[40px]"
             >
-              {submitting ? <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent" /> : <Plus size={24} />}
+              {submitting ? <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent" /> : <Plus size={20} />}
             </button>
           </form>
         </div>

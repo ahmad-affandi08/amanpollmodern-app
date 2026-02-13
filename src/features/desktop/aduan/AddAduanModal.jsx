@@ -132,7 +132,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Buat Laporan Aduan">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <SearchableSelect
           label={loadingInventaris ? "Memuat Alat..." : "Pilih Alat / Inventaris"}
           name="inventaris_id"
@@ -143,36 +143,37 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
           searchPlaceholder="Cari nomor inventaris atau nama alat..."
           required
           disabled={loadingInventaris}
+          size="sm"
         />
 
         {/* Read Only Details */}
-        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+        <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <div className="col-span-2">
-            <label className="text-xs text-gray-500 font-bold uppercase">Lokasi / Ruangan</label>
-            <p className="font-semibold text-gray-800">{formData.ruangan_nama || '-'}</p>
+            <label className="text-[10px] text-gray-500 font-bold uppercase">Lokasi / Ruangan</label>
+            <p className="font-semibold text-sm text-gray-800">{formData.ruangan_nama || '-'}</p>
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-bold uppercase">Nama Alat</label>
-            <p className="font-semibold text-gray-800">{formData.nama_alat_nama || '-'}</p>
+            <label className="text-[10px] text-gray-500 font-bold uppercase">Nama Alat</label>
+            <p className="font-semibold text-sm text-gray-800">{formData.nama_alat_nama || '-'}</p>
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-bold uppercase">No Inventaris</label>
-            <p className="font-semibold text-gray-800 break-all">{formData.no_inventaris || '-'}</p>
+            <label className="text-[10px] text-gray-500 font-bold uppercase">No Inventaris</label>
+            <p className="font-semibold text-sm text-gray-800 break-all">{formData.no_inventaris || '-'}</p>
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-gray-500 font-bold uppercase">Merk / Type</label>
-            <p className="font-semibold text-gray-800">{formData.merk || '-'}</p>
+            <label className="text-[10px] text-gray-500 font-bold uppercase">Merk / Type</label>
+            <p className="font-semibold text-sm text-gray-800">{formData.merk || '-'}</p>
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-bold uppercase">Divisi</label>
-            <p className="font-semibold text-gray-800">{formData.divisi_nama || '-'}</p>
+            <label className="text-[10px] text-gray-500 font-bold uppercase">Divisi</label>
+            <p className="font-semibold text-sm text-gray-800">{formData.divisi_nama || '-'}</p>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Keluhan Kerusakan <span className="text-red-500">*</span></label>
+          <label className="block text-xs font-semibold text-[#808191] mb-1.5 pl-1">Keluhan Kerusakan <span className="text-red-500">*</span></label>
           <textarea
-            className="w-full px-4 py-3 bg-bg-light border border-gray-200 rounded-xl text-text-dark font-medium outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all min-h-[100px]"
+            className="w-full px-3 py-2 bg-bg-light border border-gray-200 rounded-xl text-text-dark font-medium outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all min-h-[80px] text-sm"
             value={formData.keluhan}
             onChange={(e) => setFormData({ ...formData, keluhan: e.target.value })}
             placeholder="Deskripsikan kerusakan alat..."
@@ -185,12 +186,13 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
           value={formData.nama_pengadu}
           onChange={(e) => setFormData({ ...formData, nama_pengadu: e.target.value })}
           required
+          size="sm"
         />
 
         <div>
-          <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Foto Bukti (Opsional)</label>
+          <label className="block text-xs font-semibold text-[#808191] mb-1.5 pl-1">Foto Bukti (Opsional)</label>
           <div className="flex gap-2">
-            <div className="relative flex-1 border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 hover:border-brand-primary/50 transition-colors cursor-pointer">
+            <div className="relative flex-1 border-2 border-dashed border-gray-200 rounded-xl p-3 text-center hover:bg-gray-50 hover:border-brand-primary/50 transition-colors cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -199,9 +201,9 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
               />
               <div className="text-gray-400">
                 {formData.img_keluhan && !formData.img_keluhan.name.startsWith('capture_') ? (
-                  <span className="text-brand-primary font-medium truncate block max-w-[150px] mx-auto">{formData.img_keluhan.name}</span>
+                  <span className="text-brand-primary font-medium truncate block max-w-[150px] mx-auto text-xs">{formData.img_keluhan.name}</span>
                 ) : (
-                  <span className="text-xs">Klik untuk upload foto</span>
+                  <span className="text-[10px]">Klik untuk upload foto</span>
                 )}
               </div>
             </div>
@@ -210,10 +212,10 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
               type="button"
               variant="outline"
               onClick={() => setShowCamera(true)}
-              className="flex flex-col items-center justify-center p-2 h-auto w-24 gap-1 border-dashed"
+              className="flex flex-col items-center justify-center p-2 h-auto w-20 gap-1 border-dashed"
             >
-              <Camera size={20} className="text-gray-500" />
-              <span className="text-[10px] text-gray-500 font-normal">Ambil Foto</span>
+              <Camera size={16} className="text-gray-500" />
+              <span className="text-[9px] text-gray-500 font-normal">Ambil Foto</span>
             </Button>
           </div>
 
@@ -231,9 +233,9 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
           />
         </div>
 
-        <div className="pt-4 flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose}>Batal</Button>
-          <Button type="submit" loading={submitLoading}>Kirim Laporan</Button>
+        <div className="pt-2 flex justify-end gap-2">
+          <Button type="button" variant="secondary" size="sm" onClick={onClose}>Batal</Button>
+          <Button type="submit" loading={submitLoading} size="sm">Kirim Laporan</Button>
         </div>
       </form>
     </Modal>

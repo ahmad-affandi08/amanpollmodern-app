@@ -160,23 +160,23 @@ export default function MasterNamaAlat() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">Master Nama Alat</h1>
-          <p className="text-text-gray text-sm mt-1">Standarisasi nama alat dan masa pakai</p>
+          <h1 className="text-xl font-bold text-text-dark">Master Nama Alat</h1>
+          <p className="text-text-gray text-xs mt-1">Standarisasi nama alat dan masa pakai</p>
         </div>
-        <Button onClick={handleOpenCreate} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20">
-          <Plus size={18} />
+        <Button onClick={handleOpenCreate} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20 py-2 px-4 text-sm">
+          <Plus size={16} />
           <span>Tambah Nama Alat</span>
         </Button>
       </div>
 
-      <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="mb-6 max-w-md">
+      <div className="bg-white rounded-[20px] p-4 md:p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+        <div className="mb-4 max-w-md">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Cari nama alat..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
@@ -187,12 +187,12 @@ export default function MasterNamaAlat() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">No</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Nama Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Kategori</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Divisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase">Usia Pakai</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase text-right">Aksi</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">No</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Nama Alat</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Kategori</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Divisi</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Usia Pakai</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -209,35 +209,35 @@ export default function MasterNamaAlat() {
               ) : (
                 paginatedData.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6 text-sm font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td className="py-4 px-6 text-sm font-bold text-text-dark">{item.nama_nama_alat}</td>
-                    <td className="py-4 px-6 text-sm">
+                    <td className="py-2 px-4 text-sm font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <td className="py-2 px-4 text-sm font-bold text-text-dark">{item.nama_nama_alat}</td>
+                    <td className="py-2 px-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <Tag size={14} className="text-brand-primary" />
-                        <span className="font-semibold">{item.kategori_alat?.nama_kategori || '-'}</span>
+                        <Tag size={12} className="text-brand-primary" />
+                        <span className="font-semibold text-xs">{item.kategori_alat?.nama_kategori || '-'}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm">
+                    <td className="py-2 px-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <Users size={14} className="text-[#FF754C]" />
-                        <span className="font-semibold">{item.divisi?.nama_divisi || '-'}</span>
+                        <Users size={12} className="text-[#FF754C]" />
+                        <span className="font-semibold text-xs">{item.divisi?.nama_divisi || '-'}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm font-bold">{item.standar_usia_pakai} Tahun</td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <td className="py-2 px-4 text-sm font-bold">{item.standar_usia_pakai} Tahun</td>
+                    <td className="py-2 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => checklistModal.open(item)}
-                          className="p-3 bg-purple-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                          className="p-2 bg-purple-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                           title="Checklist Maintenance"
                         >
-                          <ClipboardList size={20} />
+                          <ClipboardList size={16} />
                         </button>
-                        <button onClick={() => handleOpenEdit(item)} className="p-3 bg-brand-primary text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all">
-                          <Edit2 size={20} />
+                        <button onClick={() => handleOpenEdit(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+                          <Edit2 size={16} />
                         </button>
-                        <button onClick={() => handleDeleteClick(item)} className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
-                          <Trash2 size={20} />
+                        <button onClick={() => handleDeleteClick(item)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>

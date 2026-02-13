@@ -70,29 +70,29 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
       title="Edit Jadwal Pemeliharaan"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>Batal</Button>
-          <Button onClick={handleSubmit} loading={loading}>Simpan Perubahan</Button>
+          <Button variant="secondary" size="sm" onClick={onClose}>Batal</Button>
+          <Button onClick={handleSubmit} loading={loading} size="sm">Simpan Perubahan</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Info Section */}
-        <div className="bg-[#F8F9FB] p-4 rounded-xl border border-gray-200">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="bg-[#F8F9FB] p-3 rounded-xl border border-gray-200">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-gray-500 block text-xs">No. Inventaris</span>
+              <span className="text-gray-500 block text-[10px]">No. Inventaris</span>
               <p className="font-bold text-text-dark truncate">{pemeliharaan.no_inventaris}</p>
             </div>
             <div>
-              <span className="text-gray-500 block text-xs">Ruangan</span>
+              <span className="text-gray-500 block text-[10px]">Ruangan</span>
               <p className="font-bold text-text-dark truncate">{pemeliharaan.ruangan_nama}</p>
             </div>
             <div>
-              <span className="text-gray-500 block text-xs">Alat</span>
+              <span className="text-gray-500 block text-[10px]">Alat</span>
               <p className="font-bold text-text-dark truncate">{pemeliharaan.nama_alat_nama}</p>
             </div>
             <div>
-              <span className="text-gray-500 block text-xs">Divisi</span>
+              <span className="text-gray-500 block text-[10px]">Divisi</span>
               <p className="font-bold text-text-dark truncate">{pemeliharaan.divisi_nama}</p>
             </div>
           </div>
@@ -106,6 +106,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
             value={formData.jadwal_pemeliharaan}
             onChange={(e) => setFormData({ ...formData, jadwal_pemeliharaan: e.target.value })}
             required
+            size="sm"
           />
 
           <Select
@@ -114,6 +115,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
             onChange={(e) => setFormData({ ...formData, teknisi_id: e.target.value })}
             options={teknisiOptions.map(t => ({ value: t.id_user, label: t.nama_lengkap }))}
             placeholder="-- Pilih Teknisi --"
+            size="sm"
           />
         </div>
       </form>

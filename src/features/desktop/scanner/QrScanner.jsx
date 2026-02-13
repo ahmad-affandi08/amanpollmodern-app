@@ -17,7 +17,6 @@ export default function Scanner() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-
     const timer = setTimeout(() => {
       if (!videoRef.current) {
         setError('Video element tidak ditemukan');
@@ -28,7 +27,6 @@ export default function Scanner() {
       let qrScanner = null;
 
       try {
-
         qrScanner = new QrScanner(
           videoRef.current,
           (result) => {
@@ -89,14 +87,11 @@ export default function Scanner() {
       try {
         setLoading(true);
 
-
         await scannerRef.current.stop();
         scannerRef.current.destroy();
 
-
         const newMode = currentCamera === 'environment' ? 'user' : 'environment';
         setCurrentCamera(newMode);
-
 
         const qrScanner = new QrScanner(
           videoRef.current,
@@ -123,7 +118,6 @@ export default function Scanner() {
 
         scannerRef.current = qrScanner;
 
-
         await qrScanner.start();
         setLoading(false);
       } catch (err) {
@@ -135,30 +129,29 @@ export default function Scanner() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-text-dark flex items-center justify-center gap-2">
-          <Camera size={28} />
+        <h1 className="text-lg font-bold text-text-dark flex items-center justify-center gap-2">
+          <Camera size={22} />
           QR Code Scanner
         </h1>
-        <p className="text-text-gray text-sm mt-2">
+        <p className="text-text-gray text-xs mt-1">
           Arahkan kamera ke QR Code inventaris untuk melihat detail
         </p>
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-
+        <div className="bg-white rounded-xl p-4 shadow-sm">
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Camera size={32} className="text-red-600" />
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-5 text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Camera size={24} className="text-red-600" />
               </div>
-              <h3 className="font-bold text-red-900 mb-2">Gagal Mengakses Kamera</h3>
-              <p className="text-red-700 text-sm mb-4">{error}</p>
+              <h3 className="font-bold text-red-900 mb-1.5 text-sm">Gagal Mengakses Kamera</h3>
+              <p className="text-red-700 text-xs mb-3">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                className="px-5 py-1.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-sm"
               >
                 Coba Lagi
               </button>
@@ -167,68 +160,62 @@ export default function Scanner() {
 
           {!error && (
             <div className="relative">
-              {/* Video Element - Always rendered */}
               <div className="relative w-full aspect-square max-h-[70vh] mx-auto">
                 <video
                   ref={videoRef}
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-full object-cover rounded-xl"
                   autoPlay
                   playsInline
                   muted
                 />
 
-                {/* Loading Overlay */}
                 {loading && (
-                  <div className="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-brand-primary mb-4"></div>
-                    <p className="text-gray-600 font-medium">Memuat kamera...</p>
+                  <div className="absolute inset-0 bg-white rounded-xl flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brand-primary mb-3"></div>
+                    <p className="text-gray-600 font-medium text-sm">Memuat kamera...</p>
                   </div>
                 )}
 
-                {/* Scanner Frame Overlay */}
                 {!loading && (
                   <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-8 left-8 w-16 h-16 border-t-4 border-l-4 border-brand-primary rounded-tl-2xl"></div>
-                    <div className="absolute top-8 right-8 w-16 h-16 border-t-4 border-r-4 border-brand-primary rounded-tr-2xl"></div>
-                    <div className="absolute bottom-8 left-8 w-16 h-16 border-b-4 border-l-4 border-brand-primary rounded-bl-2xl"></div>
-                    <div className="absolute bottom-8 right-8 w-16 h-16 border-b-4 border-r-4 border-brand-primary rounded-br-2xl"></div>
+                    <div className="absolute top-6 left-6 w-12 h-12 border-t-4 border-l-4 border-brand-primary rounded-tl-xl"></div>
+                    <div className="absolute top-6 right-6 w-12 h-12 border-t-4 border-r-4 border-brand-primary rounded-tr-xl"></div>
+                    <div className="absolute bottom-6 left-6 w-12 h-12 border-b-4 border-l-4 border-brand-primary rounded-bl-xl"></div>
+                    <div className="absolute bottom-6 right-6 w-12 h-12 border-b-4 border-r-4 border-brand-primary rounded-br-xl"></div>
 
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-64 h-64 border-2 border-dashed border-white/50 rounded-2xl"></div>
+                      <div className="w-56 h-56 border-2 border-dashed border-white/50 rounded-xl"></div>
                     </div>
                   </div>
                 )}
 
-                {/* Scanning Indicator */}
                 {!loading && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-brand-primary text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-brand-primary text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                     Scanning...
                   </div>
                 )}
               </div>
 
-              {/* Controls */}
               {!loading && (
-                <div className="mt-6 flex justify-center">
+                <div className="mt-4 flex justify-center">
                   <button
                     onClick={toggleCamera}
-                    className="flex items-center gap-2 px-6 py-3 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-xl transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-5 py-2 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-lg transition-all shadow-sm text-sm"
                   >
-                    <SwitchCamera size={20} />
+                    <SwitchCamera size={16} />
                     Switch Camera
                   </button>
                 </div>
               )}
 
-              {/* Instructions */}
               {!loading && (
-                <div className="mt-6 p-4 bg-bg-light rounded-xl">
-                  <h3 className="font-bold text-text-dark mb-2 flex items-center gap-2">
-                    <CheckCircle size={18} className="text-brand-primary" />
+                <div className="mt-4 p-3 bg-bg-light rounded-lg">
+                  <h3 className="font-bold text-text-dark mb-1.5 flex items-center gap-1.5 text-xs">
+                    <CheckCircle size={14} className="text-brand-primary" />
                     Cara Menggunakan:
                   </h3>
-                  <ol className="text-sm text-text-gray space-y-1 list-decimal list-inside">
+                  <ol className="text-xs text-text-gray space-y-0.5 list-decimal list-inside">
                     <li>Izinkan akses kamera saat diminta</li>
                     <li>Arahkan kamera ke QR Code pada label inventaris</li>
                     <li>Tunggu hingga QR Code terdeteksi</li>

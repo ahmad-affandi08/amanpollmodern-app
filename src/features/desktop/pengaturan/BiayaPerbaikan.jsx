@@ -28,7 +28,6 @@ export default function BiayaPerbaikan() {
   });
   const [expandedRow, setExpandedRow] = useState(null);
 
-
   const [filters, setFilters] = useState({
     divisi_id: '',
     kategori_alat_id: '',
@@ -97,7 +96,6 @@ export default function BiayaPerbaikan() {
       const res = await AnggaranApi.getRepairAnalysis(params);
       const responseData = res.data.data;
 
-
       if (responseData && responseData.items) {
         setData(responseData.items.data || []);
         setTotals(responseData.totals || { total_biaya_aktual: 0, total_mmel: 0, jumlah_ganti_aset: 0 });
@@ -108,7 +106,6 @@ export default function BiayaPerbaikan() {
           totalItems: responseData.items.total
         }));
       } else if (responseData && responseData.data) {
-
         setData(responseData.data || []);
       } else {
         setData([]);
@@ -149,50 +146,47 @@ export default function BiayaPerbaikan() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
+        <h1 className="text-lg font-bold text-text-dark flex items-center gap-2">
           Biaya Perbaikan vs MMEL
         </h1>
-        <p className="text-text-gray text-sm mt-1">
+        <p className="text-text-gray text-xs mt-0.5">
           Analisis kelayakan alat dengan membandingkan Biaya Perbaikan Tahunan dengan Batas MMEL (Maximum Maintenance Expenditure Limit).
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-brand-primary">
-          <p className="text-gray-500 text-sm mb-2">Total Biaya Perbaikan (Tahun {filters.tahun_filter})</p>
-          <h2 className="text-2xl font-extrabold text-text-dark">{formatCurrency(totals.total_biaya_aktual)}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-brand-primary">
+          <p className="text-gray-500 text-xs mb-1">Total Biaya Perbaikan (Tahun {filters.tahun_filter})</p>
+          <h2 className="text-xl font-extrabold text-text-dark">{formatCurrency(totals.total_biaya_aktual)}</h2>
         </div>
-        <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-gray-400">
-          <p className="text-gray-500 text-sm mb-2">Total Batas MMEL (Tahun {filters.tahun_filter})</p>
-          <h2 className="text-2xl font-extrabold text-gray-400">{formatCurrency(totals.total_mmel)}</h2>
+        <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-gray-400">
+          <p className="text-gray-500 text-xs mb-1">Total Batas MMEL (Tahun {filters.tahun_filter})</p>
+          <h2 className="text-xl font-extrabold text-gray-400">{formatCurrency(totals.total_mmel)}</h2>
         </div>
-        <div className="bg-white p-6 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-red-500">
-          <p className="text-gray-500 text-sm mb-2">Aset Direkomendasikan Ganti</p>
-          <h2 className="text-2xl font-extrabold text-red-500">{totals.jumlah_ganti_aset} Unit</h2>
+        <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center justify-center text-center border-l-4 border-red-500">
+          <p className="text-gray-500 text-xs mb-1">Aset Direkomendasikan Ganti</p>
+          <h2 className="text-xl font-extrabold text-red-500">{totals.jumlah_ganti_aset} Unit</h2>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">Cari Alat / No Inv</label>
+            <label className="block text-xs font-semibold text-[#808191] mb-1.5 pl-1">Cari Alat / No Inv</label>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Nama alat atau no inventaris..."
-                className="w-full px-4 py-3 bg-bg-light border border-gray-200 rounded-xl text-text-dark font-medium outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder:text-gray-400"
+                className="w-full px-3 py-2 bg-bg-light border border-gray-200 rounded-lg text-text-dark text-sm font-medium outline-none focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10 transition-all placeholder:text-gray-400"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             </div>
           </div>
 
-          {/* Year Filter */}
           <SearchableSelect
             label="Tahun Analisis"
             name="tahun_filter"
@@ -203,7 +197,6 @@ export default function BiayaPerbaikan() {
             onChange={(e) => handleFilterChange('tahun_filter', e.target.value)}
           />
 
-          {/* Hide divisi filter for Admin Divisi */}
           {!isAdminDivisi && (
             <SearchableSelect
               label="Divisi"
@@ -238,27 +231,26 @@ export default function BiayaPerbaikan() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-[24px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="overflow-x-auto rounded-xl border border-gray-100 custom-scrollbar mb-4">
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-100 custom-scrollbar mb-3">
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider sticky left-0 bg-bg-light z-10 w-[50px]"></th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Biaya Aktual</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Batas MMEL</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-center">% Biaya/MMEL</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-center">Rekomendasi</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider sticky left-0 bg-bg-light z-10 w-[40px]"></th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Ruangan</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Biaya Aktual</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Batas MMEL</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-center">% Biaya/MMEL</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-center">Rekomendasi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 text-sm">
+            <tbody className="divide-y divide-gray-50 text-xs">
               {loading ? (
                 <TableSkeleton rows={5} columns={8} />
               ) : data.length === 0 ? (
-                <tr><td colSpan="8" className="py-8 text-center text-gray-400">Tidak ada data analisis</td></tr>
+                <tr><td colSpan="8" className="py-6 text-center text-gray-400 text-xs">Tidak ada data analisis</td></tr>
               ) : (
                 data.map((item, idx) => (
                   <React.Fragment key={idx}>
@@ -266,54 +258,52 @@ export default function BiayaPerbaikan() {
                       className={`hover:bg-gray-50/50 cursor-pointer ${expandedRow === item.id_inventaris ? 'bg-gray-50' : ''}`}
                       onClick={() => toggleExpand(item.id_inventaris)}
                     >
-                      <td className="py-4 px-6 text-center border-r border-gray-50">
+                      <td className="py-2.5 px-4 text-center border-r border-gray-50">
                         <div className={`transition-transform duration-200 ${expandedRow === item.id_inventaris ? 'rotate-90' : ''}`}>
-                          <div className={`p-1 rounded-full ${expandedRow === item.id_inventaris ? 'bg-brand-primary/10 text-brand-primary' : 'text-gray-400'}`}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                          <div className={`p-0.5 rounded-full ${expandedRow === item.id_inventaris ? 'bg-brand-primary/10 text-brand-primary' : 'text-gray-400'}`}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-6 font-medium text-gray-800">
+                      <td className="py-2.5 px-4 font-medium text-gray-800">
                         {(pagination.currentPage - 1) * pagination.perPage + idx + 1}
                       </td>
-                      <td className="py-4 px-6 font-medium text-text-dark">
+                      <td className="py-2.5 px-4 font-medium text-text-dark">
                         {item.nama_alat}
-                        <div className="text-xs text-brand-primary font-normal">{item.no_inventaris}</div>
+                        <div className="text-[10px] text-brand-primary font-normal">{item.no_inventaris}</div>
                       </td>
-                      <td className="py-4 px-6 text-gray-600">{item.ruangan}</td>
-                      <td className="py-4 px-6 text-right font-mono text-gray-800">{formatCurrency(item.biaya_aktual)}</td>
-                      <td className="py-4 px-6 text-right font-mono text-gray-500">{formatCurrency(item.mmel)}</td>
-                      <td className="py-4 px-6 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.percentage > 100 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                      <td className="py-2.5 px-4 text-gray-600">{item.ruangan}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-gray-800">{formatCurrency(item.biaya_aktual)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-gray-500">{formatCurrency(item.mmel)}</td>
+                      <td className="py-2.5 px-4 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.percentage > 100 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
                           {item.percentage.toFixed(1)}%
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-2.5 px-4 text-center">
                         {item.status === 'Ganti Aset' ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100 text-xs font-bold uppercase tracking-wide">
-                            <AlertTriangle size={14} />
+                          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold uppercase tracking-wide">
+                            <AlertTriangle size={12} />
                             Ganti Aset
                           </div>
                         ) : (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-xs font-bold uppercase tracking-wide">
-                            <CheckCircle size={14} />
+                          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold uppercase tracking-wide">
+                            <CheckCircle size={12} />
                             Aman
                           </div>
                         )}
                       </td>
                     </tr>
 
-                    {/* Expanded Detail View */}
                     {expandedRow === item.id_inventaris && (
                       <tr className="bg-bg-light">
-                        <td colSpan="8" className="p-6 cursor-default">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-scale-in">
-                            {/* Card 1: Asset Info */}
-                            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                              <h6 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                <Info size={16} /> Informasi Aset
+                        <td colSpan="8" className="p-4 cursor-default">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-scale-in">
+                            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                              <h6 className="font-bold text-gray-800 mb-2 flex items-center gap-1.5 text-sm">
+                                <Info size={14} /> Informasi Aset
                               </h6>
-                              <ul className="space-y-2 text-sm text-gray-600">
+                              <ul className="space-y-1.5 text-xs text-gray-600">
                                 <li className="flex justify-between"><span>Harga Awal (IIC):</span> <span className="font-medium text-gray-800">{formatCurrency(item.harga_awal)}</span></li>
                                 <li className="flex justify-between"><span>Tahun Pengadaan:</span> <span className="font-medium text-gray-800">{item.tahun}</span></li>
                                 <li className="flex justify-between"><span>Usia Alat:</span> <span className="font-medium text-gray-800">{item.usia_alat} Tahun</span></li>
@@ -321,12 +311,11 @@ export default function BiayaPerbaikan() {
                               </ul>
                             </div>
 
-                            {/* Card 2: Calculation Factors */}
-                            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                              <h6 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                <TrendingUp size={16} /> Faktor Perhitungan
+                            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                              <h6 className="font-bold text-gray-800 mb-2 flex items-center gap-1.5 text-sm">
+                                <TrendingUp size={14} /> Faktor Perhitungan
                               </h6>
-                              <ul className="space-y-2 text-sm text-gray-600">
+                              <ul className="space-y-1.5 text-xs text-gray-600">
                                 <li className="flex justify-between">
                                   <span title="Harga Pengganti saat ini (Compounded Inflation)">Harga Pengganti (FV):</span>
                                   <span className="font-medium text-gray-800">{formatCurrency(item.harga_pengganti)}</span>
@@ -342,31 +331,30 @@ export default function BiayaPerbaikan() {
                               </ul>
                             </div>
 
-                            {/* Card 3: Result Breakdown */}
-                            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 bg-gradient-to-br from-white to-gray-50">
-                              <h6 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                <Hammer size={16} /> Analisis MMEL
+                            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 bg-gradient-to-br from-white to-gray-50">
+                              <h6 className="font-bold text-gray-800 mb-2 flex items-center gap-1.5 text-sm">
+                                <Hammer size={14} /> Analisis MMEL
                               </h6>
-                              <div className="text-sm text-gray-600 space-y-1 mb-3">
+                              <div className="text-xs text-gray-600 space-y-0.5 mb-2">
                                 <p><strong>Rumus:</strong> MMEL = MEL Factor × Fraksi Usia × FV</p>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
-                                <span className="text-sm font-semibold">Jumlah Perbaikan:</span>
-                                <span className="text-lg font-bold text-blue-600">{item.jumlah_perbaikan}x</span>
+                              <div className="flex justify-between items-center py-1.5 border-t border-gray-200">
+                                <span className="text-xs font-semibold">Jumlah Perbaikan:</span>
+                                <span className="text-base font-bold text-blue-600">{item.jumlah_perbaikan}x</span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
-                                <span className="text-sm font-semibold">Rata-rata Biaya/Perbaikan:</span>
-                                <span className="text-lg font-bold text-purple-600">
+                              <div className="flex justify-between items-center py-1.5 border-t border-gray-200">
+                                <span className="text-xs font-semibold">Rata-rata Biaya/Perbaikan:</span>
+                                <span className="text-base font-bold text-purple-600">
                                   {item.jumlah_perbaikan > 0 ? formatCurrency(item.biaya_aktual / item.jumlah_perbaikan) : 'Rp 0'}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
-                                <span className="text-sm font-semibold">MMEL Limit:</span>
-                                <span className="text-lg font-bold text-gray-800">{formatCurrency(item.mmel)}</span>
+                              <div className="flex justify-between items-center py-1.5 border-t border-gray-200">
+                                <span className="text-xs font-semibold">MMEL Limit:</span>
+                                <span className="text-base font-bold text-gray-800">{formatCurrency(item.mmel)}</span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-t border-gray-200">
-                                <span className="text-sm font-semibold">Biaya Perbaikan:</span>
-                                <span className={`text-lg font-bold ${item.biaya_aktual > item.mmel ? 'text-red-500' : 'text-emerald-500'}`}>{formatCurrency(item.biaya_aktual)}</span>
+                              <div className="flex justify-between items-center py-1.5 border-t border-gray-200">
+                                <span className="text-xs font-semibold">Biaya Perbaikan:</span>
+                                <span className={`text-base font-bold ${item.biaya_aktual > item.mmel ? 'text-red-500' : 'text-emerald-500'}`}>{formatCurrency(item.biaya_aktual)}</span>
                               </div>
                             </div>
                           </div>

@@ -147,8 +147,8 @@ export default function ReportAduan() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-dark">Laporan Aduan</h1>
-          <p className="text-text-gray text-sm mt-1">Rekapitulasi seluruh data aduan dan perbaikan</p>
+          <h1 className="text-xl font-bold text-text-dark">Laporan Aduan</h1>
+          <p className="text-text-gray text-xs mt-1">Rekapitulasi seluruh data aduan dan perbaikan</p>
         </div>
         <Button
           onClick={() => {
@@ -164,6 +164,7 @@ export default function ReportAduan() {
 
             window.open(`/api/aduan/export-excel?${params.toString()}`, '_blank');
           }}
+          size="md"
           className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
         >
           <Download className="w-4 h-4" />
@@ -178,11 +179,11 @@ export default function ReportAduan() {
             {/* Search */}
             <div className="lg:col-span-1">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="text"
                   placeholder="Cari laporan..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
@@ -190,6 +191,7 @@ export default function ReportAduan() {
             </div>
 
             <SearchableSelect
+              size="sm"
               name="ruangan_id"
               value={filters.ruangan_id}
               onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
@@ -201,6 +203,7 @@ export default function ReportAduan() {
             {/* Hide divisi filter for Admin Divisi */}
             {!isAdminDivisi && (
               <SearchableSelect
+                size="sm"
                 name="divisi_id"
                 value={filters.divisi_id}
                 onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
@@ -211,6 +214,7 @@ export default function ReportAduan() {
             )}
 
             <SearchableSelect
+              size="sm"
               name="teknisi_id"
               value={filters.teknisi_id}
               onChange={(e) => handleFilterChange('teknisi_id', e.target.value)}
@@ -222,6 +226,7 @@ export default function ReportAduan() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Select
+              size="sm"
               value={filters.status_aduan}
               onChange={(e) => handleFilterChange('status_aduan', e.target.value)}
               options={[{ label: 'Semua Status', value: '' }, ...statusOptions]}
@@ -229,12 +234,14 @@ export default function ReportAduan() {
               className="bg-bg-light border-none"
             />
             <Input
+              size="sm"
               type="date"
               value={filters.start_date}
               onChange={(e) => handleFilterChange('start_date', e.target.value)}
               className="bg-bg-light border-none"
             />
             <Input
+              size="sm"
               type="date"
               value={filters.end_date}
               onChange={(e) => handleFilterChange('end_date', e.target.value)}
@@ -242,8 +249,9 @@ export default function ReportAduan() {
             />
             <Button
               variant="outline"
+              size="sm"
               onClick={resetFilters}
-              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
             >
               Reset Filter
             </Button>
@@ -255,25 +263,25 @@ export default function ReportAduan() {
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No. Aduan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tanggal Aduan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Divisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Ruangan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Gedung</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">No Inventaris</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Keluhan Kerusakan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Foto</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Nama Pengadu</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tanggal Pemeriksaan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Jam Pemeriksaan</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Tindakan Petugas</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Rekomendasi</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Kondisi Alat</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Aduan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal Aduan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Divisi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Ruangan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Gedung</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No Inventaris</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Keluhan Kerusakan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Foto</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Pengadu</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal Pemeriksaan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Jam Pemeriksaan</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tindakan Petugas</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Rekomendasi</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi Alat</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
@@ -290,39 +298,39 @@ export default function ReportAduan() {
               ) : (
                 data.map((item, index) => (
                   <tr key={item.id_aduan} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6 font-bold text-text-dark">
+                    <td className="py-3 px-4 font-bold text-text-dark text-xs">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="px-2 py-1 text-xs font-bold rounded-md bg-brand-primary-50 text-brand-primary">
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-brand-primary-50 text-brand-primary">
                         {item.no_aduan || '-'}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.create_date ? new Date(item.create_date).toLocaleString('id-ID', {
                         day: '2-digit', month: '2-digit', year: 'numeric',
                         hour: '2-digit', minute: '2-digit', second: '2-digit'
                       }).replace(/\./g, ':') : '-'}
                     </td>
-                    <td className="py-4 px-6 text-gray-600">{item.divisi_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600 font-medium">{item.ruangan_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{item.gedung || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600 font-mono text-xs">{item.no_inventaris || '-'}</td>
-                    <td className="py-4 px-6 text-text-dark font-medium">{item.nama_alat_nama || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate" title={item.keluhan}>{item.keluhan}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.divisi_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 font-medium text-xs">{item.ruangan_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.gedung || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 font-mono text-[10px]">{item.no_inventaris || '-'}</td>
+                    <td className="py-3 px-4 text-text-dark font-medium text-xs">{item.nama_alat_nama || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs" title={item.keluhan}>{item.keluhan}</td>
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-center">
                         {item.img_keluhan ? (
                           <div
-                            className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
-                            style={{ minWidth: '80px', minHeight: '80px', width: '80px', height: '80px' }}
+                            className="w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
+                            style={{ minWidth: '64px', minHeight: '64px', width: '64px', height: '64px' }}
                           >
                             <LazyLoadImage
                               src={item.img_keluhan}
                               alt="Foto Keluhan"
                               effect="blur"
                               className="object-cover"
-                              style={{ width: '80px', height: '80px', display: 'block' }}
+                              style={{ width: '64px', height: '64px', display: 'block' }}
                               placeholderSrc={noImage}
                               onError={(e) => { e.target.src = noImage; }}
                               onClick={() => {
@@ -332,7 +340,7 @@ export default function ReportAduan() {
                             />
                           </div>
                         ) : (
-                          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '80px', minHeight: '80px' }}>
+                          <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
                             <img
                               src={noImage}
                               alt="No Image"
@@ -342,36 +350,36 @@ export default function ReportAduan() {
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-gray-600">{item.nama_pengadu || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.nama_pengadu || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
                         day: '2-digit', month: '2-digit', year: 'numeric'
                       }) : 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 text-xs">
                       {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleTimeString('id-ID', {
                         hour: '2-digit', minute: '2-digit'
                       }) : 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-brand-primary font-medium">
+                    <td className="py-3 px-4 text-brand-primary font-medium text-xs">
                       {item.teknisi_nama || 'Belum Ditentukan'}
                     </td>
-                    <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate">{item.tindakan_teknisi || 'Belum Ditentukan'}</td>
-                    <td className="py-4 px-6 text-gray-600 max-w-[200px] truncate">{item.rekomendasi || '-'}</td>
-                    <td className="py-4 px-6 text-gray-600">{item.kondisi_alat || '-'}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.tindakan_teknisi || 'Belum Ditentukan'}</td>
+                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.rekomendasi || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">{item.kondisi_alat || '-'}</td>
+                    <td className="py-3 px-4">
                       {getStatusBadge(item.status_aduan)}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2 text-xs">
                         {/* Detail Button - Show for Sedang Dikerjakan, Selesai, Tindakan Lanjutan, or Rusak Berat */}
                         {(item.status_aduan === 'Sedang Dikerjakan' || item.status_aduan === 'Selesai' || item.status_aduan === 'Tindakan Lanjutan' || item.kondisi_alat === 'Rusak Berat') && (
                           <button
                             onClick={() => navigate(`/report/aduan/${item.id_aduan}`)}
-                            className="p-3 bg-[#4FD1C5] text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                            className="p-2 bg-[#4FD1C5] text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                             title="Detail"
                           >
-                            <Eye size={20} />
+                            <Eye size={16} />
                           </button>
                         )}
 
@@ -383,10 +391,10 @@ export default function ReportAduan() {
                         ) && (
                             <button
                               onClick={() => window.open(`/mobile/aduan/${item.id_aduan}/disposisi`, '_blank')}
-                              className="p-3 bg-success-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all"
+                              className="p-2 bg-success-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
                               title="Isi Disposisi"
                             >
-                              <Edit size={20} />
+                              <Edit size={16} />
                             </button>
                           )}
 
@@ -395,10 +403,10 @@ export default function ReportAduan() {
                           <button
                             onClick={() => handleDelete(item.id_aduan)}
                             disabled={deleteMutation.isPending}
-                            className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+                            className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                             title="Hapus"
                           >
-                            <Trash2 size={20} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>
@@ -414,6 +422,7 @@ export default function ReportAduan() {
           pagination.totalPages > 1 && (
             <div className="mt-6">
               <Pagination
+                size="sm"
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
                 onPageChange={pagination.goToPage}

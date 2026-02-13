@@ -9,16 +9,16 @@ import { Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
 
 
 const ThickInput = ({ label, type = "text", suffix, ...props }) => (
-  <div className="mb-5">
-    <label className="block text-brand-primary font-bold mb-2 ml-1 text-base">{label}</label>
+  <div className="mb-4">
+    <label className="block text-brand-primary font-bold mb-1 ml-1 text-sm">{label}</label>
     <div className="relative">
       <input
         type={type}
         {...props}
-        className={`w-full bg-white border-[3px] border-indigo-100 text-brand-primary text-lg font-medium px-6 py-4 rounded-[20px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder-gray-300 ${suffix ? 'pr-14' : ''}`}
+        className={`w-full bg-white border-2 border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[16px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all placeholder-gray-300 ${suffix ? 'pr-12' : ''}`}
       />
       {suffix && (
-        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-brand-primary/50 hover:text-brand-primary cursor-pointer transition-colors">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-primary/50 hover:text-brand-primary cursor-pointer transition-colors">
           {suffix}
         </div>
       )}
@@ -27,17 +27,17 @@ const ThickInput = ({ label, type = "text", suffix, ...props }) => (
 );
 
 const ThickSelect = ({ label, children, ...props }) => (
-  <div className="mb-5">
-    <label className="block text-brand-primary font-bold mb-2 ml-1 text-base">{label}</label>
+  <div className="mb-4">
+    <label className="block text-brand-primary font-bold mb-1 ml-1 text-sm">{label}</label>
     <div className="relative">
       <select
         {...props}
-        className="w-full bg-white border-[3px] border-indigo-100 text-brand-primary text-lg font-medium px-6 py-4 rounded-[20px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all cursor-pointer appearance-none"
+        className="w-full bg-white border-2 border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[16px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all cursor-pointer appearance-none"
       >
         {children}
       </select>
-      <div className="absolute right-6 top-1/2 -translate-y-1/2 text-brand-primary pointer-events-none">
-        <svg width="14" height="9" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1L6 6L11 1" /></svg>
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-primary pointer-events-none">
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1L6 6L11 1" /></svg>
       </div>
     </div>
   </div>
@@ -137,7 +137,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 lg:p-8 font-[Plus_Jakarta_Sans] relative overflow-hidden">
+    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-[Plus_Jakarta_Sans] relative overflow-hidden">
 
       {/* Background Blobs (Identical to Login) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -146,64 +146,64 @@ export default function Register() {
       </div>
 
       {/* Main Card (Fixed Size like Login) */}
-      <div className="bg-white/80 backdrop-blur-xl w-full max-w-[1400px] h-full lg:h-[85vh] rounded-[40px] shadow-2xl shadow-brand-primary/15 border border-white p-4 lg:p-6 flex flex-col lg:flex-row relative z-10 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-xl w-full max-w-[1100px] h-auto lg:h-[80vh] rounded-[32px] shadow-2xl shadow-brand-primary/15 border border-white p-3 lg:p-4 flex flex-col lg:flex-row relative z-10 overflow-hidden">
 
         {/* LEFT SIDE - ILLUSTRATION */}
-        <div className="hidden lg:flex w-full lg:w-[45%] h-48 lg:h-full bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-[32px] items-center justify-center relative overflow-hidden group shrink-0">
+        <div className="hidden lg:flex w-full lg:w-[45%] h-64 lg:h-full bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-[24px] items-center justify-center relative overflow-hidden group shrink-0">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-soft-light"></div>
 
           {/* Mascot (Animated) */}
-          <div className="relative z-10 transform translate-y-2 lg:translate-y-10 group-hover:scale-105 transition-transform duration-700 ease-in-out">
+          <div className="relative z-10 transform translate-y-2 lg:translate-y-8 group-hover:scale-105 transition-transform duration-700 ease-in-out">
             <img
               src={LogoAmanpoll3d}
               alt="Amanpoll 3D"
-              className="w-auto h-[280px] md:h-[320px] lg:h-[380px] object-contain drop-shadow-[0_30px_60px_rgba(108,93,211,0.3)] animate-float"
+              className="w-auto h-[220px] md:h-[260px] lg:h-[300px] object-contain drop-shadow-[0_30px_60px_rgba(108,93,211,0.3)] animate-float"
             />
-            <h1 className="text-2xl text-center lg:text-5xl font-bold text-brand-primary">Aman Poll</h1>
+            <h1 className="text-xl text-center lg:text-4xl font-bold text-brand-primary mt-4">Aman Poll</h1>
           </div>
           <div className="absolute top-10 right-10 w-12 h-12 bg-yellow-300 rounded-full blur-xl opacity-60 animate-pulse"></div>
         </div>
 
         {/* RIGHT SIDE - FORM WIZARD */}
-        <div className="w-full lg:w-[55%] h-full flex flex-col justify-center px-4 lg:px-20 py-8 lg:py-0 overflow-y-auto lg:overflow-visible relative">
+        <div className="w-full lg:w-[55%] h-full flex flex-col justify-center px-4 lg:px-12 py-6 lg:py-0 overflow-y-auto lg:overflow-visible relative">
 
           {/* Progress Dots */}
-          <div className="absolute top-8 right-8 flex gap-2 hidden lg:flex">
-            <div className={`w-3 h-3 rounded-full transition-colors ${step >= 1 ? 'bg-brand-primary' : 'bg-gray-200'}`}></div>
-            <div className={`w-3 h-3 rounded-full transition-colors ${step >= 2 ? 'bg-brand-primary' : 'bg-gray-200'}`}></div>
+          <div className="absolute top-6 right-6 flex gap-2 hidden lg:flex">
+            <div className={`w-2.5 h-2.5 rounded-full transition-colors ${step >= 1 ? 'bg-brand-primary' : 'bg-gray-200'}`}></div>
+            <div className={`w-2.5 h-2.5 rounded-full transition-colors ${step >= 2 ? 'bg-brand-primary' : 'bg-gray-200'}`}></div>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center gap-2 mb-2 lg:hidden">
               <img src={Logo} alt="Logo" className="w-8 h-8 object-contain" />
               <span className="text-xl font-bold text-brand-primary">Amanpoll</span>
             </div>
-            <h1 className="text-3xl lg:text-5xl font-black text-gray-900 mb-2 tracking-tight">Kenalan Yuk! 👋</h1>
-            <p className="text-gray-400 text-lg">
+            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2 tracking-tight">Kenalan Yuk! 👋</h1>
+            <p className="text-gray-400 text-sm lg:text-base">
               {step === 1 ? 'Isi identitas diri kamu dulu.' : 'Sekarang amankan akunmu.'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-100 text-red-500 rounded-2xl font-bold text-sm text-center">
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-500 rounded-xl font-bold text-sm text-center">
               {error}
             </div>
           )}
 
           {success ? (
-            <div className="flex flex-col items-center justify-center text-center py-10">
-              <div className="w-20 h-20 bg-success-300 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
-                <ArrowRight className="text-gray-900" size={40} />
+            <div className="flex flex-col items-center justify-center text-center py-8">
+              <div className="w-16 h-16 bg-success-300 rounded-full flex items-center justify-center mb-4 shadow-xl animate-bounce">
+                <ArrowRight className="text-gray-900" size={32} />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 mb-2">{success}</h2>
+              <h2 className="text-xl font-black text-gray-900 mb-2">{success}</h2>
               <p className="text-sm text-gray-400">Mengalihkan...</p>
             </div>
           ) : (
-            <form onSubmit={step === 2 ? handleSubmit : handleNext} className="w-full max-w-lg mx-auto lg:mx-0">
+            <form onSubmit={step === 2 ? handleSubmit : handleNext} className="w-full max-w-md mx-auto lg:mx-0">
 
               {/* STEP 1: IDENTITY */}
               {step === 1 && (
-                <div className="animate-fade-in space-y-4">
+                <div className="animate-fade-in space-y-3">
                   <ThickSelect
                     label="Kamu Siapa?"
                     name="kategori_user_id"
@@ -252,13 +252,13 @@ export default function Register() {
                   <ThickInput label="Nama Lengkap" name="nama_lengkap" placeholder="Nama lengkap kamu" value={form.nama_lengkap} onChange={handleChange} required />
                   <ThickInput label="Username" name="username" placeholder="Buat username unik" value={form.username} onChange={handleChange} required />
 
-                  <div className="mt-8">
+                  <div className="mt-6">
                     <Button
                       type="button"
                       onClick={handleNext}
-                      className="w-full bg-gray-900 hover:bg-gray-900 text-white font-black text-xl py-5 rounded-[20px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                     >
-                      Lanjut Langkah 2 <ArrowRight size={24} />
+                      Lanjut Langkah 2 <ArrowRight size={20} />
                     </Button>
                   </div>
                 </div>
@@ -266,11 +266,11 @@ export default function Register() {
 
               {/* STEP 2: SECURITY */}
               {step === 2 && (
-                <div className="animate-fade-in space-y-4">
+                <div className="animate-fade-in space-y-3">
                   <ThickInput label="Email" name="email" type="email" placeholder="email@kamu.com" value={form.email} onChange={handleChange} required />
                   <ThickInput label="WhatsApp" name="wa" placeholder="08xxxxx" value={form.wa} onChange={handleChange} required />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <ThickInput
                       label="Password"
                       name="password"
@@ -279,7 +279,7 @@ export default function Register() {
                       value={form.password}
                       onChange={handleChange}
                       required
-                      suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-brand-primary hover:text-brand-primary/80">{showPassword ? <EyeOff size={24} /> : <Eye size={24} />}</button>}
+                      suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-brand-primary hover:text-brand-primary/80">{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>}
                     />
                     <ThickInput
                       label="Konfirmasi"
@@ -289,22 +289,22 @@ export default function Register() {
                       value={form.password_confirmation}
                       onChange={handleChange}
                       required
-                      suffix={<button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-brand-primary hover:text-brand-primary/80">{showConfirmPassword ? <EyeOff size={24} /> : <Eye size={24} />}</button>}
+                      suffix={<button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-brand-primary hover:text-brand-primary/80">{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>}
                     />
                   </div>
 
-                  <div className="mt-8 flex gap-4">
+                  <div className="mt-6 flex gap-3">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-lg py-5 rounded-[20px] transition-all"
+                      className="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-lg py-3 rounded-[16px] transition-all"
                     >
                       Kembali
                     </button>
                     <Button
                       type="submit"
                       loading={loading}
-                      className="w-2/3 bg-gray-900 hover:bg-gray-900 text-white font-black text-xl py-5 rounded-[20px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"
+                      className="w-2/3 bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"
                     >
                       {loading ? 'Daftar...' : 'Selesai & Daftar'}
                     </Button>
@@ -312,8 +312,8 @@ export default function Register() {
                 </div>
               )}
 
-              <div className="mt-8 text-center">
-                <p className="text-gray-500 font-medium">
+              <div className="mt-6 text-center">
+                <p className="text-gray-500 font-medium text-sm">
                   Sudah punya akun?{' '}
                   <Link to="/login" className="text-brand-primary font-bold hover:underline">
                     Masuk Aja Disini
