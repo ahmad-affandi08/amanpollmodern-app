@@ -75,9 +75,9 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
         no_inventaris: item.no_inventaris || '-',
         nama_alat_id: item.nama_alat?.id || '',
         nama_alat_nama: item.nama_alat?.nama_nama_alat || '-',
-        ruangan_id: item.ruangan?.id_ruangan || '',
+        ruangan_id: item.ruangan?.id || '',
         ruangan_nama: item.ruangan?.nama_ruangan || '-',
-        divisi_id: item.divisi?.id_divisi || item.nama_alat?.divisi?.id_divisi || '',
+        divisi_id: item.divisi?.id || item.nama_alat?.divisi?.id || '',
         divisi_nama: item.divisi?.nama_divisi || item.nama_alat?.divisi?.nama_divisi || '-',
         merk: item.merk || '-'
       }));

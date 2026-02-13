@@ -372,29 +372,29 @@ export default function InventarisList() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">No</th>
-                {isVisible('no_inventaris') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">No. Inventaris</th>}
-                {isVisible('nama_alat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Nama Alat</th>}
-                {isVisible('divisi') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Divisi</th>}
-                {isVisible('ruangan') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Nama Bagian/Ruangan</th>}
-                {isVisible('merk') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Merk</th>}
-                {isVisible('model') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Model/Tipe</th>}
-                {isVisible('seri') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">No. Seri</th>}
-                {isVisible('daya') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Daya (watt)</th>}
-                {isVisible('harga') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Harga</th>}
-                {isVisible('harga_ganti') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Harga Ganti (AIC)</th>}
-                {isVisible('tahun_pengadaan') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Tahun Pengadaan</th>}
-                {isVisible('ruang_sekarang') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Letak Saat Ini/Ruang</th>}
-                {isVisible('gedung') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Gedung</th>}
-                {isVisible('kategori_alat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Kategori Alat</th>}
-                {isVisible('interval_maintenance') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Interval Maintenance</th>}
-                {isVisible('img_alat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Foto</th>}
-                {isVisible('file_sertifikat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Sertifikat</th>}
-                {isVisible('kadaluwarsa') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Berlaku Hingga</th>}
-                {isVisible('file_sop') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">File SOP</th>}
-                {isVisible('qrcode') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">QR Code</th>}
-                {isVisible('kondisi_alat') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase">Kondisi Alat</th>}
-                {isVisible('actions') && <th className="py-4 px-6 text-xs font-bold text-[#808191] uppercase text-right">Aksi</th>}
+                <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">No</th>
+                {isVisible('no_inventaris') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">No. Inventaris</th>}
+                {isVisible('nama_alat') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Nama Alat</th>}
+                {isVisible('divisi') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Divisi</th>}
+                {isVisible('ruangan') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Nama Bagian/Ruangan</th>}
+                {isVisible('merk') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Merk</th>}
+                {isVisible('model') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Model/Tipe</th>}
+                {isVisible('seri') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">No. Seri</th>}
+                {isVisible('daya') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Daya (watt)</th>}
+                {isVisible('harga') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Harga</th>}
+                {isVisible('harga_ganti') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Harga Ganti (AIC)</th>}
+                {isVisible('tahun_pengadaan') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Tahun Pengadaan</th>}
+                {isVisible('ruang_sekarang') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Letak Saat Ini/Ruang</th>}
+                {isVisible('gedung') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Gedung</th>}
+                {isVisible('kategori_alat') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Kategori Alat</th>}
+                {isVisible('interval_maintenance') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Interval Maintenance</th>}
+                {isVisible('img_alat') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Foto</th>}
+                {isVisible('file_sertifikat') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Sertifikat</th>}
+                {isVisible('kadaluwarsa') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Berlaku Hingga</th>}
+                {isVisible('file_sop') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">File SOP</th>}
+                {isVisible('qrcode') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">QR Code</th>}
+                {isVisible('kondisi_alat') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase">Kondisi Alat</th>}
+                {isVisible('actions') && <th className="py-3 px-4 text-xs font-bold text-[#808191] uppercase text-right">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -412,13 +412,13 @@ export default function InventarisList() {
                 dataList.map((item, index) => (
                   <tr key={item.id || `row-${index}`} className="hover:bg-gray-50/50 transition-colors">
                     {/* No Urut */}
-                    <td className="py-4 px-6 font-bold text-gray-800">
+                    <td className="py-3 px-4 font-bold text-gray-800 text-sm">
                       {(pagination.currentPage - 1) * pagination.perPage + index + 1}
                     </td>
                     {/* No Inventaris */}
                     {isVisible('no_inventaris') && (
-                      <td className="py-4 px-6 text-sm">
-                        <span className="px-2 py-1 rounded-md bg-purple-50 text-[#6C5DD3] text-xs font-bold">
+                      <td className="py-3 px-4 text-sm">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#6C5DD3] text-xs font-bold">
                           {item.no_inventaris}
                         </span>
                       </td>
@@ -426,91 +426,91 @@ export default function InventarisList() {
 
                     {/* Nama Alat */}
                     {isVisible('nama_alat') && (
-                      <td className="py-4 px-6 text-sm font-bold text-text-dark">
+                      <td className="py-3 px-4 text-sm font-bold text-text-dark">
                         {item.nama_alat?.nama_nama_alat || '-'}
                       </td>
                     )}
 
                     {/* Divisi */}
                     {isVisible('divisi') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.nama_alat?.divisi?.nama_divisi || item.divisi?.nama_divisi || '-'}
                       </td>
                     )}
 
                     {/* Ruangan */}
                     {isVisible('ruangan') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.ruangan?.nama_ruangan || '-'}
                       </td>
                     )}
 
                     {/* Merk */}
                     {isVisible('merk') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.merk || '-'}
                       </td>
                     )}
 
                     {/* Model */}
                     {isVisible('model') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.model || '-'}
                       </td>
                     )}
 
                     {/* No Seri */}
                     {isVisible('seri') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.seri || '-'}
                       </td>
                     )}
 
                     {/* Daya */}
                     {isVisible('daya') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.daya || '-'}
                       </td>
                     )}
 
                     {/* Harga */}
                     {isVisible('harga') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.harga ? `Rp ${parseInt(item.harga).toLocaleString('id-ID')}` : '-'}
                       </td>
                     )}
 
                     {/* Harga Ganti (AIC) */}
                     {isVisible('harga_ganti') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.harga_pengganti ? `Rp ${parseInt(item.harga_pengganti).toLocaleString('id-ID')}` : '-'}
                       </td>
                     )}
 
                     {/* Tahun Pengadaan */}
                     {isVisible('tahun_pengadaan') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.tahun_pengadaan || '-'}
                       </td>
                     )}
 
                     {/* Ruang Sekarang */}
                     {isVisible('ruang_sekarang') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.ruangan_sekarang?.nama_ruangan || item.ruangan?.nama_ruangan || '-'}
                       </td>
                     )}
 
                     {/* Gedung */}
                     {isVisible('gedung') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.gedung || '-'}
                       </td>
                     )}
 
                     {/* Kategori Alat */}
                     {isVisible('kategori_alat') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {(item.alat_kesehatan === 1 || item.alat_kesehatan === true)
                           ? (
                             <div className="flex flex-col gap-1">
@@ -533,14 +533,14 @@ export default function InventarisList() {
 
                     {/* Interval Maintenance */}
                     {isVisible('interval_maintenance') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.interval_maintenance || '-'}
                       </td>
                     )}
 
                     {/* Foto */}
                     {isVisible('img_alat') && (
-                      <td className="py-4 px-6">
+                      <td className="py-3 px-4">
                         <div className="flex items-center justify-center">
                           {item.img_alat_url ? (
                             <div className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary" style={{ minWidth: '80px', minHeight: '80px', width: '80px', height: '80px' }}>
@@ -570,7 +570,7 @@ export default function InventarisList() {
 
                     {/* Sertifikat */}
                     {isVisible('file_sertifikat') && (
-                      <td className="py-4 px-6 text-sm">
+                      <td className="py-3 px-4 text-sm">
                         {item.file_sertifikat_url ? (
                           <a
                             href={item.file_sertifikat_url}
@@ -588,14 +588,14 @@ export default function InventarisList() {
 
                     {/* Kadaluwarsa */}
                     {isVisible('kadaluwarsa') && (
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {item.kadaluwarsa ? new Date(item.kadaluwarsa).toLocaleDateString('id-ID') : '-'}
                       </td>
                     )}
 
                     {/* File SOP */}
                     {isVisible('file_sop') && (
-                      <td className="py-4 px-6 text-sm">
+                      <td className="py-3 px-4 text-sm">
                         {item.file_sop_url ? (
                           <a
                             href={item.file_sop_url}
@@ -613,7 +613,7 @@ export default function InventarisList() {
 
                     {/* QR Code */}
                     {isVisible('qrcode') && (
-                      <td className="py-4 px-6 text-sm">
+                      <td className="py-3 px-4 text-sm">
                         {item.qrcode_url ? (
                           <img
                             src={qrCodeIcon}
@@ -632,14 +632,14 @@ export default function InventarisList() {
 
                     {/* Kondisi */}
                     {isVisible('kondisi_alat') && (
-                      <td className="py-4 px-6 text-sm">
+                      <td className="py-3 px-4 text-sm">
                         {getKondisiBadge(item.kondisi_alat)}
                       </td>
                     )}
 
                     {/* Action */}
                     {isVisible('actions') && (
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-3">
                           {isPimpinan ? (
                             /* Pimpinan View: Only Detail */
@@ -726,16 +726,18 @@ export default function InventarisList() {
         </div>
       </div>
 
-      {confirmDialog.isOpen && (
-        <ConfirmDialog
-          isOpen={confirmDialog.isOpen}
-          title={confirmDialog.title}
-          message={confirmDialog.message}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ isOpen: false })}
-          type="danger"
-        />
-      )}
+      {
+        confirmDialog.isOpen && (
+          <ConfirmDialog
+            isOpen={confirmDialog.isOpen}
+            title={confirmDialog.title}
+            message={confirmDialog.message}
+            onConfirm={confirmDialog.onConfirm}
+            onCancel={() => setConfirmDialog({ isOpen: false })}
+            type="danger"
+          />
+        )
+      }
 
       {/* Image Preview Modal */}
       <ImagePreviewModal
@@ -743,6 +745,6 @@ export default function InventarisList() {
         imageUrl={imagePreview.imageUrl}
         onClose={() => setImagePreview({ isOpen: false, imageUrl: '' })}
       />
-    </div>
+    </div >
   );
 }

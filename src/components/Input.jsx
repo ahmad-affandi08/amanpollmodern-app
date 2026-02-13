@@ -58,11 +58,11 @@ export default function Input({
 
         <input
           className={`
-            w-full px-4 py-3 bg-[#F8F9FB] border border-gray-200 rounded-xl text-[#11142D] font-medium 
+            w-full px-3 py-2 bg-[#F8F9FB] border border-gray-200 rounded-xl text-sm font-medium 
             outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all
             placeholder:text-[#B0B3C7]
             disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60
-            ${icon ? 'pl-11' : ''}
+            ${icon ? 'pl-9' : ''}
             ${error ? 'border-red-500 bg-red-50' : ''}
             ${className}
           `}
