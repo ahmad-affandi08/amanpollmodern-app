@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Loader2, AlertCircle, Search } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { usePemeliharaanAssignments, useUpdateSignature } from '../../../hooks/queries/usePemeliharaanQueries';
-import { formatDateTime } from '../../../utils/format';
+import { formatDateTime, formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 import SignatureModal from './components/SignatureModal';
 import { ToastDialog } from '../../../components/Alert/Alert';
@@ -241,7 +241,7 @@ export default function MobilePemeliharaan() {
                   </p>
                   <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
                     <Calendar size={12} />
-                    <span>{formatDateTime(item.jadwal_pemeliharaan)}</span>
+                    <span>{formatDate(item.jadwal_pemeliharaan)}</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
                     <span className={`px-1.5 py-0.5 rounded ${item.kondisi_alat === 'Baik' ? 'bg-success-50 text-success-700 border border-success-200' :

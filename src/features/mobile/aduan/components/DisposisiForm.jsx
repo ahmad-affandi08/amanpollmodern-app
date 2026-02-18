@@ -45,8 +45,7 @@ export default function DisposisiForm({ aduan }) {
       },
       {
         onSuccess: () => {
-
-          navigate(-1);
+          // Stay on page to show Disposisi Detail
         },
       }
     );

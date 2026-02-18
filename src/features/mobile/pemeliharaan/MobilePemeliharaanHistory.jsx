@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, FileDown, RotateCcw, Search, AlertCircle } from 'lucide-react';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
 import { usePemeliharaanAssignments } from '../../../hooks/queries/usePemeliharaanQueries';
-import { formatDateTime } from '../../../utils/format';
+import { formatDateTime, formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 
 export default function MobilePemeliharaanHistory() {
@@ -191,7 +191,7 @@ export default function MobilePemeliharaanHistory() {
                   </p>
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <Calendar size={12} />
-                    <span>{formatDateTime(item.jadwal_pemeliharaan)}</span>
+                    <span>{formatDate(item.jadwal_pemeliharaan)}</span>
                   </div>
                 </div>
               </div>

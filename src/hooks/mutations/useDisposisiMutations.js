@@ -15,6 +15,7 @@ export const useCreateDisposisiAduan = () => {
       disposisiApi.createDisposisiAduan(aduanId, data),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
+      queryClient.invalidateQueries({ queryKey: ['aduan'] });
     },
     onError: (error) => {
       console.error('Error saving disposisi:', error);
