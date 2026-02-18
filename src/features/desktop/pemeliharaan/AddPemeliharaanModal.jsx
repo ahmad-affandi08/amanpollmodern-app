@@ -9,9 +9,11 @@ import InventarisApi from '../../../api/InventarisApi';
 import MasterApi from '../../../api/MasterApi';
 import PemeliharaanApi from '../../../api/PemeliharaanApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { useAuth } from '../../../hooks';
 
 export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
 
@@ -51,13 +53,29 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
 
   const loadInitialData = async () => {
     try {
+      // Filter logic
+      const ROLE_ADMIN_DIVISI = 4;
+      const isAdminDivisi = user?.kategori_user_id == ROLE_ADMIN_DIVISI;
+      const userDivisiId = user?.divisi_id;
+
+      const teknisiParams = {};
+      if (isAdminDivisi && userDivisiId) {
+        teknisiParams.divisi_id = userDivisiId;
+      }
+
       const [ruanganRes, teknisiRes] = await Promise.all([
         RuanganApi.getAll(),
-        MasterApi.getTeknisi()
+        MasterApi.getTeknisi(teknisiParams)
       ]);
       setRuanganOptions(ruanganRes.data || ruanganRes);
 
-      const teknisiData = Array.isArray(teknisiRes) ? teknisiRes : (teknisiRes.data || []);
+      let teknisiData = Array.isArray(teknisiRes) ? teknisiRes : (teknisiRes.data || []);
+
+      // Client-side safety filter
+      if (isAdminDivisi && userDivisiId) {
+        teknisiData = teknisiData.filter(t => t.divisi_id == userDivisiId);
+      }
+
       setTeknisiOptions(teknisiData);
     } catch (error) {
       console.error(error);

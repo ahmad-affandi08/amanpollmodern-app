@@ -78,12 +78,13 @@ const MasterApi = {
   },
 
 
-  getTeknisi: async () => {
+  getTeknisi: async (params = {}) => {
 
     const response = await axiosClient.get('/users', {
       params: {
-        per_page: 100,
-        category: 'teknisi'
+        per_page: 500, // Tingkatkan limit agar aman
+        category: 'teknisi',
+        ...params // Allow override/addition of params
       }
     });
     return response.data.data || response.data;

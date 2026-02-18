@@ -45,7 +45,7 @@ export default function PemeliharaanList() {
   const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = user?.kategori_user_id == ROLE_ADMIN_DIVISI;
   const userDivisiId = user?.divisi_id;
 
 
@@ -77,7 +77,18 @@ export default function PemeliharaanList() {
   });
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
-  const { data: usersData } = useMasterUsers({ per_page: 500 });
+
+  // 2. Filter API
+  const userQueryFilters = {
+    per_page: 500,
+    category: 'teknisi' // Tambahkan filter kategori agar payload lebih kecil dan spesifik
+  };
+
+  if (isAdminDivisi && userDivisiId) {
+    userQueryFilters.divisi_id = userDivisiId;
+  }
+
+  const { data: usersData } = useMasterUsers(userQueryFilters);
 
   const deleteMutation = useDeletePemeliharaan();
 
@@ -91,15 +102,16 @@ export default function PemeliharaanList() {
   }, [meta]);
 
   const ruanganOptions = (ruanganData?.data || []);
-
   let teknisi = (usersData?.data || []).filter(u => {
     const role = (u.role || '').toLowerCase();
     return role === 'teknisi';
   });
 
+  // Double Safety: Filter client-side juga jika user admin divisi,
+  // untuk berjaga-jaga jika API mengembalikan data teknisi divisi lain
   if (isAdminDivisi && userDivisiId) {
-    const targetDivisiId = parseInt(userDivisiId);
-    teknisi = teknisi.filter(u => parseInt(u.divisi_id) === targetDivisiId);
+    // Pastikan perbandingan ID divisi aman (loose equality)
+    teknisi = teknisi.filter(u => u.divisi_id == userDivisiId);
   }
 
   const teknisiOptions = teknisi;
