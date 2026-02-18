@@ -53,7 +53,6 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
 
   const loadInitialData = async () => {
     try {
-      // Filter logic
       const ROLE_ADMIN_DIVISI = 4;
       const isAdminDivisi = user?.kategori_user_id == ROLE_ADMIN_DIVISI;
       const userDivisiId = user?.divisi_id;
@@ -71,7 +70,6 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
 
       let teknisiData = Array.isArray(teknisiRes) ? teknisiRes : (teknisiRes.data || []);
 
-      // Client-side safety filter
       if (isAdminDivisi && userDivisiId) {
         teknisiData = teknisiData.filter(t => t.divisi_id == userDivisiId);
       }

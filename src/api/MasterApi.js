@@ -22,8 +22,6 @@ const MasterApi = {
     const response = await axiosClient.delete(`/divisi/${id}`);
     return response.data;
   },
-
-
   getAllRuangan: async (params) => {
     const response = await axiosClient.get('/ruangan', { params });
     return response.data;
@@ -50,8 +48,6 @@ const MasterApi = {
     const response = await axiosClient.get('/kategori-user');
     return response.data;
   },
-
-
   getAllUsers: async (params) => {
     const response = await axiosClient.get('/users', { params });
     return response.data;
@@ -82,9 +78,9 @@ const MasterApi = {
 
     const response = await axiosClient.get('/users', {
       params: {
-        per_page: 500, // Tingkatkan limit agar aman
+        per_page: 500,
         category: 'teknisi',
-        ...params // Allow override/addition of params
+        ...params
       }
     });
     return response.data.data || response.data;

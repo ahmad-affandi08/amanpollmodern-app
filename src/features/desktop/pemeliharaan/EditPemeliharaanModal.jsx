@@ -39,7 +39,6 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
 
   const loadTeknisi = async () => {
     try {
-      // Filter logic
       const ROLE_ADMIN_DIVISI = 4;
       const isAdminDivisi = user?.kategori_user_id == ROLE_ADMIN_DIVISI;
       const userDivisiId = user?.divisi_id;
@@ -52,7 +51,6 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
       const res = await MasterApi.getTeknisi(teknisiParams);
       let teknisiData = Array.isArray(res) ? res : (res.data || []);
 
-      // Client-side safety filter
       if (isAdminDivisi && userDivisiId) {
         teknisiData = teknisiData.filter(t => t.divisi_id == userDivisiId);
       }
