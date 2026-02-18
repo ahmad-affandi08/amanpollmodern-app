@@ -13,6 +13,7 @@ export default function MobileAduanHistory() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
@@ -30,7 +31,7 @@ export default function MobileAduanHistory() {
     isLoading,
     isError
   } = useAduanListInfinite({
-    status_aduan: 'Selesai',
+    status_aduan: statusFilter,
     search: searchQuery,
   }, 10);
 
@@ -109,7 +110,28 @@ export default function MobileAduanHistory() {
     <div className="max-w-md mx-auto px-4 pt-4 pb-20">
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-800">Riwayat Aduan</h1>
-        <p className="text-xs text-gray-500">Daftar laporan kerusakan yang sudah selesai</p>
+        <p className="text-xs text-gray-500">Daftar semua riwayat laporan kerusakan</p>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar">
+        {[
+          { label: 'Semua', value: '' },
+          { label: 'Pending', value: 'Pending' },
+          { label: 'Proses', value: 'Sedang Dikerjakan' },
+          { label: 'Selesai', value: 'Selesai' },
+          { label: 'Lanjut', value: 'Tindakan Lanjutan' },
+        ].map((filter) => (
+          <button
+            key={filter.value}
+            onClick={() => setStatusFilter(filter.value)}
+            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${statusFilter === filter.value
+                ? 'bg-brand-primary text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
 
       {/* Filter & Export Section - Only for Teknisi */}
