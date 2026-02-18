@@ -243,13 +243,10 @@ export default function MobilePemeliharaan() {
                     <Calendar size={12} />
                     <span>{formatDate(item.jadwal_pemeliharaan)}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className={`px-1.5 py-0.5 rounded ${item.kondisi_alat === 'Baik' ? 'bg-success-50 text-success-700 border border-success-200' :
-                      item.kondisi_alat === 'Rusak Ringan' ? 'bg-warning-50 text-warning-700 border border-warning-200' :
-                        item.kondisi_alat === 'Rusak Berat' ? 'bg-danger-50 text-danger-700 border border-danger-200' :
-                          'bg-gray-100 text-gray-600'
-                      }`}>
-                      {item.kondisi_alat || 'Belum Dicek'}
+                  {/* Status Alat (Inventory) */}
+                  <div className="flex items-center gap-2 text-xs mt-1">
+                    <span className={`px-1.5 py-0.5 rounded font-medium bg-${item.inventaris_kondisi_color}-50 text-${item.inventaris_kondisi_color}-700 border border-${item.inventaris_kondisi_color}-200`}>
+                      {item.inventaris_kondisi_label}
                     </span>
                   </div>
                 </div>
