@@ -8,7 +8,7 @@ import {
   Clock, Plus, QrCode, Wrench, Search, Filter, Calendar, FileText
 } from 'lucide-react';
 import { useDashboardStats, useMasterDivisi, useFilters, useAuth, usePageTitle } from '../../../hooks';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const COLORS = ['#6C5DD3', '#FF754C', '#FFAF4E', '#3F8CFF', '#A0D7E7', '#F0C782'];
 
@@ -298,7 +298,7 @@ export default function Dashboard() {
         <div className="lg:col-span-1 bg-white rounded-2xl p-4  border border-gray-100 h-full flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-base text-text-dark">Aktivitas Terbaru</h3>
-            <button className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</button>
+            <Link to="/activities" className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</Link>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 space-y-6 max-h-full">

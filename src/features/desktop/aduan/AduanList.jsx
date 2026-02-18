@@ -27,6 +27,7 @@ import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
+import technicianIcon from '../../../assets/img/technician.png';
 
 
 const COLUMN_DEFS = [
@@ -412,14 +413,17 @@ export default function AduanList() {
                     {isVisible('actions') && (
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {/* Assign Teknisi Button */}
                           {!item.teknisi_id && (
                             <button
                               onClick={() => assignModal.open(item)}
-                              className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+                              className="group w-12 h-12 p-1 bg-white rounded-xl shadow-lg hover:-translate-y-1 transition-all overflow-hidden flex items-center justify-center border border-gray-100"
                               title="Tugaskan Teknisi"
                             >
-                              <Wrench size={16} />
+                              <img
+                                src={technicianIcon}
+                                alt="Assign Teknisi"
+                                className="w-full h-full object-cover mix-blend-multiply"
+                              />
                             </button>
                           )}
                         </div>

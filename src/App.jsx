@@ -31,6 +31,7 @@ import AnggaranPemeliharaan from './features/desktop/pengaturan/AnggaranPemeliha
 import DetailAnggaranPemeliharaan from './features/desktop/pengaturan/DetailAnggaranPemeliharaan';
 import BiayaPerbaikan from './features/desktop/pengaturan/BiayaPerbaikan';
 import NotificationCenter from './features/desktop/notifications/NotificationCenter';
+import ActivitiesPage from './features/desktop/activities/ActivitiesPage';
 import DashboardLayoutMobile from './layouts/DashboardLayoutMobile';
 import MobileDashboard from './features/mobile/dashboard/MobileDashboard';
 import MobileAduan from './features/mobile/aduan/MobileAduan';
@@ -187,6 +188,10 @@ const router = createBrowserRouter(
     {
       path: '/notifications',
       element: <ProtectedRoute><DashboardLayout><NotificationCenter /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/activities',
+      element: <ProtectedRoute><DashboardLayout><ActivitiesPage /></DashboardLayout></ProtectedRoute>
     },
 
     {

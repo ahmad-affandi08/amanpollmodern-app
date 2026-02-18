@@ -3,6 +3,7 @@ import { Bell, X, Check, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import notificationIcon from '../assets/img/notification.png';
 import {
   useUnreadNotifications,
   useUnreadCount,
@@ -64,12 +65,15 @@ const NotificationBell = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 shadow-sm bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <Bell className="w-6 h-6" />
+        <img
+          src={notificationIcon}
+          alt="Notifications"
+          className="w-8 h-8 object-cover mix-blend-multiply"
+        />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}

@@ -35,3 +35,21 @@ export const useMobileDashboard = (filters = {}) => {
     placeholderData: (previousData) => previousData,
   });
 };
+
+/**
+ * Hook to fetch paginated activities
+ * @param {Object} filters - Filter parameters (page, per_page, type, search)
+ */
+export const useActivities = (filters = {}) => {
+  return useQuery({
+    queryKey: ['activities', filters],
+    queryFn: async () => {
+      const response = await axiosClient.get('/activities', {
+        params: filters
+      });
+      return response.data.data;
+    },
+    keepPreviousData: true,
+    staleTime: 1 * 60 * 1000,
+  });
+};
