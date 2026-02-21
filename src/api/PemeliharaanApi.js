@@ -6,7 +6,7 @@ const PemeliharaanApi = {
     return response.data;
   },
 
-  getAssignments: async (page = 1, limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null) => {
+  getAssignments: async (page = 1, limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null, startDate = null, endDate = null) => {
     const response = await axiosClient.get('/pemeliharaan/assignments', {
       params: {
         page,
@@ -15,7 +15,9 @@ const PemeliharaanApi = {
         status: status !== 'all' ? status : undefined,
         kondisi_alat: kondisi !== 'all' ? kondisi : undefined,
         month: month || undefined,
-        year: year || undefined
+        year: year || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
       }
     });
     return response.data;

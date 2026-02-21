@@ -17,10 +17,10 @@ export const usePemeliharaan = (filters = {}) => {
 };
 
 
-export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null) => {
+export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'all', kondisi = 'all', month = null, year = null, startDate = null, endDate = null) => {
   return useInfiniteQuery({
-    queryKey: ['pemeliharaan', 'assignments', { search, status, kondisi, month, year }],
-    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, kondisi, month, year),
+    queryKey: ['pemeliharaan', 'assignments', { search, status, kondisi, month, year, startDate, endDate }],
+    queryFn: ({ pageParam = 1 }) => PemeliharaanApi.getAssignments(pageParam, limit, search, status, kondisi, month, year, startDate, endDate),
     getNextPageParam: (lastPage) => {
 
       const currentPage = lastPage.meta?.current_page || lastPage.current_page;

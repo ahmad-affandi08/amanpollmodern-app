@@ -21,7 +21,7 @@ export default function MobilePemeliharaanHistory() {
     isFetchingNextPage,
     isLoading,
     error
-  } = usePemeliharaanAssignments(20, '', statusFilter);
+  } = usePemeliharaanAssignments(20, '', statusFilter, 'all', null, null, startDate || null, endDate || null);
 
 
   useEffect(() => {
@@ -41,13 +41,7 @@ export default function MobilePemeliharaanHistory() {
 
   const pemeliharaanList = data?.pages.flatMap(page => page.data).filter(Boolean) || [];
 
-
-  const filteredList = pemeliharaanList.filter(item => {
-    const matchesStartDate = !startDate || new Date(item.jadwal_pemeliharaan) >= new Date(startDate);
-    const matchesEndDate = !endDate || new Date(item.jadwal_pemeliharaan) <= new Date(endDate);
-
-    return matchesStartDate && matchesEndDate;
-  });
+  const filteredList = pemeliharaanList;
 
   const handleReset = () => {
     setStatusFilter('all');
