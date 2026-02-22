@@ -87,7 +87,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
     }
   };
 
-  const filteredItems = checklists.filter(item => item.kategori_checklist_id === activeTab);
+  const filteredItems = checklists.filter(item => Number(item.kategori_checklist_id) === Number(activeTab));
 
   if (!isOpen) return null;
 
