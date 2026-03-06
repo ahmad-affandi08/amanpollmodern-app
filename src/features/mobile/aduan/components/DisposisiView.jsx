@@ -1,13 +1,14 @@
 import { ArrowLeft, Package, FileText, Wrench, Lightbulb, CheckCircle } from 'lucide-react';
 import DisposisiDetail from '../../../../components/DisposisiDetail';
 import DisposisiForm from './DisposisiForm';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Disposisi View for Aduan
  * Modern redesign with glassmorphism and smooth animations
  */
 export default function DisposisiView({ aduan }) {
-
+  const navigate = useNavigate();
   const hasDisposisi = aduan?.disposisi_tgl;
 
   if (hasDisposisi) {
@@ -81,7 +82,7 @@ export default function DisposisiView({ aduan }) {
 
         {/* Back Button */}
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/login')}
           className="w-full py-4 bg-gradient-to-br from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white font-bold rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2"
         >
           <ArrowLeft size={20} />
