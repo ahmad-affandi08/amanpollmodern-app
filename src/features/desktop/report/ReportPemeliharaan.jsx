@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RotateCcw, Download, Eye, Trash2, Calendar, MapPin, Layers, User, AlertCircle, FileText } from 'lucide-react';
+import { Search, RotateCcw, Download, Eye, Trash2, Calendar, MapPin, Layers, User, AlertCircle, FileText, Edit } from 'lucide-react';
 import {
   useReportPemeliharaan,
   useDeletePemeliharaan,
@@ -29,7 +29,9 @@ export default function ReportPemeliharaan() {
   const { showToast } = useToast();
 
   const ROLE_ADMIN_DIVISI = 4;
+  const ROLE_PIMPINAN = 5;
   const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
   const userDivisiId = user?.divisi_id;
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
@@ -319,6 +321,20 @@ export default function ReportPemeliharaan() {
                         >
                           <Eye size={16} />
                         </button>
+
+                        {/* Disposisi Button - Show for Pimpinan only */}
+                        {isPimpinan && (
+                          item.status === 'Tindakan Lanjutan' ||
+                          (item.status === 'Selesai' && item.kondisi_alat === 'Rusak Berat')
+                        ) && (
+                            <button
+                              onClick={() => window.open(`/mobile/pemeliharaan/${item.id_pemeliharaan}/disposisi`, '_blank')}
+                              className="p-2 bg-success-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+                              title="Isi Disposisi"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          )}
 
                         {canDelete(item) && (
                           <button

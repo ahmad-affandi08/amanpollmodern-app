@@ -35,8 +35,8 @@ export default function ReportAduan() {
 
   const ROLE_ADMIN_DIVISI = 4;
   const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
-  const isPimpinan = user?.kategori_user_id === ROLE_PIMPINAN;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
+  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
   const userDivisiId = user?.divisi_id;
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
