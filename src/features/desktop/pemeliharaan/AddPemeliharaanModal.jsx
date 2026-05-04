@@ -279,7 +279,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
               <div className="form-group">
                 <label className="block text-[10px] text-gray-500 mb-1">Kategori Alat</label>
                 <input type="text" className="w-full text-xs font-bold text-gray-700 bg-[#E9ECEF] border border-gray-300 rounded px-2 py-1"
-                  value={selectedInventaris.namaAlat?.kategoriAlat?.nama_kategori || '-'} readOnly />
+                  value={selectedInventaris.namaAlat?.kategori_alat?.nama_kategori || selectedInventaris.nama_alat?.kategori_alat?.nama_kategori || selectedInventaris.kategori_alat_nama || '-'} readOnly />
               </div>
               <div className="form-group">
                 <label className="block text-[10px] text-gray-500 mb-1">Interval Maintenance</label>

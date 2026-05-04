@@ -109,6 +109,14 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
               <p className="font-bold text-text-dark truncate">{pemeliharaan.nama_alat_nama}</p>
             </div>
             <div>
+              <span className="text-gray-500 block text-[10px]">Kategori Alat</span>
+              <p className="font-bold text-text-dark truncate">
+                {pemeliharaan.inventaris?.namaAlat?.kategori_alat?.nama_kategori || 
+                 pemeliharaan.inventaris?.nama_alat?.kategori_alat?.nama_kategori || 
+                 pemeliharaan.kategori_alat_nama || '-'}
+              </p>
+            </div>
+            <div>
               <span className="text-gray-500 block text-[10px]">Divisi</span>
               <p className="font-bold text-text-dark truncate">{pemeliharaan.divisi_nama}</p>
             </div>
