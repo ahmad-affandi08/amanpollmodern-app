@@ -17,7 +17,7 @@ export default function AnggaranPemeliharaan() {
   const { user } = useAuth();
 
   const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({ total_aic: 0, total_rab: 0 });

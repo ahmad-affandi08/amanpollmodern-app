@@ -64,8 +64,8 @@ export default function InventarisList() {
 
   const ROLE_ADMIN_DIVISI = 4;
   const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
-  const isPimpinan = user?.kategori_user_id === ROLE_PIMPINAN;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
+  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
 
 
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(

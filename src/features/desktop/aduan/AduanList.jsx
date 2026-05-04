@@ -53,7 +53,7 @@ export default function AduanList() {
 
 
   const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
   const userDivisiId = user?.divisi_id;
 
 

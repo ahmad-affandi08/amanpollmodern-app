@@ -30,7 +30,7 @@ export default function ReportPemeliharaan() {
 
   const ROLE_ADMIN_DIVISI = 4;
   const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
   const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
   const userDivisiId = user?.divisi_id;
 
@@ -87,8 +87,8 @@ export default function ReportPemeliharaan() {
   ];
 
   const canDelete = (item) => {
-    if (user?.kategori_user_id === 1) return true;
-    if (user?.kategori_user_id === 4) return item.status !== 'Selesai';
+    if (Number(user?.kategori_user_id) === 1) return true;
+    if (Number(user?.kategori_user_id) === 4) return item.status !== 'Selesai';
     return false;
   };
 

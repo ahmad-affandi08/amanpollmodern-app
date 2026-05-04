@@ -23,7 +23,7 @@ export default function Dashboard() {
   });
 
   const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
 
 
   const { data, isLoading } = useDashboardStats(filters);

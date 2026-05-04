@@ -115,7 +115,7 @@ export default function InventarisForm() {
         setDivisiOptions(divisiOpts);
 
 
-        if (!isEdit && user && user.kategori_user_id === 4 && user.divisi_id) {
+        if (!isEdit && user && Number(user.kategori_user_id) === 4 && user.divisi_id) {
           setFormData(prev => ({ ...prev, divisi_id: user.divisi_id }));
 
 
@@ -425,7 +425,7 @@ export default function InventarisForm() {
                 placeholder="Pilih Divisi"
                 searchPlaceholder="Cari divisi..."
                 required
-                disabled={user?.kategori_user_id === 4}
+                disabled={Number(user?.kategori_user_id) === 4}
               />
               <SearchableSelect
                 label="Nama Alat (Master)"

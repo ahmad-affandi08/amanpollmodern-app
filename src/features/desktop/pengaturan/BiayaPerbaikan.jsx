@@ -16,7 +16,7 @@ export default function BiayaPerbaikan() {
   const { user } = useAuth();
 
   const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id === ROLE_ADMIN_DIVISI;
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({ total_biaya_aktual: 0, total_mmel: 0, jumlah_ganti_aset: 0 });
