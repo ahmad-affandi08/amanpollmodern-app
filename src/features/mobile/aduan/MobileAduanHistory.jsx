@@ -32,11 +32,19 @@ export default function MobileAduanHistory() {
     isError
   } = useAduanListInfinite({
     status_aduan: statusFilter,
-    search: searchQuery,
+    start_date: startDate,
+    end_date: endDate,
   }, 10);
 
   const aduanList = data?.pages.flatMap(page => page.data) || [];
 
+  const filteredList = aduanList.filter(item => {
+    const matchesSearch = searchQuery === '' ||
+      item.nama_alat_nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.no_inventaris?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesSearch;
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -192,8 +200,13 @@ export default function MobileAduanHistory() {
             <AlertCircle className="mx-auto mb-3 text-gray-300" size={48} />
             <p>Belum ada riwayat aduan</p>
           </div>
+        ) : filteredList.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <AlertCircle className="mx-auto mb-3 text-gray-300" size={48} />
+            <p>Tidak ada hasil yang sesuai dengan pencarian</p>
+          </div>
         ) : (
-          aduanList.map(item => (
+          filteredList.map(item => (
             <div
               key={item.id_aduan}
               className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all"
