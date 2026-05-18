@@ -80,6 +80,7 @@ export default function InventarisList() {
     kategori_alat_id: '',
     divisi_id: '',
     ruangan_id: '',
+    kondisi_alat: '',
     tahun_awal: '',
     tahun_akhir: ''
   });
@@ -332,6 +333,20 @@ export default function InventarisList() {
               ]}
               placeholder="Semua Ruangan"
               searchPlaceholder="Cari ruangan..."
+            />
+
+            {/* Kondisi Alat Filter */}
+            <Select
+              name="kondisi_alat"
+              size="sm"
+              value={filters.kondisi_alat}
+              onChange={(e) => handleFilterChange('kondisi_alat', e.target.value)}
+              options={[
+                { label: 'Semua Kondisi', value: '' },
+                { label: 'Baik', value: 'Baik' },
+                { label: 'Rusak Ringan', value: 'Rusak Ringan' },
+                { label: 'Rusak Berat', value: 'Rusak Berat' }
+              ]}
             />
 
             {/* Tahun Awal */}
