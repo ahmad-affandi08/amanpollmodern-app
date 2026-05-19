@@ -148,7 +148,7 @@ export default function Register() {
       </div>
 
       {/* Main Card (Fixed Size like Login) */}
-      <div className="bg-white/80 backdrop-blur-xl w-full max-w-[1100px] h-auto lg:h-[80vh] rounded-[32px] shadow-2xl shadow-brand-primary/15 border border-white p-3 lg:p-4 flex flex-col lg:flex-row relative z-10 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-xl w-full max-w-[1100px] h-auto lg:h-[80vh] rounded-[32px] shadow-2xl shadow-brand-primary/15 border border-white p-3 lg:p-4 flex flex-col lg:flex-row relative z-10">
 
         {/* LEFT SIDE - ILLUSTRATION */}
         <div className="hidden lg:flex w-full lg:w-[45%] h-64 lg:h-full bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-[24px] items-center justify-center relative overflow-hidden group shrink-0">
@@ -167,7 +167,7 @@ export default function Register() {
         </div>
 
         {/* RIGHT SIDE - FORM WIZARD */}
-        <div className="w-full lg:w-[55%] h-full flex flex-col justify-center px-4 lg:px-12 py-6 lg:py-0 overflow-y-auto lg:overflow-visible relative">
+        <div className="w-full lg:w-[55%] h-full flex flex-col justify-center px-4 lg:px-12 py-6 lg:py-0 overflow-visible relative">
 
           {/* Progress Dots */}
           <div className="absolute top-6 right-6 flex gap-2 hidden lg:flex">
