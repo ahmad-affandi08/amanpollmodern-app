@@ -26,6 +26,7 @@ import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
+import KondisiBadge from '../../../components/KondisiBadge';
 
 export default function ReportAduan() {
   usePageTitle('Laporan Aduan');
@@ -128,15 +129,15 @@ export default function ReportAduan() {
 
   const getStatusBadge = (status) => {
     const config = {
-      'Pending': { bg: 'bg-red-500', text: 'text-white', border: 'border-red-200' },
-      'Sedang Dikerjakan': { bg: 'bg-yellow-500', text: 'text-white', border: 'border-yellow-200' },
-      'Selesai': { bg: 'bg-green-500', text: 'text-white', border: 'border-green-200' },
-      'Tindakan Lanjutan': { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-200' },
+      'Pending': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+      'Sedang Dikerjakan': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+      'Selesai': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+      'Tindakan Lanjutan': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
     };
-    const c = config[status] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
+    const c = config[status] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
 
     return (
-      <span className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full border-2 ${c.bg} ${c.text} ${c.border} shadow-sm`}>
+      <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold rounded-full border ${c.bg} ${c.text} ${c.border}`}>
         {status}
       </span>
     );
@@ -366,7 +367,9 @@ export default function ReportAduan() {
                     </td>
                     <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.tindakan_teknisi || 'Belum Ditentukan'}</td>
                     <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.rekomendasi || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">{item.kondisi_alat || '-'}</td>
+                    <td className="py-3 px-4">
+                      {item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>}
+                    </td>
                     <td className="py-3 px-4">
                       {getStatusBadge(item.status_aduan)}
                     </td>

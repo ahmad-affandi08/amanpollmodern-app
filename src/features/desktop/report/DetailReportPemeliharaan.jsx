@@ -9,6 +9,7 @@ import { usePageTitle } from '../../../hooks';
 import PemeliharaanApi from '../../../api/PemeliharaanApi';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import noImage from '../../../assets/img/no_image.png';
+import KondisiBadge from '../../../components/KondisiBadge';
 
 export default function DetailReportPemeliharaan() {
   usePageTitle('Detail Laporan Pemeliharaan');
@@ -221,7 +222,7 @@ export default function DetailReportPemeliharaan() {
           {data.kondisi_alat && (
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <h3 className="text-xs font-bold text-gray-700 mb-2">Kondisi Alat Terakhir</h3>
-              <KondisiBadge kondisi={data.kondisi_alat} large />
+              <KondisiBadge kondisi={data.kondisi_alat} size="lg" />
             </div>
           )}
 
@@ -272,20 +273,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const KondisiBadge = ({ kondisi, large = false }) => {
-  const kondisiConfig = {
-    'Baik': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-    'Rusak Ringan': { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
-    'Rusak Berat': { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' }
-  };
-  const config = kondisiConfig[kondisi] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
 
-  return (
-    <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border ${config.bg} ${config.text} ${config.border} ${large ? 'text-sm font-bold w-full' : 'text-xs font-medium'}`}>
-      {kondisi || 'Belum Ditentukan'}
-    </div>
-  );
-};
 
 const InfoCard = ({ icon, label, value }) => (
   <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">

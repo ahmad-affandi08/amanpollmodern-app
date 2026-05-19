@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Printer, Download, Calendar, MapPin, Layers, Edit2, Trash2, Eye, FileText, QrCode } from 'lucide-react';
 import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
+import KondisiBadge from '../../../components/KondisiBadge';
 import {
   useInventaris,
   useDeleteInventaris,
@@ -201,21 +202,7 @@ export default function InventarisList() {
     }
   };
 
-  const getKondisiBadge = (kondisi) => {
-    const kondisiConfig = {
-      'Baik': { bg: 'bg-green-100', text: 'text-green-800' },
-      'Rusak Ringan': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-      'Rusak Berat': { bg: 'bg-red-100', text: 'text-red-800' },
-    };
 
-    const config = kondisiConfig[kondisi] || { bg: 'bg-gray-100', text: 'text-gray-800' };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
-        {kondisi}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -646,7 +633,7 @@ export default function InventarisList() {
                     {/* Kondisi */}
                     {isVisible('kondisi_alat') && (
                       <td className="py-1.5 px-3 text-xs">
-                        {getKondisiBadge(item.kondisi_alat)}
+                        <KondisiBadge kondisi={item.kondisi_alat} size="sm" />
                       </td>
                     )}
 

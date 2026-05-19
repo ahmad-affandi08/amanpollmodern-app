@@ -9,6 +9,7 @@ import { useAduanDetail } from '../../../hooks/queries/useAduanQueries';
 import { formatDateTime, formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import KondisiBadge from '../../../components/KondisiBadge';
 
 export default function MobileAduanDetail() {
   usePageTitle('Detail Aduan');
@@ -48,20 +49,7 @@ export default function MobileAduanDetail() {
   };
 
 
-  const KondisiBadge = ({ kondisi }) => {
-    const kondisiConfig = {
-      'Baik': { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
-      'Rusak Ringan': { bg: 'bg-yellow-50', text: 'text-yellow-600', border: 'border-yellow-200' },
-      'Rusak Berat': { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200' }
-    };
-    const config = kondisiConfig[kondisi] || { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200' };
 
-    return (
-      <div className={`inline-flex items-center px-2.5 py-1 rounded-lg border ${config.bg} ${config.text} ${config.border} text-xs font-medium`}>
-        {kondisi || 'Belum Ditentukan'}
-      </div>
-    );
-  };
 
   if (isLoading) {
     return (

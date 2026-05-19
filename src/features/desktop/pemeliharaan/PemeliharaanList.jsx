@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2, Calendar } from 'lucide-react';
+import KondisiBadge from '../../../components/KondisiBadge';
 import {
   usePemeliharaan,
   useDeletePemeliharaan,
@@ -355,13 +356,7 @@ export default function PemeliharaanList() {
                     {isVisible('kondisi_alat') && (
                       <td className="py-3 px-4 text-gray-600">
                         {item.kondisi_alat ? (
-                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${item.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-800' :
-                            item.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-800' :
-                              item.kondisi_alat === 'Rusak Berat' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                            }`}>
-                            {item.kondisi_alat}
-                          </span>
+                          <KondisiBadge kondisi={item.kondisi_alat} size="sm" />
                         ) : '-'}
                       </td>
                     )}
