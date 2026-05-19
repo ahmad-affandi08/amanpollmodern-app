@@ -22,7 +22,7 @@ export default function SearchableSelect({
   size = 'md',
 }) {
   const sizeClasses = {
-    sm: "px-2 py-1.5 text-xs rounded-lg",
+    sm: "px-3 py-1.5 text-xs rounded-lg h-[36px]",
     md: "px-3 py-2 text-sm rounded-xl",
     lg: "px-4 py-3 text-base rounded-xl",
   };
@@ -99,7 +99,10 @@ export default function SearchableSelect({
     <div className={`relative ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
       {/* Label */}
       {label && (
-        <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">
+        <label className={`block mb-2 pl-1 ${variant === 'thick'
+          ? 'text-brand-primary font-bold text-sm ml-1 mb-1'
+          : 'text-sm font-semibold text-[#808191]'
+        }`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -112,7 +115,7 @@ export default function SearchableSelect({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`w-full bg-white text-left flex items-center justify-between transition-all ${variant === 'thick'
-            ? 'border-[3px] border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[20px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10'
+            ? 'border-2 border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[16px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10'
             : `border border-gray-200 text-gray-700 font-medium ${sizeClasses[size] || sizeClasses.md} focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20`
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${!value ? 'text-gray-400' : ''}`}
         >
@@ -135,7 +138,7 @@ export default function SearchableSelect({
         {/* Dropdown Menu */}
         {isOpen && (
           <div className={`absolute z-[9999] w-full mt-2 bg-white shadow-2xl overflow-hidden ${variant === 'thick'
-            ? 'border-[3px] border-indigo-100 rounded-[20px]'
+            ? 'border-2 border-indigo-100 rounded-[16px]'
             : 'border-2 border-gray-200 rounded-xl'
             }`}>
             {/* Search Input */}
@@ -152,7 +155,7 @@ export default function SearchableSelect({
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={searchPlaceholder}
                   className={`w-full font-medium focus:outline-none transition-all placeholder-gray-400 ${variant === 'thick'
-                    ? 'bg-indigo-50 text-brand-primary text-base pl-12 pr-4 py-3 rounded-[15px] focus:ring-2 focus:ring-brand-primary/20'
+                    ? 'bg-indigo-50 text-brand-primary text-base pl-12 pr-4 py-3 rounded-[12px] focus:ring-2 focus:ring-brand-primary/20'
                     : `bg-gray-50 text-gray-700 ${sizeClasses[size]} pl-10 pr-4 focus:ring-1 focus:ring-brand-primary/30`
                     }`}
                 />

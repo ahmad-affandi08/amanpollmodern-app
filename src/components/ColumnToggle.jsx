@@ -18,7 +18,7 @@ export default function ColumnToggle({
   size = 'md'
 }) {
   const sizeClasses = {
-    sm: "px-3 py-1.5 text-xs h-8",
+    sm: "px-3 py-1.5 text-xs h-[36px]",
     md: "px-4 py-2 text-sm h-[46px]",
     lg: "px-6 py-2.5 text-base h-12",
   };

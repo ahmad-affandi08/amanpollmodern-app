@@ -53,7 +53,8 @@ const InventarisApi = {
   printLabel: async (filters = {}) => {
     const response = await axiosClient.get('/print/label', {
       params: filters,
-      responseType: 'blob'
+      responseType: 'blob',
+      timeout: 300000, // 5 minutes for bulk label generation
     });
     return response.data;
   },

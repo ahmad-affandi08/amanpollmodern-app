@@ -12,7 +12,7 @@ export default function Input({
   ...props
 }) {
   const sizes = {
-    sm: "px-2 py-1.5 text-xs rounded-lg",
+    sm: "px-3 py-1.5 text-xs rounded-lg h-[36px]",
     md: "px-3 py-2 text-sm rounded-xl",
     lg: "px-4 py-3 text-base rounded-xl",
   };

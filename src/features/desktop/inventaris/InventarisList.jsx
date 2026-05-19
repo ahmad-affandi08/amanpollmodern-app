@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Printer, Download, Calendar, MapPin, Layers, Edit2, Trash2, Eye, FileText, QrCode } from 'lucide-react';
+import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
 import {
   useInventaris,
   useDeleteInventaris,
@@ -177,7 +178,11 @@ export default function InventarisList() {
   };
 
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
   const handlePrintLabelWithType = async (labelType, itemId = null) => {
+    setIsPrinting(true);
+    showToast('Sedang menyiapkan label, mohon tunggu...', 'info');
     try {
       const params = itemId
         ? { id_inventaris: itemId, type: labelType }
@@ -191,6 +196,8 @@ export default function InventarisList() {
     } catch (error) {
       console.error('Print label error:', error);
       showToast('Gagal membuka print label', 'error');
+    } finally {
+      setIsPrinting(false);
     }
   };
 
@@ -220,32 +227,10 @@ export default function InventarisList() {
         </div>
         <div className="grid grid-cols-1 md:flex gap-2 md:gap-2 w-full md:w-auto">
           {/* Print All Labels Button */}
-          <div className="relative w-full md:w-auto">
-            <Button
-              variant="outline"
-              size="md"
-              className="gap-2 w-full md:w-auto"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              Print Semua Label
-            </Button>
-            <select
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  handlePrintLabelWithType(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-              title="Print Semua Label"
-            >
-              <option value="" disabled>Pilih Ukuran Label</option>
-              <option value="standar">Standar (100x50mm)</option>
-              <option value="kecil">Kecil (70x30mm)</option>
-              <option value="besar">Besar (100x100mm)</option>
-            </select>
-          </div>
+          <PrintLabelDropdown
+            onSelect={(type) => handlePrintLabelWithType(type)}
+            isPrinting={isPrinting}
+          />
           <Button
             variant="outline"
             size="md"
@@ -336,7 +321,7 @@ export default function InventarisList() {
             />
 
             {/* Kondisi Alat Filter */}
-            <Select
+            <SearchableSelect
               name="kondisi_alat"
               size="sm"
               value={filters.kondisi_alat}
@@ -347,6 +332,8 @@ export default function InventarisList() {
                 { label: 'Rusak Ringan', value: 'Rusak Ringan' },
                 { label: 'Rusak Berat', value: 'Rusak Berat' }
               ]}
+              placeholder="Semua Kondisi"
+              searchPlaceholder="Cari kondisi..."
             />
 
             {/* Tahun Awal */}
@@ -679,28 +666,12 @@ export default function InventarisList() {
                           ) : (
                             /* Admin View: All Actions */
                             <>
-                              {/* Print Label Select */}
-                              <div className="relative">
-                                <div className="p-1.5 bg-cyan-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all">
-                                  <Printer size={14} />
-                                </div>
-                                <select
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                  value=""
-                                  onChange={(e) => {
-                                    if (e.target.value) {
-                                      handlePrintLabelWithType(e.target.value, item.id);
-                                      e.target.value = '';
-                                    }
-                                  }}
-                                  title="Print Label"
-                                >
-                                  <option value="" disabled>Pilih Ukuran Label</option>
-                                  <option value="standar">Standar (100x50mm)</option>
-                                  <option value="kecil">Kecil (70x30mm)</option>
-                                  <option value="besar">Besar (100x100mm)</option>
-                                </select>
-                              </div>
+                              {/* Print Label Dropdown */}
+                              <PrintLabelDropdown
+                                variant="icon"
+                                onSelect={(type) => handlePrintLabelWithType(type, item.id)}
+                                isPrinting={isPrinting}
+                              />
 
                               {/* View Details */}
                               <button

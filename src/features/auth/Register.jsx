@@ -215,14 +215,16 @@ export default function Register() {
                     disabled={dataLoading}
                   >
                     <option value="">Pilih Tipe Akun</option>
-                    {kategoriUserList.map(k => <option key={k.id} value={k.id}>{k.display_kategori}</option>)}
+                    {kategoriUserList.map(k => <option key={k.id_kategori_user} value={k.id_kategori_user}>{k.display_kategori}</option>)}
                   </ThickSelect>
 
                   {/* Conditional Fields */}
-                  {kategoriUserList.find(k => String(k.id) === String(form.kategori_user_id))?.display_kategori === 'User Ruangan' && (
+                  {kategoriUserList.find(k => String(k.id_kategori_user) === String(form.kategori_user_id))?.display_kategori === 'User Ruangan' && (
                     <SearchableSelect
                       label="Ruangan"
                       name="ruangan_id"
+                      variant="thick"
+                      size="lg"
                       options={ruanganList.map(r => ({
                         value: r.id_ruangan,
                         label: r.nama_ruangan,
@@ -235,10 +237,12 @@ export default function Register() {
                     />
                   )}
 
-                  {kategoriUserList.find(k => String(k.id) === String(form.kategori_user_id))?.display_kategori === 'Teknisi' && (
+                  {kategoriUserList.find(k => String(k.id_kategori_user) === String(form.kategori_user_id))?.display_kategori === 'Teknisi' && (
                     <SearchableSelect
                       label="Divisi"
                       name="divisi_id"
+                      variant="thick"
+                      size="lg"
                       options={divisiList.map(d => ({
                         value: d.id_divisi,
                         label: d.nama_divisi,
