@@ -12,6 +12,7 @@ import Logo3 from '../assets/img/logo3-amanpoll.png';
 import IconLogo from '../assets/img/icon-logo-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
 import ConfirmDialog from '../components/Alert/Alert';
+import GlobalSearch from '../components/GlobalSearch';
 
 export default function DashboardLayout({ children }) {
 
@@ -455,11 +456,8 @@ export default function DashboardLayout({ children }) {
 
             {/* Header Actions */}
             <div className="flex items-center gap-4">
-              {/* Search (Optional) */}
-              <div className="hidden md:flex items-center bg-white px-3 py-2 rounded-lg shadow-sm w-56">
-                <span className="text-gray-400 mr-2">🔍</span>
-                <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-xs w-full" />
-              </div>
+              {/* Global Search Command Palette */}
+              <GlobalSearch menuItems={menuItems} />
 
               {/* Notifications */}
               <NotificationBell className="bg-white rounded-lg p-1 shadow-sm text-gray-600 scale-90" />
