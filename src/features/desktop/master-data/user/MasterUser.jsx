@@ -17,6 +17,7 @@ import Button from '../../../../components/Button';
 import Modal from '../../../../components/Modal';
 import Input from '../../../../components/Input';
 import Select from '../../../../components/Select';
+import SearchableSelect from '../../../../components/SearchableSelect';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
 import ConfirmDialog from '../../../../components/Alert/Alert';
@@ -74,13 +75,12 @@ export default function MasterUser() {
   useEffect(() => {
     const fetchKategori = async () => {
       try {
-        const res = await MasterApi.getAllKategoriUser();
-        if (Array.isArray(res.data)) {
-          setKategoriOptions(res.data.map(k => ({
-            label: k.display_kategori,
-            value: k.id_kategori_user
-          })));
-        }
+        const res = await MasterApi.getAllKategoriUser({ all: 1 });
+        const data = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+        setKategoriOptions(data.map(k => ({
+          label: k.display_kategori,
+          value: k.id_kategori_user
+        })));
       } catch (error) {
         console.error(error);
       }
@@ -355,7 +355,7 @@ export default function MasterUser() {
               <Input label="Role / Kategori User" value={formData.roleName} disabled className="bg-gray-100" />
             </div>
           ) : (
-            <Select
+            <SearchableSelect
               label="Role / Kategori User"
               options={kategoriOptions}
               value={formData.kategori_user_id}
@@ -364,14 +364,14 @@ export default function MasterUser() {
             />
           )}
 
-          <Select
+          <SearchableSelect
             label="Divisi (Optional)"
             options={[{ label: 'Pilih Divisi', value: '' }, ...divisiOptions]}
             value={formData.divisi_id}
             onChange={(e) => setFormData({ ...formData, divisi_id: e.target.value })}
           />
 
-          <Select
+          <SearchableSelect
             label="Ruangan (Optional)"
             options={[{ label: 'Pilih Ruangan', value: '' }, ...ruanganOptions]}
             value={formData.ruangan_id}

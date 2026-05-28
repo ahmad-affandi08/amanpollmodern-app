@@ -44,8 +44,8 @@ const MasterApi = {
   },
 
 
-  getAllKategoriUser: async () => {
-    const response = await axiosClient.get('/kategori-user');
+  getAllKategoriUser: async (params) => {
+    const response = await axiosClient.get('/kategori-user', { params });
     return response.data;
   },
   getAllUsers: async (params) => {

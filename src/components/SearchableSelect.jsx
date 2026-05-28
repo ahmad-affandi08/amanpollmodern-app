@@ -96,7 +96,7 @@ export default function SearchableSelect({
   };
 
   return (
-    <div className={`relative ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
+    <div className={`relative ${isOpen ? 'z-[9999]' : 'z-10'} ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
       {/* Label */}
       {label && (
         <label className={`block mb-2 pl-1 ${variant === 'thick'
