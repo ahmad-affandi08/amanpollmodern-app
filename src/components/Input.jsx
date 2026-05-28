@@ -19,7 +19,7 @@ export default function Input({
 
   const formatRupiah = (val) => {
     if (val === undefined || val === null || val === '') return '';
-    const stringVal = String(val).replace(/\D/g, '');
+    const stringVal = String(val).split('.')[0].replace(/\D/g, '');
     return stringVal.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 

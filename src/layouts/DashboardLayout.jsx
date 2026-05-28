@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
   Wallet, Users, QrCode, LogOut, Menu, X, ChevronDown, ChevronRight,
   User as UserIcon, Layers, Tag, Server, PlusCircle, Settings, Phone,
-  Building2, Search, Bell, AlignLeft, Hammer
+  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
 import Logo from '../assets/img/logo2-amanpoll.png';
@@ -143,6 +143,18 @@ export default function DashboardLayout({ children }) {
         { icon: Phone, label: 'Integrasi Fonnte', path: '/konfigurasi/integrasi' },
         { icon: Settings, label: 'Sistem', path: '/konfigurasi/sistem' },
         { icon: FileText, label: 'Template Notifikasi', path: '/konfigurasi/template-notifikasi' },
+      ]
+    },
+    {
+      icon: BarChart2,
+      label: 'Analisis',
+      roles: [ROLE_SUPER_ADMIN, ROLE_PIMPINAN],
+      children: [
+        { icon: Activity, label: 'Keandalan Alat', path: '/analisis/keandalan' },
+        { icon: UserIcon, label: 'Kinerja Teknisi', path: '/analisis/kinerja' },
+        { icon: Map, label: 'Sebaran Ruangan', path: '/analisis/ruangan' },
+        { icon: DollarSign, label: 'Biaya Pemeliharaan', path: '/analisis/biaya' },
+        { icon: ShieldCheck, label: 'Kepatuhan Kalibrasi', path: '/analisis/kalibrasi' },
       ]
     },
     {

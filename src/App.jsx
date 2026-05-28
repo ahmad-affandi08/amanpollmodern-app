@@ -61,7 +61,11 @@ import Profile from './features/desktop/profile/Profile';
 import MaintenancePage from './features/system/MaintenancePage';
 import MaintenanceBypass from './features/system/MaintenanceBypass';
 import NotificationTemplatePage from './features/desktop/konfigurasi/NotificationTemplatePage';
-
+import KeandalanAlatPage from './features/desktop/analisis/KeandalanAlatPage';
+import KinerjaTeknisiPage from './features/desktop/analisis/KinerjaTeknisiPage';
+import SebaranRuanganPage from './features/desktop/analisis/SebaranRuanganPage';
+import BiayaPemeliharaanPage from './features/desktop/analisis/BiayaPemeliharaanPage';
+import KepatuhanKalibrasiPage from './features/desktop/analisis/KepatuhanKalibrasiPage';
 const router = createBrowserRouter(
   [
     { path: '/', element: <LandingPage /> },
@@ -225,7 +229,26 @@ const router = createBrowserRouter(
       path: '/konfigurasi/template-notifikasi',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><NotificationTemplatePage /></DashboardLayout></ProtectedRoute>
     },
-
+    {
+      path: '/analisis/keandalan',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KeandalanAlatPage /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/analisis/kinerja',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KinerjaTeknisiPage /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/analisis/ruangan',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><SebaranRuanganPage /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/analisis/biaya',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><BiayaPemeliharaanPage /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/analisis/kalibrasi',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KepatuhanKalibrasiPage /></DashboardLayout></ProtectedRoute>
+    },
 
     {
       path: '/scanner',
