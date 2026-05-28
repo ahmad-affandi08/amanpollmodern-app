@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, X } from 'lucide-react';
 
+import ReactDOM from 'react-dom';
+
 /**
  * Searchable Select Component
  * A custom dropdown with search functionality
@@ -40,13 +42,19 @@ export default function SearchableSelect({
   };
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dropdownPosition, setDropdownPosition] = useState({});
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      // Check if click is outside both the trigger and the portal menu
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) &&
+        !event.target.closest('.searchable-select-portal')
+      ) {
         setIsOpen(false);
         setSearchTerm('');
       }
@@ -56,11 +64,32 @@ export default function SearchableSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const updatePosition = () => {
+      if (dropdownRef.current) {
+         const rect = dropdownRef.current.getBoundingClientRect();
+         setDropdownPosition({
+           top: rect.bottom, // Use viewport relative top (fixed positioning)
+           left: rect.left,
+           width: rect.width
+         });
+      }
+    };
+    
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen]);
 
 
@@ -95,8 +124,85 @@ export default function SearchableSelect({
     setSearchTerm('');
   };
 
+  const dropdownMenu = isOpen ? ReactDOM.createPortal(
+    <div 
+      className={`searchable-select-portal fixed z-[9999] mt-2 bg-white shadow-2xl overflow-hidden ${variant === 'thick'
+        ? 'border-2 border-indigo-100 rounded-[16px]'
+        : 'border-2 border-gray-200 rounded-xl'
+      }`}
+      style={{
+        top: dropdownPosition.top ? `${dropdownPosition.top}px` : 0,
+        left: dropdownPosition.left ? `${dropdownPosition.left}px` : 0,
+        width: dropdownPosition.width ? `${dropdownPosition.width}px` : 'auto',
+      }}
+    >
+      {/* Search Input */}
+      <div className={`p-3 ${variant === 'thick' ? 'border-b-2 border-indigo-50' : 'border-b border-gray-100'}`}>
+        <div className="relative">
+          <Search
+            size={variant === 'thick' ? 20 : 16}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={searchPlaceholder}
+            className={`w-full font-medium focus:outline-none transition-all placeholder-gray-400 ${variant === 'thick'
+              ? 'bg-indigo-50 text-brand-primary text-base pl-12 pr-4 py-3 rounded-[12px] focus:ring-2 focus:ring-brand-primary/20'
+              : `bg-gray-50 text-gray-700 ${sizeClasses[size]} pl-10 pr-4 focus:ring-1 focus:ring-brand-primary/30`
+              }`}
+          />
+        </div>
+      </div>
+
+      {/* Options List */}
+      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+        {filteredOptions.length > 0 ? (
+          filteredOptions.map((option, index) => {
+            const isSelected = String(option[valueKey]) === String(value);
+            return (
+              <button
+                key={option[valueKey] || index}
+                type="button"
+                onClick={() => handleSelect(option)}
+                className={`w-full text-left transition-colors ${variant === 'thick' ? 'px-6 py-4' : (optionSizeClasses[size] || optionSizeClasses.md)
+                  } ${isSelected
+                    ? 'bg-brand-primary text-white hover:bg-brand-primary/90'
+                    : variant === 'thick'
+                      ? 'text-gray-700 hover:bg-indigo-50'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                <span className="font-medium">{option[displayKey]}</span>
+              </button>
+            );
+          })
+        ) : (
+          <div className="px-6 py-8 text-center text-gray-400">
+            <Search size={40} className="mx-auto mb-2 opacity-50" />
+            <p className="font-medium">Tidak ada hasil</p>
+            <p className="text-sm">Coba kata kunci lain</p>
+          </div>
+        )}
+      </div>
+
+      {/* Results Count */}
+      {filteredOptions.length > 0 && (
+        <div className={`px-4 py-2 text-xs text-gray-500 text-center ${variant === 'thick'
+          ? 'bg-indigo-50 border-t-2 border-indigo-100'
+          : 'bg-gray-50 border-t border-gray-100'
+          }`}>
+          Menampilkan {filteredOptions.length} dari {options.length} data
+        </div>
+      )}
+    </div>,
+    document.body
+  ) : null;
+
   return (
-    <div className={`relative ${isOpen ? 'z-[9999]' : 'z-10'} ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
+    <div className={`relative ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
       {/* Label */}
       {label && (
         <label className={`block mb-2 pl-1 ${variant === 'thick'
@@ -135,75 +241,8 @@ export default function SearchableSelect({
           </div>
         </button>
 
-        {/* Dropdown Menu */}
-        {isOpen && (
-          <div className={`absolute z-[9999] w-full mt-2 bg-white shadow-2xl overflow-hidden ${variant === 'thick'
-            ? 'border-2 border-indigo-100 rounded-[16px]'
-            : 'border-2 border-gray-200 rounded-xl'
-            }`}>
-            {/* Search Input */}
-            <div className={`p-3 ${variant === 'thick' ? 'border-b-2 border-indigo-50' : 'border-b border-gray-100'}`}>
-              <div className="relative">
-                <Search
-                  size={variant === 'thick' ? 20 : 16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={searchPlaceholder}
-                  className={`w-full font-medium focus:outline-none transition-all placeholder-gray-400 ${variant === 'thick'
-                    ? 'bg-indigo-50 text-brand-primary text-base pl-12 pr-4 py-3 rounded-[12px] focus:ring-2 focus:ring-brand-primary/20'
-                    : `bg-gray-50 text-gray-700 ${sizeClasses[size]} pl-10 pr-4 focus:ring-1 focus:ring-brand-primary/30`
-                    }`}
-                />
-              </div>
-            </div>
-
-            {/* Options List */}
-            <div className="max-h-[300px] overflow-y-auto">
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((option, index) => {
-                  const isSelected = String(option[valueKey]) === String(value);
-                  return (
-                    <button
-                      key={option[valueKey] || index}
-                      type="button"
-                      onClick={() => handleSelect(option)}
-                      className={`w-full text-left transition-colors ${variant === 'thick' ? 'px-6 py-4' : (optionSizeClasses[size] || optionSizeClasses.md)
-                        } ${isSelected
-                          ? 'bg-brand-primary text-white hover:bg-brand-primary/90'
-                          : variant === 'thick'
-                            ? 'text-gray-700 hover:bg-indigo-50'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                      <span className="font-medium">{option[displayKey]}</span>
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="px-6 py-8 text-center text-gray-400">
-                  <Search size={40} className="mx-auto mb-2 opacity-50" />
-                  <p className="font-medium">Tidak ada hasil</p>
-                  <p className="text-sm">Coba kata kunci lain</p>
-                </div>
-              )}
-            </div>
-
-            {/* Results Count */}
-            {filteredOptions.length > 0 && (
-              <div className={`px-4 py-2 text-xs text-gray-500 text-center ${variant === 'thick'
-                ? 'bg-indigo-50 border-t-2 border-indigo-100'
-                : 'bg-gray-50 border-t border-gray-100'
-                }`}>
-                Menampilkan {filteredOptions.length} dari {options.length} data
-              </div>
-            )}
-          </div>
-        )}
+        {/* Render Portal Dropdown Menu */}
+        {dropdownMenu}
       </div>
     </div>
   );
