@@ -60,6 +60,7 @@ import KonfigurasiSistem from './features/desktop/konfigurasi/KonfigurasiSistem'
 import Profile from './features/desktop/profile/Profile';
 import MaintenancePage from './features/system/MaintenancePage';
 import MaintenanceBypass from './features/system/MaintenanceBypass';
+import NotificationTemplatePage from './features/desktop/konfigurasi/NotificationTemplatePage';
 
 const router = createBrowserRouter(
   [
@@ -219,6 +220,10 @@ const router = createBrowserRouter(
     {
       path: '/konfigurasi/sistem',
       element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiSistem /></DashboardLayout></ProtectedRoute>
+    },
+    {
+      path: '/konfigurasi/template-notifikasi',
+      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><NotificationTemplatePage /></DashboardLayout></ProtectedRoute>
     },
 
 

@@ -142,6 +142,7 @@ export default function DashboardLayout({ children }) {
         { icon: Building2, label: 'Data Institusi', path: '/konfigurasi/data' },
         { icon: Phone, label: 'Integrasi Fonnte', path: '/konfigurasi/integrasi' },
         { icon: Settings, label: 'Sistem', path: '/konfigurasi/sistem' },
+        { icon: FileText, label: 'Template Notifikasi', path: '/konfigurasi/template-notifikasi' },
       ]
     },
     {
