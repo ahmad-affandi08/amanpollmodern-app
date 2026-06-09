@@ -71,7 +71,7 @@ export default function AduanForm({ scannedInventarisId }) {
 
       const formattedData = {
         id_inventaris: inventarisData.id,
-        id_nama_alat: inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
+        id_nama_alat: inventarisData.nama_alat?.id || inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
         no_inventaris: inventarisData.no_inventaris,
         divisi_id: inventarisData.divisi?.id_divisi || inventarisData.nama_alat?.divisi?.id_divisi || inventarisData.divisi_id,
         nama_alat: inventarisData.nama_alat?.nama_nama_alat || '',
@@ -83,6 +83,17 @@ export default function AduanForm({ scannedInventarisId }) {
       handleInventarisChange(formattedData);
     }
   }, [scannedInventaris, handleInventarisChange]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        nama_pengadu: prev.nama_pengadu || user.nama_lengkap || '',
+        pengadu_id: prev.pengadu_id || user.id_user || '',
+        ruangan_id: prev.ruangan_id || user.ruangan_id || ''
+      }));
+    }
+  }, [user]);
 
   const validateForm = () => {
     const newErrors = {};

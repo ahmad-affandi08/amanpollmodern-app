@@ -39,9 +39,11 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       loadAllInventaris();
-      if (!formData.nama_pengadu) setFormData(prev => ({ ...prev, nama_pengadu: user?.nama_lengkap || '' }));
+      if (!formData.nama_pengadu && user?.nama_lengkap) {
+        setFormData(prev => ({ ...prev, nama_pengadu: user.nama_lengkap }));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   const loadAllInventaris = async () => {
     setLoadingInventaris(true);
@@ -120,6 +122,23 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
 
       await AduanApi.create(payload);
       showToast('Aduan berhasil dilaporkan', 'success');
+      
+      // Reset form state so next opening is fresh
+      setFormData({
+        ruangan_id: '',
+        inventaris_id: '',
+        divisi_id: '',
+        keluhan: '',
+        img_keluhan: null,
+        nama_pengadu: user?.nama_lengkap || '',
+        no_inventaris: '',
+        nama_alat_id: '',
+        nama_alat_nama: '',
+        ruangan_nama: '',
+        divisi_nama: '',
+        merk: ''
+      });
+      
       onSuccess();
       onClose();
     } catch (error) {
