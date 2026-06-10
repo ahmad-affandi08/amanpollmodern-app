@@ -511,23 +511,22 @@ export default function InventarisList() {
                     {/* Kategori Alat */}
                     {isVisible('kategori_alat') && (
                       <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {(item.alat_kesehatan === 1 || item.alat_kesehatan === true)
-                          ? (
-                            <div className="flex flex-col gap-1">
-                              <span className="font-semibold text-gray-600">Alat Kesehatan</span>
-                              {item.kategori_alkes ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium inline-block w-fit">
-                                  {item.kategori_alkes}
-                                </span>
-                              ) : (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium inline-block w-fit">
-                                  Kategori belum diisi
-                                </span>
-                              )}
-                            </div>
-                          )
-                          : item.nama_alat?.kategori_alat?.nama_kategori || '-'
-                        }
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-gray-600">
+                            {item.nama_alat?.kategori_alat?.nama_kategori || '-'}
+                          </span>
+                          {(item.alat_kesehatan === 1 || item.alat_kesehatan === true) && (
+                            item.kategori_alkes ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium inline-block w-fit mt-0.5">
+                                {item.kategori_alkes}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium inline-block w-fit mt-0.5">
+                                Alat Kesehatan
+                              </span>
+                            )
+                          )}
+                        </div>
                       </td>
                     )}
 

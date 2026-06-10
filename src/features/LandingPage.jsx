@@ -112,7 +112,7 @@ export default function LandingPage() {
         )}
       </nav>
 
-      <section className="relative min-h-screen flex items-center px-6 overflow-hidden">
+      <section className="relative min-h-screen flex items-center px-6 overflow-hidden pt-28 pb-12 lg:py-0">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px] animate-pulse"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-orange/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
