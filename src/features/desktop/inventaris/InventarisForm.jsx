@@ -665,19 +665,46 @@ export default function InventarisForm() {
             <h3 className="text-base font-bold text-text-dark mb-3 border-b pb-1.5">Berkas & Foto</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors">
-                <input type="file" name="img_alat" id="img_alat" className="hidden" onChange={handleChange} accept="image/*" />
-                <label htmlFor="img_alat" className="cursor-pointer block">
-                  {previews.img_alat ? (
-                    <img src={previews.img_alat} alt="Preview" className="h-24 mx-auto object-contain mb-2" />
-                  ) : (
-                    <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                  )}
-                  <span className="font-bold text-sm text-brand-primary">Upload Foto Alat</span>
-                  <p className="text-[10px] text-gray-400 mt-1">.jpg, .png (Max 2MB)</p>
-                  {formData.img_alat && typeof formData.img_alat === 'object' && (
-                    <p className="text-xs text-green-600 mt-2 font-medium">{formData.img_alat.name}</p>
-                  )}
-                </label>
+                {previews.img_alat ? (
+                  <div className="relative group">
+                    <img src={previews.img_alat} alt="Preview" className="h-24 mx-auto object-contain mb-2 rounded" />
+                    <button 
+                      type="button" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPreviews(prev => ({...prev, img_alat: null}));
+                        setFormData(prev => ({...prev, img_alat: null}));
+                      }} 
+                      className="absolute top-0 right-1/4 translate-x-4 -translate-y-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                    {formData.img_alat && typeof formData.img_alat === 'object' && (
+                      <p className="text-xs text-green-600 mt-2 font-medium">{formData.img_alat.name}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="relative hover:shadow-sm transition-shadow">
+                        <input type="file" name="img_alat" id="img_alat" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept="image/*" />
+                        <div className="border border-gray-200 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-full pointer-events-none">
+                          <Upload className="h-6 w-6 text-brand-primary/60 mb-1" />
+                          <span className="text-xs font-bold text-brand-primary">Dari Galeri</span>
+                        </div>
+                      </div>
+                      <div className="relative hover:shadow-sm transition-shadow">
+                        <input type="file" name="img_alat" id="img_alat_cam" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept="image/*" capture="environment" />
+                        <div className="border border-gray-200 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-full pointer-events-none">
+                          <svg className="h-6 w-6 text-brand-primary/60 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                          <span className="text-xs font-bold text-brand-primary">Kamera</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="font-bold text-sm text-gray-600 block mb-1">Foto Alat</span>
+                    <p className="text-[10px] text-gray-400">.jpg, .png (Max 2MB)</p>
+                  </div>
+                )}
               </div>
 
               {formData.perlu_kalibrasi && (
