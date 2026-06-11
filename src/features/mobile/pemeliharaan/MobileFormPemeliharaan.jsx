@@ -409,7 +409,9 @@ export default function MobileFormPemeliharaan() {
 
         {/* Biaya */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Biaya Pemeliharaan (Rp)</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">
+            {formData.status === 'Selesai' ? 'Biaya Riil Pemeliharaan (Rp)' : 'Estimasi Biaya Pemeliharaan (Rp)'}
+          </label>
           <input
             type="number"
             value={formData.biaya}
@@ -419,7 +421,11 @@ export default function MobileFormPemeliharaan() {
             min="0"
             required
           />
-          <p className="text-xs text-gray-500 mt-1">Masukkan total biaya pemeliharaan. Isi 0 jika tidak ada biaya.</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {formData.status === 'Selesai' 
+              ? 'Masukkan total biaya asli pemeliharaan. Isi 0 jika tidak ada biaya.' 
+              : 'Masukkan perkiraan biaya pemeliharaan. Isi 0 jika tidak ada estimasi.'}
+          </p>
         </div>
 
         {/* Submit Button */}

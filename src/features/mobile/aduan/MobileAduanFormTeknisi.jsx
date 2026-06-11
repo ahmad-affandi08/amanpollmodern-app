@@ -404,7 +404,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Biaya */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Biaya Perbaikan (Rp)
+            {formData.status_aduan === 'Selesai' ? 'Biaya Riil Perbaikan (Rp)' : 'Estimasi Biaya Perbaikan (Rp)'}
           </label>
           <input
             type="number"
@@ -417,7 +417,9 @@ export default function MobileAduanFormTeknisi() {
             required
           />
           <small className="text-xs text-gray-500 mt-1 block">
-            Masukkan total biaya perbaikan. Isi 0 jika tidak ada biaya.
+            {formData.status_aduan === 'Selesai' 
+              ? 'Masukkan total biaya asli perbaikan. Isi 0 jika tidak ada biaya.' 
+              : 'Masukkan perkiraan biaya perbaikan. Isi 0 jika tidak ada estimasi.'}
           </small>
         </div>
 
