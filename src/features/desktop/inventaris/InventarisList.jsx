@@ -79,6 +79,7 @@ export default function InventarisList() {
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
     search: '',
+    nama_alat: '',
     kategori_alat_id: '',
     divisi_id: '',
     ruangan_id: '',
@@ -243,14 +244,26 @@ export default function InventarisList() {
         {/* Filters */}
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
+            {/* Global Search */}
+            <div>
+              <Input
+                name="search"
+                size="sm"
+                placeholder="Cari No. Inventaris, Seri..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                icon={<Search className="w-3.5 h-3.5" />}
+                className="bg-bg-light border-none h-[36px]"
+              />
+            </div>
+
             {/* Search Nama Alat */}
             <div>
               <SearchableSelect
-                name="search"
+                name="nama_alat"
                 size="sm"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                value={filters.nama_alat}
+                onChange={(e) => handleFilterChange('nama_alat', e.target.value)}
                 options={[
                   { label: 'Semua Alat', value: '' },
                   ...(namaAlatData?.data || []).map(item => ({
@@ -258,8 +271,8 @@ export default function InventarisList() {
                     value: item.nama_nama_alat
                   }))
                 ]}
-                placeholder="Cari nama alat..."
-                searchPlaceholder="Cari..."
+                placeholder="Semua Alat"
+                searchPlaceholder="Cari nama alat..."
               />
             </div>
 

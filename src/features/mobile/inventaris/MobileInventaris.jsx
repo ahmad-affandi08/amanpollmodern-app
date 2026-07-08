@@ -8,7 +8,8 @@ import InventarisCard from './components/InventarisCard';
 export default function MobileInventaris() {
   const [filters, setFilters] = useState({
     kondisi_alat: '',
-    nama_alat: ''
+    nama_alat: '',
+    search: ''
   });
 
 

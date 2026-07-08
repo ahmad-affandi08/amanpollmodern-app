@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { RotateCcw, Download } from 'lucide-react';
+import { RotateCcw, Download, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../../../api/axiosClient';
 import SearchableSelect from '../../../../components/SearchableSelect';
+import Input from '../../../../components/Input';
 
 export default function InventarisFilters({ filters, onFilterChange, onExport }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -33,7 +34,7 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
   };
 
   const handleReset = () => {
-    const resetFilters = { kondisi_alat: '', nama_alat: '' };
+    const resetFilters = { kondisi_alat: '', nama_alat: '', search: '' };
     onFilterChange(resetFilters);
   };
 
@@ -66,6 +67,19 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
           </>
         )}
       </button>
+
+      {/* Pencarian Global */}
+      <div className="space-y-1">
+        <Input
+          label="Cari Inventaris"
+          name="search"
+          size="md"
+          placeholder="Cari No. Inventaris, Seri, dll..."
+          value={filters.search || ''}
+          onChange={(e) => handleChange('search', e.target.value)}
+          icon={<Search className="w-4 h-4" />}
+        />
+      </div>
 
       {/* Kondisi Alat */}
       <div className="space-y-1">
