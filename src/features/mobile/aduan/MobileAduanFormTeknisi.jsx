@@ -46,7 +46,8 @@ export default function MobileAduanFormTeknisi() {
         const response = await axiosClient.get('/inventaris/search', {
           params: {
             q: '',
-            ruangan_id: aduan.ruangan_id
+            ruangan_id: aduan.ruangan_id,
+            limit: 500
           }
         });
 
