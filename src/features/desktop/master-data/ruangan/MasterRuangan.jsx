@@ -66,6 +66,7 @@ export default function MasterRuangan() {
         showToast('Ruangan berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
+        pagination.reset();
         showToast('Ruangan berhasil ditambahkan', 'success');
       }
       modal.close();

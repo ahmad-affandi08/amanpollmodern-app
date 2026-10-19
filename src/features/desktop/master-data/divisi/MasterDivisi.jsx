@@ -59,6 +59,7 @@ export default function MasterDivisi() {
         showToast('Divisi berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
+        pagination.reset();
         showToast('Divisi berhasil ditambahkan', 'success');
       }
       modal.close();

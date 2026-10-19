@@ -130,6 +130,7 @@ export default function MasterUser() {
         showToast('User berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
+        pagination.reset();
         showToast('User berhasil ditambahkan', 'success');
       }
       modal.close();
