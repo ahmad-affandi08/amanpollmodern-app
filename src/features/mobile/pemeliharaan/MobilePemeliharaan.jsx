@@ -23,8 +23,8 @@ export default function MobilePemeliharaan() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [kondisiFilter, setKondisiFilter] = useState('all');
-  // Default "Semua Data" supaya pekerjaan Belum Selesai dari bulan lalu tetap terlihat.
-  const [periodFilter, setPeriodFilter] = useState('semua');
+  // Default bulan berjalan; pilih "Semua Data" untuk melihat bulan lain (urut jadwal terdekat hari ini).
+  const [periodFilter, setPeriodFilter] = useState('bulan_ini');
 
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [signatureType, setSignatureType] = useState('');
@@ -149,8 +149,8 @@ export default function MobilePemeliharaan() {
             onChange={(e) => setPeriodFilter(e.target.value)}
             className="w-full px-3 py-3 pr-8 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer transition-all"
           >
-            <option value="semua">Semua Data</option>
             <option value="bulan_ini">Bulan Ini</option>
+            <option value="semua">Semua Data</option>
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
