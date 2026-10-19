@@ -43,10 +43,10 @@ const EMPTY_FORM = {
   active: true
 };
 
-// Backend tidak memvalidasi divisi/ruangan per peran, padahal pembatasan data Admin Divisi
-// (per divisi) dan User Ruangan (per ruangan) bergantung padanya: tanpa isian ini akun tersebut
-// akan melihat SEMUA data. Karena itu diwajibkan di sini.
-const needsDivisi = (kategoriId) => Number(kategoriId) === ROLES.ADMIN_DIVISI;
+// Divisi/ruangan wajib per peran (sama dengan aturan backend): pembatasan data Admin Divisi
+// dan Teknisi (per divisi) serta User Ruangan (per ruangan) bergantung padanya.
+const needsDivisi = (kategoriId) =>
+  [ROLES.ADMIN_DIVISI, ROLES.TEKNISI].includes(Number(kategoriId));
 const needsRuangan = (kategoriId) => Number(kategoriId) === ROLES.USER_RUANGAN;
 
 export default function MasterUser() {
@@ -141,7 +141,7 @@ export default function MasterUser() {
     e.preventDefault();
 
     if (needsDivisi(formData.kategori_user_id) && !formData.divisi_id) {
-      showToast('Divisi wajib dipilih untuk Admin Divisi.', 'warning');
+      showToast('Divisi wajib dipilih untuk Admin Divisi dan Teknisi.', 'warning');
       return;
     }
     if (needsRuangan(formData.kategori_user_id) && !formData.ruangan_id) {

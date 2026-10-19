@@ -8,7 +8,7 @@ import { DISPOSISI_CONFIG } from './disposisiConfig';
  * Form disposisi pimpinan (halaman publik, tanpa login).
  * `jenis` memilih mutation, label, dan blok info: 'aduan' | 'pemeliharaan'.
  */
-export default function DisposisiForm({ jenis, data }) {
+export default function DisposisiForm({ jenis, data, token }) {
   const config = DISPOSISI_CONFIG[jenis];
   const { showToast } = useToast();
   const signaturePadRef = useRef(null);
@@ -40,9 +40,9 @@ export default function DisposisiForm({ jenis, data }) {
 
     // Setelah berhasil, data di-refresh sehingga halaman otomatis menampilkan detail disposisi.
     if (jenis === 'aduan') {
-      createAduan.mutate({ aduanId: data[config.idKey], data: payload });
+      createAduan.mutate({ aduanId: data[config.idKey], data: payload, token });
     } else {
-      createPemeliharaan.mutate({ pemeliharaanId: data[config.idKey], data: payload });
+      createPemeliharaan.mutate({ pemeliharaanId: data[config.idKey], data: payload, token });
     }
   };
 

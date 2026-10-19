@@ -1,12 +1,16 @@
-import { useParams } from 'react-router-dom';
-import { usePemeliharaanDetail, usePageTitle } from '../../../hooks';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { useDisposisiPemeliharaan, usePageTitle } from '../../../hooks';
 import DisposisiPage from '../disposisi/DisposisiPage';
 
-/** Halaman disposisi pimpinan untuk pemeliharaan (publik, tanpa login). */
+/** Halaman disposisi pimpinan untuk pemeliharaan (tanpa login; dibuka lewat tautan bertoken). */
 export default function MobileDisposisiPemeliharaan() {
   usePageTitle('Disposisi Pemeliharaan');
   const { id } = useParams();
-  const { data: pemeliharaan, isLoading, isError } = usePemeliharaanDetail(id);
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('t');
+  const { data: pemeliharaan, isLoading, error } = useDisposisiPemeliharaan(id, token);
 
-  return <DisposisiPage jenis="pemeliharaan" data={pemeliharaan} isLoading={isLoading} isError={isError} />;
+  return (
+    <DisposisiPage jenis="pemeliharaan" data={pemeliharaan} isLoading={isLoading} error={error} token={token} />
+  );
 }
