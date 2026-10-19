@@ -317,9 +317,6 @@ export default function NotificationTemplatePage() {
                   </div>
                 </div>
 
-                {/* WA Background Pattern */}
-                <div className="absolute inset-0 opacity-[0.06] z-0 pointer-events-none" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-solid-color-thumbnail.jpg")', backgroundSize: 'cover' }}></div>
-
                 {/* Chat Area */}
                 <div className="flex-1 p-4 overflow-y-auto flex flex-col justify-end z-10">
                   <div className="bg-white rounded-xl rounded-tl-sm p-3 max-w-[90%] relative">

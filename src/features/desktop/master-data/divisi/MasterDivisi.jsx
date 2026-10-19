@@ -93,7 +93,7 @@ export default function MasterDivisi() {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in font-[Plus_Jakarta_Sans]">
+    <div className="space-y-4 animate-fade-in font-body">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-bold text-text-dark">Master Divisi</h1>

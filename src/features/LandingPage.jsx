@@ -71,7 +71,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-bg-light font-[Plus_Jakarta_Sans]">
+    <div className="min-h-screen bg-bg-light font-body">
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
         }`}>
         <div className="max-w-6xl mx-auto px-6 py-3">

@@ -129,7 +129,7 @@ export default function GlobalSearch({ menuItems = [] }) {
 
       {/* Modal Portal */}
       {isOpen && ReactDOM.createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-start justify-center pt-[10vh] px-4 font-[Plus_Jakarta_Sans]">
+        <div className="fixed inset-0 z-[99999] flex items-start justify-center pt-[10vh] px-4 font-body">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 

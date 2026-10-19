@@ -21,4 +21,5 @@ Jalankan `PWA_SELF_DESTROY=true npm run build` lalu unggah `dist/`. Service work
 ## Catatan
 - Ikon: `public/icons/` (192, 512, maskable 512, apple-touch 180). Ganti file dengan nama sama untuk mengubah ikon.
 - Sesi login mengikuti `SESSION_LIFETIME` di backend (default 120 menit tidak aktif). Naikkan nilainya bila pengguna PWA diharapkan tetap login lebih lama.
+- Semua aset (font Plus Jakarta Sans, tekstur noise, ikon) ikut di `dist/`; aplikasi tidak lagi memanggil Google Fonts atau situs luar, jadi tetap tampil benar di jaringan yang memblokir internet luar.
 - Pengembangan: service worker tidak aktif di `npm run dev`. Uji dengan `npm run build && npm run preview`.

@@ -58,12 +58,6 @@ export default defineConfig({
         runtimeCaching: [
           // Data API bersifat pribadi dan cepat berubah: selalu ke jaringan, tidak pernah disimpan.
           { urlPattern: ({ url }) => url.pathname.startsWith('/api/'), handler: 'NetworkOnly' },
-          { urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com', handler: 'StaleWhileRevalidate', options: { cacheName: 'google-fonts-css' } },
-          {
-            urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
-            handler: 'CacheFirst',
-            options: { cacheName: 'google-fonts-files', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
-          },
           // Foto alat/aduan: tampil dari cache dulu, diperbarui di latar belakang.
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/storage/'),

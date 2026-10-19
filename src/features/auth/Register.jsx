@@ -166,7 +166,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-[Plus_Jakarta_Sans] relative overflow-hidden">
+    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-body relative overflow-hidden">
 
       {/* Background Blobs (Identical to Login) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -179,7 +179,7 @@ export default function Register() {
 
         {/* LEFT SIDE - ILLUSTRATION */}
         <div className="hidden lg:flex w-full lg:w-[45%] h-64 lg:h-full bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-[24px] items-center justify-center relative overflow-hidden group shrink-0">
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-soft-light"></div>
+          <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-40 mix-blend-soft-light"></div>
 
           {/* Mascot (Animated) */}
           <div className="relative z-10 transform translate-y-2 lg:translate-y-8 group-hover:scale-105 transition-transform duration-700 ease-in-out">

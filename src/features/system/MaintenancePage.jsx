@@ -15,7 +15,7 @@ export default function MaintenancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-light flex flex-col items-center justify-center p-6 relative overflow-hidden font-[Plus_Jakarta_Sans]">
+    <div className="min-h-screen bg-bg-light flex flex-col items-center justify-center p-6 relative overflow-hidden font-body">
       {/* Background Decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[100px] animate-pulse"></div>

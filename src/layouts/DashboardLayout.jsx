@@ -203,7 +203,7 @@ export default function DashboardLayout({ children }) {
   const isPathActive = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-bg-light flex font-[Plus_Jakarta_Sans]">
+    <div className="min-h-screen bg-bg-light flex font-body">
       {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white transition-all duration-300 ease-in-out

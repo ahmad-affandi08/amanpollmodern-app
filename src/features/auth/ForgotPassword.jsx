@@ -53,7 +53,7 @@ export default function ForgotPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-[Plus_Jakarta_Sans] relative overflow-hidden">
+      <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-body relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-indigo-200 rounded-full blur-[100px] opacity-40"></div>
           <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-violet-200 rounded-full blur-[80px] opacity-40"></div>
@@ -76,7 +76,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-[Plus_Jakarta_Sans] relative overflow-hidden">
+    <div className="min-h-screen bg-indigo-50 flex items-center justify-center p-4 font-body relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-indigo-200 rounded-full blur-[100px] opacity-40"></div>
         <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-violet-200 rounded-full blur-[80px] opacity-40"></div>
@@ -84,7 +84,7 @@ export default function ForgotPassword() {
 
       <div className="bg-white/80 backdrop-blur-xl w-full max-w-[1100px] h-auto lg:h-[80vh] rounded-[32px] shadow-2xl shadow-brand-primary/15 border border-white p-3 lg:p-4 flex flex-col lg:flex-row relative z-10 overflow-hidden lg:overflow-visible">
         <div className="hidden lg:flex w-full lg:w-[45%] h-64 lg:h-full bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-[24px] items-center justify-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40 mix-blend-soft-light"></div>
+          <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-40 mix-blend-soft-light"></div>
 
           <div className="relative z-10 transform translate-y-4 lg:translate-y-8 group-hover:scale-105 transition-transform duration-700 ease-in-out">
             <img
