@@ -4,8 +4,8 @@ import { useState, useCallback, useMemo } from 'react';
  * State untuk satu ConfirmDialog pada halaman master (hapus / ubah status).
  *
  * Pemakaian:
- *   const { confirm, dialogProps } = useConfirmAction();
- *   confirm({ title, message, confirmText, type, onConfirm: async () => { ... } });
+ *   const { askConfirm, dialogProps } = useConfirmAction();
+ *   askConfirm({ title, message, confirmText, type, onConfirm: async () => { ... } });
  *   <ConfirmDialog {...dialogProps} />
  *
  * Dialog baru ditutup SETELAH onConfirm selesai (ConfirmDialog mengunci tombolnya
@@ -14,7 +14,7 @@ import { useState, useCallback, useMemo } from 'react';
 export default function useConfirmAction() {
   const [options, setOptions] = useState(null);
 
-  const confirm = useCallback((next) => setOptions(next), []);
+  const askConfirm = useCallback((next) => setOptions(next), []);
   const close = useCallback(() => setOptions(null), []);
 
   const dialogProps = useMemo(() => ({
@@ -33,5 +33,5 @@ export default function useConfirmAction() {
     onCancel: close,
   }), [options, close]);
 
-  return { confirm, close, dialogProps };
+  return { askConfirm, close, dialogProps };
 }

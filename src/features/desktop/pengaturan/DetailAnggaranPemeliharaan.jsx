@@ -1,57 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Printer, Box, ChartLine, Calculator, Coins, ArrowLeft } from 'lucide-react';
 import AnggaranApi from '../../../api/AnggaranApi';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
-import TableSkeleton from '../../../components/TableSkeleton';
+import { apiUrl } from '../../../config';
+import { rupiah, formatPercent } from '../../../utils/format';
+import { toNumber } from './useAnggaranAnalysis';
 
+// Persentase dari pecahan (0.035 -> "3,50%"). Belum ada padanannya di utils/format.
 export default function DetailAnggaranPemeliharaan() {
   usePageTitle('Detail Anggaran');
   const { id } = useParams();
   const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
+
+  // Kunci query memuat id, jadi data milik id sebelumnya tidak pernah tampil di id yang baru.
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['pengaturan', 'detail', id],
+    queryFn: async () => {
+      const res = await AnggaranApi.getDetail(id);
+      const items = res.data?.data?.items?.data;
+      const rows = Array.isArray(items) ? items : [];
+      // Pastikan benar-benar item yang diminta (bukan sekadar baris pertama).
+      return rows.find((row) => String(row.id_inventaris) === String(id)) || null;
+    },
+  });
 
   useEffect(() => {
-    fetchDetail();
-  }, [id]);
+    if (isError) showToast('Gagal memuat detail anggaran', 'error');
+  }, [isError, showToast]);
 
-  const fetchDetail = async () => {
-    try {
-      setLoading(true);
-      const res = await AnggaranApi.getDetail(id);
-
-      const items = res.data.data?.items?.data;
-      if (items && items.length > 0) {
-        setData(items[0]);
-      } else {
-        showToast('Data tidak ditemukan', 'error');
-      }
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal memuat detail anggaran', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
-
-  const formatPercent = (val) => {
-    return (val * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
-  };
-
-  if (loading) return (
+  if (isLoading) return (
     <div className="p-6 space-y-4">
       <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
       <div className="h-48 bg-gray-200 rounded animate-pulse"></div>
     </div>
   );
 
-  if (!data) return <div className="p-6 text-center text-gray-500 text-sm">Data tidak ditemukan</div>;
+  if (!data) return (
+    <div className="p-6 text-center text-gray-500 text-sm space-y-3">
+      <p>{isError ? 'Gagal memuat detail anggaran.' : 'Data tidak ditemukan.'}</p>
+      <Link to="/anggaran/pemeliharaan" className="text-brand-primary font-semibold hover:underline">Kembali ke Daftar</Link>
+    </div>
+  );
 
   const firstProjection = data.projections && data.projections.length > 0 ? data.projections[0] : null;
 
@@ -68,7 +60,7 @@ export default function DetailAnggaranPemeliharaan() {
         </div>
 
         <a
-          href={`${import.meta.env.VITE_API_URL}/anggaran/analysis/export-pdf/${data.id_inventaris}`}
+          href={apiUrl(`/anggaran/analysis/export-pdf/${data.id_inventaris}`)}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm text-xs"
@@ -90,7 +82,7 @@ export default function DetailAnggaranPemeliharaan() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 border-b border-gray-50 py-2">
             <div className="font-semibold text-gray-600 text-xs">Harga Pengadaan Awal (IIC)</div>
-            <div className="md:col-span-2 font-mono font-medium text-gray-900 text-xs">{formatCurrency(data.harga_awal)}</div>
+            <div className="md:col-span-2 font-mono font-medium text-gray-900 text-xs">{rupiah(data.harga_awal)}</div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 border-b border-gray-50 py-2">
             <div className="font-semibold text-gray-600 text-xs">Tahun Pengadaan</div>
@@ -102,7 +94,7 @@ export default function DetailAnggaranPemeliharaan() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 py-2">
             <div className="font-semibold text-gray-600 text-xs">Dasar Persentase RAB Pemeliharaan</div>
-            <div className="md:col-span-2 font-medium text-gray-900 text-xs">{parseFloat(data.persentase_rab).toFixed(2)}% dari Nilai AIC Tahunan</div>
+            <div className="md:col-span-2 font-medium text-gray-900 text-xs">{toNumber(data.persentase_rab).toFixed(2)}% dari Nilai AIC Tahunan</div>
           </div>
         </div>
       </div>
@@ -127,12 +119,12 @@ export default function DetailAnggaranPemeliharaan() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {data.projections && data.projections.length > 0 ? (
-                  data.projections.map((proj, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
+                  data.projections.map((proj) => (
+                    <tr key={proj.tahun} className="hover:bg-gray-50">
                       <td className="px-3 py-2 font-bold text-gray-900">{proj.tahun}</td>
                       <td className="px-3 py-2 text-center text-gray-600">{formatPercent(proj.inflasi)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-gray-700">{formatCurrency(proj.aic)}</td>
-                      <td className="px-3 py-2 text-right font-mono font-bold text-brand-primary">{formatCurrency(proj.rab)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-gray-700">{rupiah(proj.aic)}</td>
+                      <td className="px-3 py-2 text-right font-mono font-bold text-brand-primary">{rupiah(proj.rab)}</td>
                     </tr>
                   ))
                 ) : (
@@ -142,11 +134,11 @@ export default function DetailAnggaranPemeliharaan() {
               <tfoot className="bg-gray-50 font-bold border-t border-gray-100">
                 <tr>
                   <td colSpan="3" className="px-3 py-2 text-right text-gray-600">Jumlah Total Proyeksi AIC</td>
-                  <td className="px-3 py-2 text-right text-gray-900">{formatCurrency(data.total_projected_aic || 0)}</td>
+                  <td className="px-3 py-2 text-right text-gray-900">{rupiah(data.total_projected_aic || 0)}</td>
                 </tr>
                 <tr className="bg-purple-50">
                   <td colSpan="3" className="px-3 py-2 text-right text-brand-primary">Jumlah Total Proyeksi RAB</td>
-                  <td className="px-3 py-2 text-right text-brand-primary">{formatCurrency(data.total_projected_rab || 0)}</td>
+                  <td className="px-3 py-2 text-right text-brand-primary">{rupiah(data.total_projected_rab || 0)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -166,13 +158,13 @@ export default function DetailAnggaranPemeliharaan() {
                   <div className="font-bold text-gray-800 mb-1">AIC = (IIC * (1 + i)<sup>t</sup>) / L</div>
                   <hr className="my-1.5 border-gray-100" />
                   <div className="space-y-0.5 text-gray-600">
-                    <div className="flex justify-between"><span>IIC:</span> <span>{formatCurrency(data.harga_awal)}</span></div>
+                    <div className="flex justify-between"><span>IIC:</span> <span>{rupiah(data.harga_awal)}</span></div>
                     <div className="flex justify-between"><span>Inflasi (i):</span> <span>{formatPercent(firstProjection.inflasi)}</span></div>
                     <div className="flex justify-between"><span>Tahun Ke- (t):</span> <span>1</span></div>
                     <div className="flex justify-between"><span>Masa Pakai (L):</span> <span>{data.usia_pakai}</span></div>
                   </div>
                   <div className="mt-2 text-center p-1.5 bg-gray-50 rounded font-semibold text-gray-800 border border-gray-200">
-                    AIC (Tahun {firstProjection.tahun}) = {formatCurrency(firstProjection.aic)}
+                    AIC (Tahun {firstProjection.tahun}) = {rupiah(firstProjection.aic)}
                   </div>
                 </div>
 
@@ -180,11 +172,11 @@ export default function DetailAnggaranPemeliharaan() {
                   <div className="font-bold text-gray-800 mb-1">RAB = AIC Tahunan * Persentase RAB</div>
                   <hr className="my-1.5 border-gray-100" />
                   <div className="space-y-0.5 text-gray-600">
-                    <div className="flex justify-between"><span>AIC (Tahun {firstProjection.tahun}):</span> <span>{formatCurrency(firstProjection.aic)}</span></div>
-                    <div className="flex justify-between"><span>Persentase RAB:</span> <span>{parseFloat(data.persentase_rab).toFixed(2)}%</span></div>
+                    <div className="flex justify-between"><span>AIC (Tahun {firstProjection.tahun}):</span> <span>{rupiah(firstProjection.aic)}</span></div>
+                    <div className="flex justify-between"><span>Persentase RAB:</span> <span>{toNumber(data.persentase_rab).toFixed(2)}%</span></div>
                   </div>
                   <div className="mt-2 text-center p-1.5 bg-gray-50 rounded font-semibold text-brand-primary border border-purple-100">
-                    RAB (Tahun {firstProjection.tahun}) = {formatCurrency(firstProjection.rab)}
+                    RAB (Tahun {firstProjection.tahun}) = {rupiah(firstProjection.rab)}
                   </div>
                 </div>
               </div>
@@ -200,7 +192,7 @@ export default function DetailAnggaranPemeliharaan() {
               Di akhir masa pakainya (Tahun {parseInt(data.tahun_pengadaan) + parseInt(data.usia_pakai)}), nilai aset ini jika dibeli baru diperkirakan menjadi:
             </p>
             <div className="text-2xl font-extrabold text-gray-800 text-right">
-              {formatCurrency(data.nilai_pengganti || 0)}
+              {rupiah(data.nilai_pengganti || 0)}
             </div>
           </div>
         </div>

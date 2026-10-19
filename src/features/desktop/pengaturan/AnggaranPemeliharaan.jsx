@@ -1,155 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { DollarSign, Search, RefreshCw } from 'lucide-react';
 import AnggaranApi from '../../../api/AnggaranApi';
 import TableSkeleton from '../../../components/TableSkeleton';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle, useAuth } from '../../../hooks';
-import SearchableSelect from '../../../components/SearchableSelect';
-import RuanganApi from '../../../api/RuanganApi';
-import DivisiApi from '../../../api/DivisiApi';
-import KategoriAlatApi from '../../../api/KategoriAlatApi';
 import Pagination from '../../../components/Pagination';
+import { rupiah } from '../../../utils/format';
+import { ROLES } from '../../auth/constants';
+import AnggaranFilters from './AnggaranFilters';
+import useAnggaranAnalysis, { toNumber } from './useAnggaranAnalysis';
+
+const INITIAL_FILTERS = {
+  divisi_id: '',
+  kategori_alat_id: '',
+  ruangan_id: '',
+  search: ''
+};
+const EMPTY_TOTALS = { total_aic: 0, total_rab: 0 };
+const COLUMN_COUNT = 10;
 
 export default function AnggaranPemeliharaan() {
   usePageTitle('Anggaran Pemeliharaan');
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
-  const [totals, setTotals] = useState({ total_aic: 0, total_rab: 0 });
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    perPage: 10,
-    totalItems: 0
+  const isAdminDivisi = Number(user?.kategori_user_id) === ROLES.ADMIN_DIVISI;
+
+  const {
+    filters, setFilter, resetFilters,
+    items: data, totals, meta, perPage,
+    goToPage, expandedRow, toggleExpand,
+    isLoading, isFetching, isError, refetch,
+  } = useAnggaranAnalysis({
+    queryName: 'anggaran',
+    fetcher: AnggaranApi.getAnalysis,
+    initialFilters: INITIAL_FILTERS,
+    emptyTotals: EMPTY_TOTALS,
   });
 
-  const [expandedRow, setExpandedRow] = useState(null);
-
-  const [filters, setFilters] = useState({
-    divisi_id: '',
-    kategori_alat_id: '',
-    ruangan_id: '',
-    tahun_pengadaan: '',
-    search: ''
-  });
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [ruanganOptions, setRuanganOptions] = useState([]);
-  const [divisiOptions, setDivisiOptions] = useState([]);
-  const [kategoriOptions, setKategoriOptions] = useState([]);
-
   useEffect(() => {
-    fetchOptions();
-  }, []);
+    if (isError) showToast('Gagal memuat data analisis', 'error');
+  }, [isError, showToast]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(filters.search);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [filters.search]);
-
-  useEffect(() => {
-    fetchData(1, { ...filters, search: debouncedSearch });
-
-  }, [filters.divisi_id, filters.kategori_alat_id, filters.ruangan_id, filters.tahun_pengadaan, debouncedSearch]);
-
-  const fetchOptions = async () => {
-    try {
-      const [resRuangan, resDivisi, resKategori] = await Promise.all([
-        RuanganApi.getAll(),
-        DivisiApi.getAll(),
-        KategoriAlatApi.getAll()
-      ]);
-
-      const ruanganData = Array.isArray(resRuangan) ? resRuangan : (resRuangan.data || []);
-      const divisiData = Array.isArray(resDivisi) ? resDivisi : (resDivisi.data || []);
-      const kategoriData = Array.isArray(resKategori) ? resKategori : (resKategori.data || []);
-
-      setRuanganOptions(ruanganData.map(r => ({ value: r.id_ruangan, label: r.nama_ruangan })));
-      setDivisiOptions(divisiData.map(d => ({ value: d.id_divisi, label: d.nama_divisi })));
-      setKategoriOptions(kategoriData.map(k => ({ value: k.id, label: k.nama_kategori })));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchData = async (page = 1, currentFilters = filters) => {
-    setLoading(true);
-    try {
-
-      const cleanedFilters = Object.fromEntries(
-        Object.entries(currentFilters).filter(([_, v]) => v !== '' && v != null)
-      );
-
-      const params = {
-        ...cleanedFilters,
-        page: page,
-        per_page: pagination.perPage
-      };
-
-      const res = await AnggaranApi.getAnalysis(params);
-      const responseData = res.data.data;
-
-      if (responseData && responseData.items) {
-        setData(responseData.items.data || []);
-        setTotals(responseData.totals || { total_aic: 0, total_rab: 0 });
-        setPagination(prev => ({
-          ...prev,
-          currentPage: responseData.items.current_page,
-          totalPages: responseData.items.last_page,
-          totalItems: responseData.items.total
-        }));
-      } else {
-        setData(Array.isArray(responseData) ? responseData : []);
-        setTotals(responseData?.totals || { total_aic: 0, total_rab: 0 });
-      }
-
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal memuat data analisis', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSearch = () => {
-    fetchData(1, filters);
-  };
-
-  const handleReset = () => {
-    const emptyFilters = {
-      divisi_id: '',
-      kategori_alat_id: '',
-      ruangan_id: '',
-      tahun_pengadaan: '',
-      search: ''
-    };
-    setFilters(emptyFilters);
-    fetchData(1, emptyFilters);
-  };
-
-  const handlePageChange = (page) => {
-    setExpandedRow(null);
-    fetchData(page, filters);
-  };
-
-  const toggleExpand = (id) => {
-    setExpandedRow(expandedRow === id ? null : id);
-  };
-
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
+  const persen = (value) => toNumber(value).toFixed(1);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -163,66 +56,23 @@ export default function AnggaranPemeliharaan() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center justify-center text-center">
           <p className="text-gray-500 text-xs mb-1">Total Anggaran Pemeliharaan (RAB) Tahun Ini</p>
-          <h2 className="text-2xl font-extrabold text-brand-primary">{formatCurrency(totals.total_rab)}</h2>
+          <h2 className="text-2xl font-extrabold text-brand-primary">{rupiah(totals.total_rab)}</h2>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center justify-center text-center">
           <p className="text-gray-500 text-xs mb-1">Total Annual Investment Cost (AIC) Tahun Ini</p>
-          <h2 className="text-2xl font-extrabold text-text-dark">{formatCurrency(totals.total_aic)}</h2>
+          <h2 className="text-2xl font-extrabold text-text-dark">{rupiah(totals.total_aic)}</h2>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-[#808191] mb-1.5 pl-1">Cari Alat / No Inv</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Nama alat atau no inventaris..."
-                className="w-full px-3 py-2 bg-bg-light border border-gray-200 rounded-lg text-text-dark text-sm font-medium outline-none focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10 transition-all placeholder:text-gray-400"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            </div>
-          </div>
-
-          {!isAdminDivisi && (
-            <SearchableSelect
-              label="Divisi"
-              name="divisi_id"
-              placeholder="-- Pilih Divisi --"
-              searchPlaceholder="Cari divisi..."
-              options={[{ label: '-- Pilih Divisi --', value: '' }, ...divisiOptions]}
-              value={filters.divisi_id}
-              onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
-            />
-          )}
-
-          <SearchableSelect
-            label="Kategori Alat"
-            name="kategori_alat_id"
-            placeholder="-- Kategori Alat --"
-            searchPlaceholder="Cari kategori..."
-            options={[{ label: '-- Kategori Alat --', value: '' }, ...kategoriOptions]}
-            value={filters.kategori_alat_id}
-            onChange={(e) => handleFilterChange('kategori_alat_id', e.target.value)}
-          />
-
-          <SearchableSelect
-            label="Bagian / Ruangan"
-            name="ruangan_id"
-            placeholder="-- Bagian/Ruangan --"
-            searchPlaceholder="Cari ruangan..."
-            options={[{ label: '-- Bagian/Ruangan --', value: '' }, ...ruanganOptions]}
-            value={filters.ruangan_id}
-            onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
-          />
-        </div>
-      </div>
+      <AnggaranFilters
+        filters={filters}
+        onChange={setFilter}
+        onReset={resetFilters}
+        showDivisi={!isAdminDivisi}
+      />
 
       <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="overflow-x-auto rounded-lg border border-gray-100 custom-scrollbar mb-3">
+        <div className={`overflow-x-auto rounded-lg border border-gray-100 custom-scrollbar mb-3 transition-opacity ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-bg-light border-b border-gray-100">
@@ -239,13 +89,20 @@ export default function AnggaranPemeliharaan() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-xs">
-              {loading ? (
-                <TableSkeleton rows={5} columns={10} />
+              {isLoading ? (
+                <TableSkeleton rows={5} columns={COLUMN_COUNT} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={COLUMN_COUNT} className="py-6 text-center text-xs">
+                    <p className="text-red-500 mb-2">Gagal memuat data analisis.</p>
+                    <button type="button" onClick={() => refetch()} className="text-brand-primary font-semibold hover:underline">Coba lagi</button>
+                  </td>
+                </tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan="10" className="py-6 text-center text-gray-400 text-xs">Tidak ada data analisis</td></tr>
+                <tr><td colSpan={COLUMN_COUNT} className="py-6 text-center text-gray-400 text-xs">Tidak ada data analisis</td></tr>
               ) : (
                 data.map((item, idx) => (
-                  <React.Fragment key={idx}>
+                  <React.Fragment key={item.id_inventaris}>
                     <tr className={`hover:bg-gray-50/50 cursor-pointer ${expandedRow === item.id_inventaris ? 'bg-gray-50' : ''}`} onClick={() => toggleExpand(item.id_inventaris)}>
                       <td className="py-2.5 px-4 text-center border-r border-gray-50">
                         <div className={`transition-transform duration-200 ${expandedRow === item.id_inventaris ? 'rotate-90' : ''}`}>
@@ -255,7 +112,7 @@ export default function AnggaranPemeliharaan() {
                         </div>
                       </td>
                       <td className="py-2.5 px-4 font-medium text-gray-800">
-                        {(pagination.currentPage - 1) * pagination.perPage + idx + 1}
+                        {(meta.currentPage - 1) * perPage + idx + 1}
                       </td>
                       <td className="py-2.5 px-4 font-medium text-text-dark">
                         {item.nama_alat}
@@ -264,26 +121,26 @@ export default function AnggaranPemeliharaan() {
                       <td className="py-2.5 px-4 text-gray-600">{item.ruangan}</td>
                       <td className="py-2.5 px-4 text-gray-600">{item.usia_sekarang} Thn / {item.usia_pakai} Thn</td>
                       <td className="py-2.5 px-4">{item.tahun_pengadaan}</td>
-                      <td className="py-2.5 px-4 text-right font-mono text-gray-600">{formatCurrency(item.harga_awal)}</td>
-                      <td className="py-2.5 px-4 text-right font-mono text-gray-600">{formatCurrency(item.estimasi_harga_sekarang)}</td>
-                      <td className="py-2.5 px-4 text-right font-mono text-gray-800">{formatCurrency(item.aic_tahunan)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-gray-600">{rupiah(item.harga_awal)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-gray-600">{rupiah(item.estimasi_harga_sekarang)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-gray-800">{rupiah(item.aic_tahunan)}</td>
                       <td className="py-2.5 px-4 text-right font-bold font-mono text-brand-primary bg-purple-50/30">
-                        {formatCurrency(item.rab_tahunan)}
+                        {rupiah(item.rab_tahunan)}
                       </td>
                     </tr>
                     {expandedRow === item.id_inventaris && (
                       <tr className="bg-bg-light">
-                        <td colSpan="10" className="p-4 cursor-default">
+                        <td colSpan={COLUMN_COUNT} className="p-4 cursor-default">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-scale-in">
                             <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-cyan-500">
                               <h6 className="font-bold text-cyan-600 mb-3 text-sm">Detail Aset & Usia</h6>
                               <div className="space-y-2 text-xs text-gray-600">
-                                <p><strong>Harga Beli Awal:</strong> {formatCurrency(item.harga_awal)} (Thn {item.tahun_pengadaan})</p>
+                                <p><strong>Harga Beli Awal:</strong> {rupiah(item.harga_awal)} (Thn {item.tahun_pengadaan})</p>
                                 <p><strong>Standar Masa Pakai:</strong> {item.usia_pakai} Tahun</p>
                                 <p>
                                   <strong>Usia Saat Ini:</strong> {item.usia_sekarang} Tahun
                                   <span className="text-gray-400 ml-1">
-                                    ({item.usia_pakai > 0 ? ((item.usia_sekarang / item.usia_pakai) * 100).toFixed(1) : 0}% terpakai)
+                                    ({item.usia_pakai > 0 ? persen((item.usia_sekarang / item.usia_pakai) * 100) : 0}% terpakai)
                                   </span>
                                 </p>
                                 <div className="w-full bg-gray-100 rounded-full h-2 mt-2">
@@ -293,7 +150,7 @@ export default function AnggaranPemeliharaan() {
                                   ></div>
                                 </div>
                                 <hr className="border-gray-100 my-3" />
-                                <p><strong>Perhitungan RAB</strong> menggunakan <strong className="text-cyan-600">{(item.persentase_rab || 0).toFixed(2)}%</strong> dari nilai AIC.</p>
+                                <p><strong>Perhitungan RAB</strong> menggunakan <strong className="text-cyan-600">{toNumber(item.persentase_rab).toFixed(2)}%</strong> dari nilai AIC.</p>
 
                                 <Link
                                   to={`/anggaran/pemeliharaan/${item.id_inventaris}`}
@@ -318,12 +175,12 @@ export default function AnggaranPemeliharaan() {
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-gray-50">
-                                    {item.projections && item.projections.length > 0 ? item.projections.map((proj, pIdx) => (
-                                      <tr key={pIdx} className="hover:bg-gray-50">
+                                    {item.projections && item.projections.length > 0 ? item.projections.map((proj) => (
+                                      <tr key={proj.tahun} className="hover:bg-gray-50">
                                         <td className="px-3 py-2 font-medium text-gray-900">{proj.tahun}</td>
                                         <td className="px-3 py-2 text-gray-500">{proj.tahun - item.tahun_pengadaan} Tahun</td>
-                                        <td className="px-3 py-2 text-right font-mono text-gray-600">{formatCurrency(proj.aic)}</td>
-                                        <td className="px-3 py-2 text-right font-mono font-bold text-green-600 bg-green-50/30">{formatCurrency(proj.rab)}</td>
+                                        <td className="px-3 py-2 text-right font-mono text-gray-600">{rupiah(proj.aic)}</td>
+                                        <td className="px-3 py-2 text-right font-mono font-bold text-green-600 bg-green-50/30">{rupiah(proj.rab)}</td>
                                       </tr>
                                     )) : (
                                       <tr><td colSpan="4" className="px-3 py-6 text-center text-gray-400">Data proyeksi tidak tersedia</td></tr>
@@ -332,11 +189,11 @@ export default function AnggaranPemeliharaan() {
                                   <tfoot className="bg-gray-50 font-bold border-t border-gray-100">
                                     <tr>
                                       <td colSpan="3" className="px-3 py-2 text-right text-gray-600">Jumlah Total Proyeksi AIC</td>
-                                      <td className="px-3 py-2 text-right text-gray-800">{formatCurrency(item.total_projected_aic || 0)}</td>
+                                      <td className="px-3 py-2 text-right text-gray-800">{rupiah(item.total_projected_aic || 0)}</td>
                                     </tr>
                                     <tr className="bg-green-50/50">
                                       <td colSpan="3" className="px-3 py-2 text-right text-green-700">Jumlah Total Proyeksi RAB</td>
-                                      <td className="px-3 py-2 text-right text-green-700">{formatCurrency(item.total_projected_rab || 0)}</td>
+                                      <td className="px-3 py-2 text-right text-green-700">{rupiah(item.total_projected_rab || 0)}</td>
                                     </tr>
                                   </tfoot>
                                 </table>
@@ -354,10 +211,10 @@ export default function AnggaranPemeliharaan() {
         </div>
 
         <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
-          totalData={pagination.totalItems}
+          currentPage={meta.currentPage}
+          totalPages={meta.totalPages}
+          onPageChange={goToPage}
+          totalData={meta.totalItems}
         />
       </div>
     </div>

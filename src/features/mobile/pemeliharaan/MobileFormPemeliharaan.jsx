@@ -1,10 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, ClipboardCheck } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { usePageTitle, useToast, useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks';
+import { formatDateTime, rupiah } from '../../../utils/format';
 import SignaturePad from '../../../components/SignaturePad';
-import { useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks/queries/usePemeliharaanQueries';
-import { ToastDialog } from '../../../components/Alert/Alert';
+import StatusBadge from '../../../components/StatusBadge';
+import KondisiBadge from '../../../components/KondisiBadge';
+
+const SELECT_CLASS =
+  'w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white';
 
 export default function MobileFormPemeliharaan() {
   usePageTitle('Form Pemeliharaan');
@@ -12,117 +16,6 @@ export default function MobileFormPemeliharaan() {
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useFormPemeliharaan(id);
-  const submitMutation = useSubmitPemeliharaan();
-
-  const signatureTeknisiRef = useRef(null);
-  const signatureKepalaRuangRef = useRef(null);
-
-  const [toast, setToast] = useState(null);
-
-  const [formData, setFormData] = useState({
-    safety_check: [],
-    maintenance: [],
-    p_fungsi: [],
-    rekomendasi: '',
-    keterangan_pemeliharaan: '',
-    nama_kepala_ruangan: '',
-    biaya: 0,
-    status: 'Selesai',
-    kondisi_alat: 'Baik',
-  });
-
-
-  React.useEffect(() => {
-    if (data?.pemeliharaan) {
-      setFormData(prev => ({
-        ...prev,
-
-        nama_kepala_ruangan: data.pemeliharaan.nama_kepala_ruangan || '',
-        biaya: data.pemeliharaan.biaya || 0,
-
-
-
-      }));
-    }
-  }, [data]);
-
-  const handleSafetyCheckChange = (checklistId, value) => {
-    setFormData(prev => {
-      const safetyCheck = prev?.safety_check || [];
-      const existing = safetyCheck.find(item => item.id === checklistId);
-      if (existing) {
-        return {
-          ...prev,
-          safety_check: safetyCheck.map(item =>
-            item.id === checklistId ? { ...item, hasil: value } : item
-          )
-        };
-      } else {
-        return {
-          ...prev,
-          safety_check: [...safetyCheck, { id: checklistId, hasil: value }]
-        };
-      }
-    });
-  };
-
-  const handleRadioChange = (category, checklistId, value) => {
-    setFormData(prev => {
-      const categoryArray = prev?.[category] || [];
-      const existing = categoryArray.find(item => item.id === checklistId);
-      if (existing) {
-        return {
-          ...prev,
-          [category]: categoryArray.map(item =>
-            item.id === checklistId ? { ...item, hasil: value } : item
-          )
-        };
-      } else {
-        return {
-          ...prev,
-          [category]: [...categoryArray, { id: checklistId, hasil: value }]
-        };
-      }
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-
-    if (signatureTeknisiRef.current.isEmpty()) {
-      setToast({ type: 'error', message: 'Tanda tangan teknisi harus diisi' });
-      return;
-    }
-
-    const ttdTeknisi = signatureTeknisiRef.current.toDataURL();
-
-
-    const ttdKepalaRuang = signatureKepalaRuangRef.current.isEmpty()
-      ? null
-      : signatureKepalaRuangRef.current.toDataURL();
-
-    const submitData = {
-      ...formData,
-      ttd_teknisi: ttdTeknisi,
-      ttd_kepala_ruang: ttdKepalaRuang,
-    };
-
-    try {
-      await submitMutation.mutateAsync({ id, data: submitData });
-
-      setToast({ type: 'success', message: 'Pemeliharaan berhasil disimpan' });
-
-      setTimeout(() => {
-        navigate('/mobile/pemeliharaan');
-      }, 1500);
-    } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.response?.data?.message || 'Gagal menyimpan pemeliharaan'
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -136,13 +29,129 @@ export default function MobileFormPemeliharaan() {
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return (
       <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <p className="text-danger-600">Gagal memuat form</p>
+        <p className="text-danger-600 mb-4">Gagal memuat form</p>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="text-brand-primary font-bold"
+        >
+          Kembali
+        </button>
       </div>
     );
   }
+
+  // Form dibuat setelah data siap, sehingga nilai awal diambil langsung dari data (tanpa effect).
+  return <FormBody id={id} data={data} />;
+}
+
+function FormBody({ id, data }) {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const submitMutation = useSubmitPemeliharaan();
+
+  const signatureTeknisiRef = useRef(null);
+  const signatureKepalaRuangRef = useRef(null);
+
+  const previous = data.pemeliharaan;
+  // Checklist hanya diisi pada pemeriksaan pertama; pemeriksaan lanjutan sudah punya keterangan.
+  const isFollowUp = !!previous?.keterangan_pemeliharaan;
+  const categories = isFollowUp ? [] : (data.checklist_categories || []);
+
+  const [formData, setFormData] = useState({
+    safety_check: [],
+    maintenance: [],
+    p_fungsi: [],
+    rekomendasi: '',
+    keterangan_pemeliharaan: '',
+    nama_kepala_ruangan: previous?.nama_kepala_ruangan || '',
+    biaya: previous?.biaya || 0,
+    // Status & kondisi wajib dipilih eksplisit (tidak ada nilai bawaan).
+    status: '',
+    kondisi_alat: '',
+  });
+  const [showChecklistErrors, setShowChecklistErrors] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const getAnswer = (category, checklistId) =>
+    formData[category]?.find(item => item.id === checklistId)?.hasil || '';
+
+  const handleChecklistChange = (category, checklistId, value) => {
+    setFormData(prev => {
+      const list = prev[category] || [];
+      const exists = list.some(item => item.id === checklistId);
+      return {
+        ...prev,
+        [category]: exists
+          ? list.map(item => (item.id === checklistId ? { ...item, hasil: value } : item))
+          : [...list, { id: checklistId, hasil: value }],
+      };
+    });
+  };
+
+  // Item checklist yang belum dijawab (untuk validasi dan penandaan).
+  const getUnanswered = () =>
+    categories.flatMap(category =>
+      category.checklists
+        .filter(checklist => !getAnswer(category.nama_kategori, checklist.id).trim())
+        .map(checklist => ({ category: category.nama_kategori, id: checklist.id, keterangan: checklist.keterangan }))
+    );
+
+  const unanswered = getUnanswered();
+  const isUnanswered = (category, checklistId) =>
+    showChecklistErrors && unanswered.some(item => item.category === category && item.id === checklistId);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (submitMutation.isPending || submitted) return;
+
+    if (unanswered.length > 0) {
+      setShowChecklistErrors(true);
+      showToast(`Masih ada ${unanswered.length} item checklist yang belum dijawab`, 'warning');
+      const first = unanswered[0];
+      document.getElementById(`checklist-${first.category}-${first.id}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (!formData.status) {
+      showToast('Pilih status pemeliharaan terlebih dahulu', 'warning');
+      return;
+    }
+
+    if (!formData.kondisi_alat) {
+      showToast('Pilih kondisi alat terlebih dahulu', 'warning');
+      return;
+    }
+
+    if (signatureTeknisiRef.current?.isEmpty()) {
+      showToast('Tanda tangan teknisi harus diisi', 'error');
+      return;
+    }
+
+    const submitData = {
+      ...formData,
+      ttd_teknisi: signatureTeknisiRef.current.toDataURL(),
+      ttd_kepala_ruang: signatureKepalaRuangRef.current?.isEmpty()
+        ? null
+        : signatureKepalaRuangRef.current.toDataURL(),
+    };
+
+    try {
+      await submitMutation.mutateAsync({ id, data: submitData });
+      // Tombol tetap nonaktif; langsung pindah halaman (toast global tetap tampil).
+      setSubmitted(true);
+      showToast('Pemeliharaan berhasil disimpan', 'success');
+      navigate('/mobile/pemeliharaan');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Gagal menyimpan pemeliharaan', 'error');
+    }
+  };
+
+  const isSaving = submitMutation.isPending || submitted;
 
   return (
     <div className="max-w-md mx-auto px-4 pb-4">
@@ -160,8 +169,8 @@ export default function MobileFormPemeliharaan() {
         </div>
       </div>
 
-      {/* Previous Inspection History - Show if already inspected */}
-      {data?.pemeliharaan?.keterangan_pemeliharaan && (
+      {/* Pemeriksaan sebelumnya (bila sudah pernah diperiksa) */}
+      {isFollowUp && (
         <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-4 mb-4 border border-orange-200 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <div className="p-2 bg-orange-100 rounded-lg">
@@ -171,86 +180,62 @@ export default function MobileFormPemeliharaan() {
           </div>
 
           <div className="space-y-3">
-            {/* Previous Keterangan */}
             <div className="bg-white rounded-xl p-3 border border-orange-100">
               <p className="text-xs text-gray-600 mb-1">Keterangan Pemeliharaan</p>
-              <p className="text-sm text-gray-800">{data.pemeliharaan.keterangan_pemeliharaan}</p>
+              <p className="text-sm text-gray-800">{previous.keterangan_pemeliharaan}</p>
             </div>
 
-            {/* Previous Recommendation */}
-            {data.pemeliharaan.rekomendasi && (
+            {previous.rekomendasi && (
               <div className="bg-white rounded-xl p-3 border border-orange-100">
                 <p className="text-xs text-gray-600 mb-1">Rekomendasi</p>
-                <p className="text-sm text-gray-800">{data.pemeliharaan.rekomendasi}</p>
+                <p className="text-sm text-gray-800">{previous.rekomendasi}</p>
               </div>
             )}
 
-            {/* Previous Condition & Status */}
             <div className="grid grid-cols-2 gap-2">
-              {data.pemeliharaan.kondisi_alat && (
+              {previous.kondisi_alat && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${data.pemeliharaan.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-700' :
-                    data.pemeliharaan.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                    {data.pemeliharaan.kondisi_alat}
-                  </span>
+                  <KondisiBadge kondisi={previous.kondisi_alat} />
                 </div>
               )}
 
-              {data.pemeliharaan.status && (
+              {previous.status && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Status</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${data.pemeliharaan.status === 'Selesai' ? 'bg-green-100 text-green-700' :
-                    data.pemeliharaan.status === 'Tindakan Lanjutan' ? 'bg-orange-100 text-orange-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                    {data.pemeliharaan.status}
-                  </span>
+                  <StatusBadge status={previous.status} />
                 </div>
               )}
             </div>
 
-            {/* Previous Inspection Date */}
-            {data.pemeliharaan.tanggal_pemeriksaan && (
+            {previous.tanggal_pemeriksaan && (
               <div className="bg-white rounded-xl p-3 border border-orange-100">
                 <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
                 <p className="text-sm font-medium text-gray-800">
-                  {new Date(data.pemeliharaan.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDateTime(previous.tanggal_pemeriksaan)}
                 </p>
               </div>
             )}
 
-            {/* Previous Biaya & Kepala Ruangan */}
             <div className="grid grid-cols-2 gap-2">
-              {data.pemeliharaan.biaya > 0 && (
+              {parseFloat(previous.biaya) > 0 && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Biaya</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.pemeliharaan.biaya)}
-                  </p>
+                  <p className="text-sm font-medium text-gray-800">{rupiah(previous.biaya)}</p>
                 </div>
               )}
 
-              {data.pemeliharaan.nama_kepala_ruangan && (
+              {previous.nama_kepala_ruangan && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Kepala Ruangan</p>
-                  <p className="text-sm font-medium text-gray-800">{data.pemeliharaan.nama_kepala_ruangan}</p>
+                  <p className="text-sm font-medium text-gray-800">{previous.nama_kepala_ruangan}</p>
                 </div>
               )}
             </div>
 
-            {/* Info Badge */}
             <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
               <p className="text-xs text-orange-800 font-medium">
-                ℹ️ Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
+                Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk memperbarui status terbaru.
               </p>
             </div>
           </div>
@@ -258,74 +243,88 @@ export default function MobileFormPemeliharaan() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Render Checklist Categories - Only for first inspection */}
-        {!data?.pemeliharaan?.keterangan_pemeliharaan && (
-          <>
-            {data?.checklist_categories?.map((category) => (
-              <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <h3 className="font-bold text-gray-800 mb-3">{category.display_kategori}</h3>
+        {/* Checklist: hanya untuk pemeriksaan pertama, semua item wajib dijawab */}
+        {categories.map((category) => (
+          <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-3">{category.display_kategori}</h3>
 
-                {category.checklists.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
-                ) : category.nama_kategori === 'safety_check' ? (
-
-                  <div className="space-y-3">
-                    {category.checklists.map((checklist) => (
+            {category.checklists.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
+            ) : category.nama_kategori === 'safety_check' ? (
+              <div className="space-y-3">
+                {category.checklists.map((checklist) => {
+                  const missing = isUnanswered(category.nama_kategori, checklist.id);
+                  return (
+                    <div key={checklist.id} id={`checklist-${category.nama_kategori}-${checklist.id}`}>
                       <textarea
-                        key={checklist.id}
                         placeholder={checklist.keterangan}
-                        value={formData.safety_check?.find(item => item.id === checklist.id)?.hasil || ''}
-                        onChange={(e) => handleSafetyCheckChange(checklist.id, e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
+                        value={getAnswer(category.nama_kategori, checklist.id)}
+                        onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border-2 focus:outline-none focus:border-indigo-500 text-sm resize-none ${missing ? 'border-red-400' : 'border-gray-300'}`}
                         rows="3"
                       />
-                    ))}
-                  </div>
-                ) : (
-
-                  <div className="space-y-3">
-                    {category.checklists.map((checklist) => (
-                      <div key={checklist.id} className="bg-gray-50 rounded-xl p-3">
-                        <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
-                        <div className="flex gap-6">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`${category.nama_kategori}_${checklist.id}`}
-                              value="ok"
-                              onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
-                              className="w-4 h-4 text-success-600"
-                            />
-                            <span className="text-sm">Ok</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`${category.nama_kategori}_${checklist.id}`}
-                              value="notok"
-                              onChange={(e) => handleRadioChange(category.nama_kategori, checklist.id, e.target.value)}
-                              className="w-4 h-4 text-danger-600"
-                            />
-                            <span className="text-sm">Not Ok</span>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      {missing && <p className="text-xs text-red-500 mt-1">Belum dijawab</p>}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </>
-        )}
+            ) : (
+              <div className="space-y-3">
+                {category.checklists.map((checklist) => {
+                  const missing = isUnanswered(category.nama_kategori, checklist.id);
+                  const answer = getAnswer(category.nama_kategori, checklist.id);
+                  return (
+                    <div
+                      key={checklist.id}
+                      id={`checklist-${category.nama_kategori}-${checklist.id}`}
+                      className={`rounded-xl p-3 ${missing ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}
+                    >
+                      <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
+                      <div className="flex gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`${category.nama_kategori}_${checklist.id}`}
+                            value="ok"
+                            checked={answer === 'ok'}
+                            onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
+                            className="w-4 h-4 text-success-600"
+                          />
+                          <span className="text-sm">Ok</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`${category.nama_kategori}_${checklist.id}`}
+                            value="notok"
+                            checked={answer === 'notok'}
+                            onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
+                            className="w-4 h-4 text-danger-600"
+                          />
+                          <span className="text-sm">Tidak Ok</span>
+                        </label>
+                      </div>
+                      {missing && <p className="text-xs text-red-500 mt-2">Belum dijawab</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
 
         {/* Status Pemeliharaan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Status Pemeliharaan</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">
+            Status Pemeliharaan <span className="text-red-500">*</span>
+          </label>
           <select
             value={formData.status}
             onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white"
+            className={SELECT_CLASS}
+            required
           >
+            <option value="">Pilih status pemeliharaan</option>
             <option value="Selesai">Selesai</option>
             <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
           </select>
@@ -336,12 +335,16 @@ export default function MobileFormPemeliharaan() {
 
         {/* Kondisi Alat */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Kondisi Alat</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">
+            Kondisi Alat <span className="text-red-500">*</span>
+          </label>
           <select
             value={formData.kondisi_alat}
             onChange={(e) => setFormData(prev => ({ ...prev, kondisi_alat: e.target.value }))}
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white"
+            className={SELECT_CLASS}
+            required
           >
+            <option value="">Pilih kondisi alat</option>
             <option value="Baik">Baik</option>
             <option value="Rusak Ringan">Rusak Ringan</option>
             <option value="Rusak Berat">Rusak Berat</option>
@@ -353,7 +356,9 @@ export default function MobileFormPemeliharaan() {
 
         {/* Rekomendasi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Rekomendasi</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">
+            Rekomendasi <span className="text-red-500">*</span>
+          </label>
           <textarea
             value={formData.rekomendasi}
             onChange={(e) => setFormData(prev => ({ ...prev, rekomendasi: e.target.value }))}
@@ -366,7 +371,9 @@ export default function MobileFormPemeliharaan() {
 
         {/* Keterangan Pemeliharaan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Keterangan Pemeliharaan</label>
+          <label className="block text-sm font-bold text-gray-800 mb-2">
+            Keterangan Pemeliharaan <span className="text-red-500">*</span>
+          </label>
           <textarea
             value={formData.keterangan_pemeliharaan}
             onChange={(e) => setFormData(prev => ({ ...prev, keterangan_pemeliharaan: e.target.value }))}
@@ -381,17 +388,17 @@ export default function MobileFormPemeliharaan() {
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <SignaturePad
             ref={signatureTeknisiRef}
-            label="Tanda Tangan Teknisi Pelaksana"
+            label="Tanda Tangan Teknisi Pelaksana *"
           />
         </div>
 
-        {/* Tanda Tangan Kepala Ruang */}
+        {/* Tanda Tangan Kepala Ruangan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <SignaturePad
             ref={signatureKepalaRuangRef}
-            label="Tanda Tangan Kepala Ruang (Opsional)"
+            label="Tanda Tangan Kepala Ruangan (Opsional)"
           />
-          <p className="text-xs text-gray-500 mt-2">Tanda tangan kepala ruang dapat diisi nanti</p>
+          <p className="text-xs text-gray-500 mt-2">Tanda tangan Kepala Ruangan dapat diisi nanti</p>
         </div>
 
         {/* Nama Kepala Ruangan */}
@@ -401,7 +408,7 @@ export default function MobileFormPemeliharaan() {
             type="text"
             value={formData.nama_kepala_ruangan}
             onChange={(e) => setFormData(prev => ({ ...prev, nama_kepala_ruangan: e.target.value }))}
-            placeholder="Masukkan nama kepala ruangan"
+            placeholder="Masukkan nama Kepala Ruangan"
             className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
           />
           <p className="text-xs text-gray-500 mt-1">Nama dapat diisi nanti saat tanda tangan</p>
@@ -422,8 +429,8 @@ export default function MobileFormPemeliharaan() {
             required
           />
           <p className="text-xs text-gray-500 mt-1">
-            {formData.status === 'Selesai' 
-              ? 'Masukkan total biaya asli pemeliharaan. Isi 0 jika tidak ada biaya.' 
+            {formData.status === 'Selesai'
+              ? 'Masukkan total biaya asli pemeliharaan. Isi 0 jika tidak ada biaya.'
               : 'Masukkan perkiraan biaya pemeliharaan. Isi 0 jika tidak ada estimasi.'}
           </p>
         </div>
@@ -431,10 +438,10 @@ export default function MobileFormPemeliharaan() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={submitMutation.isPending}
+          disabled={isSaving}
           className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitMutation.isPending ? (
+          {isSaving ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               Menyimpan...
@@ -447,15 +454,6 @@ export default function MobileFormPemeliharaan() {
           )}
         </button>
       </form>
-
-      {/* Toast Notification */}
-      <ToastDialog
-        isOpen={!!toast}
-        type={toast?.type || 'info'}
-        message={toast?.message}
-        onClose={() => setToast(null)}
-        duration={3000}
-      />
     </div>
   );
 }

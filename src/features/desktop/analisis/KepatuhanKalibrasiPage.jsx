@@ -1,44 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { ShieldCheck, CalendarClock, AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { ShieldCheck, CalendarClock, AlertTriangle } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
-import AnalisisApi from '../../../api/AnalisisApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { usePageTitle } from '../../../hooks';
+import { useAnalisisKalibrasi } from '../../../hooks/queries/useAnalisisQueries';
+import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
 
 export default function KepatuhanKalibrasiPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Analisis Kepatuhan Kalibrasi');
   const { showToast } = useToast();
+  const { data, isLoading, isError, isFetching, refetch } = useAnalisisKalibrasi();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal mengambil data kalibrasi', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await AnalisisApi.getKalibrasi();
-      setData(response.data.data);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal mengambil data kalibrasi', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <AnalisisLoading text="Mengecek status kalibrasi, mohon tunggu..." />;
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center justify-center min-h-[70vh]">
-        <RefreshCw className="animate-spin text-brand-primary mb-4" size={32} />
-        <p className="text-gray-500 font-medium">Mengecek status kalibrasi, mohon tunggu...</p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
+  // Gagal dimuat (atau kosong): tampilkan pesan + tombol coba lagi, bukan halaman kosong.
+  if (!data) return <AnalisisError message="Gagal mengambil data kalibrasi." onRetry={() => refetch()} retrying={isFetching} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -53,9 +36,7 @@ export default function KepatuhanKalibrasiPage() {
             Memantau tingkat kepatuhan kalibrasi alat ukur medis dan prediksi kedaluwarsa ke depan.
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold">
-          <RefreshCw size={16} /> Segarkan Data
-        </button>
+        <RefreshButton onClick={() => refetch()} isFetching={isFetching} />
       </div>
 
       {/* KPI Cards */}
@@ -103,7 +84,7 @@ export default function KepatuhanKalibrasiPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={data.kepatuhan}
+                  data={data.kepatuhan || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={80}
@@ -111,8 +92,8 @@ export default function KepatuhanKalibrasiPage() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {data.kepatuhan.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {(data.kepatuhan || []).map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip 
@@ -131,7 +112,7 @@ export default function KepatuhanKalibrasiPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.expiring_trend}
+                data={data.expiring_trend || []}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />

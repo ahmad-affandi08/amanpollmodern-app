@@ -1,59 +1,56 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { refreshAllData } from '../../../lib/queryClient';
-import { Save, Trash2, TrendingUp, DollarSign, Calendar, Plus } from 'lucide-react';
+import { Trash2, TrendingUp, Calendar } from 'lucide-react';
 import AnggaranApi from '../../../api/AnggaranApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
 import ConfirmDialog from '../../../components/Alert/Alert';
-import TableSkeleton from '../../../components/TableSkeleton';
+import { toNumber } from './useAnggaranAnalysis';
+
+const DEFAULT_RAB = 5;
+const newInflasiForm = () => ({ tahun: new Date().getFullYear(), tingkat_inflasi: '' });
 
 export default function PengaturanAnggaran() {
   usePageTitle('Pengaturan Anggaran');
   const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
 
-  const [inflasiList, setInflasiList] = useState([]);
-  const [rabData, setRabData] = useState({ persentase: 5.00 });
-
-  const [rabInput, setRabInput] = useState('');
-  const [inflasiForm, setInflasiForm] = useState({
-    tahun: new Date().getFullYear(),
-    tingkat_inflasi: ''
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['pengaturan', 'anggaran-setting'],
+    queryFn: async () => {
+      const res = await AnggaranApi.getAll();
+      return {
+        inflasiList: Array.isArray(res.data?.inflasi) ? res.data.inflasi : [],
+        rabData: res.data?.rab || { persentase: DEFAULT_RAB },
+      };
+    },
   });
 
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
-  const [updateLoading, setUpdateLoading] = useState(false);
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal memuat data anggaran', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await AnggaranApi.getAll();
-      setInflasiList(res.data.inflasi);
-      setRabData(res.data.rab);
-      setRabInput(res.data.rab?.persentase || 5.00);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal memuat data anggaran', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const inflasiList = data?.inflasiList || [];
+  const rabData = data?.rabData || { persentase: DEFAULT_RAB };
+
+  // null = belum diubah pengguna, tampilkan nilai dari server.
+  const [rabInput, setRabInput] = useState(null);
+  const rabValue = rabInput ?? rabData.persentase ?? DEFAULT_RAB;
+  const [inflasiForm, setInflasiForm] = useState(newInflasiForm);
+
+  const [deleteId, setDeleteId] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const handleUpdateRab = async (e) => {
     e.preventDefault();
     try {
       setUpdateLoading(true);
-      const res = await AnggaranApi.updateRab({ persentase: rabInput });
-      refreshAllData();
-      setRabData(res.data.data);
+      await AnggaranApi.updateRab({ persentase: rabValue });
+      await refreshAllData();
+      setRabInput(null);
       showToast('Persentase RAB berhasil diperbarui', 'success');
-    } catch (error) {
-      console.error(error);
+    } catch {
       showToast('Gagal memperbarui RAB', 'error');
     } finally {
       setUpdateLoading(false);
@@ -64,38 +61,30 @@ export default function PengaturanAnggaran() {
     e.preventDefault();
     try {
       setUpdateLoading(true);
-
       await AnggaranApi.createInflasi(inflasiForm);
-      refreshAllData();
+      await refreshAllData();
       showToast('Data inflasi berhasil ditambahkan', 'success');
-      setInflasiForm({
-        tahun: new Date().getFullYear(),
-        tingkat_inflasi: ''
-      });
-      fetchData();
+      setInflasiForm(newInflasiForm());
     } catch (error) {
-      console.error(error);
-      const msg = error.response?.data?.message || 'Gagal menambahkan inflasi';
+      // Pesan validasi server berbahasa Inggris, jadi diterjemahkan di sini.
+      const msg = error.response?.status === 422
+        ? 'Data inflasi tidak valid. Pastikan tahun belum pernah diinput.'
+        : 'Gagal menambahkan inflasi';
       showToast(msg, 'error');
     } finally {
       setUpdateLoading(false);
     }
   };
 
-  const handleDeleteInflasi = (id) => {
-    setConfirmDialog({ isOpen: true, id });
-  };
-
   const confirmDeleteInflasi = async () => {
     try {
-      await AnggaranApi.deleteInflasi(confirmDialog.id);
-      refreshAllData();
+      await AnggaranApi.deleteInflasi(deleteId);
+      await refreshAllData();
       showToast('Data inflasi berhasil dihapus', 'success');
-      setConfirmDialog({ isOpen: false, id: null });
-      fetchData();
-    } catch (error) {
-      console.error(error);
+    } catch {
       showToast('Gagal menghapus data inflasi', 'error');
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -108,7 +97,7 @@ export default function PengaturanAnggaran() {
         <p className="text-text-gray text-xs mt-0.5">Kelola persentase RAB dan data inflasi tahunan</p>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
           <div className="space-y-4">
             <div className="bg-white rounded-xl h-48 w-full shadow-sm"></div>
@@ -126,6 +115,11 @@ export default function PengaturanAnggaran() {
             </div>
           </div>
         </div>
+      ) : isError && !data ? (
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center space-y-3">
+          <p className="text-sm text-red-500">Gagal memuat data anggaran.</p>
+          <Button type="button" onClick={() => refetch()} className="mx-auto">Coba Lagi</Button>
+        </div>
       ) : (
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -140,7 +134,7 @@ export default function PengaturanAnggaran() {
               <p className="text-gray-400 text-xs mb-4">Dasar perhitungan RAB dari nilai AIC tahunan</p>
 
               <h1 className="text-4xl font-extrabold text-text-dark mb-4">
-                {parseFloat(rabData?.persentase).toLocaleString('id-ID')}%
+                {toNumber(rabData.persentase).toLocaleString('id-ID')}%
               </h1>
 
               <form onSubmit={handleUpdateRab} className="space-y-3">
@@ -151,7 +145,7 @@ export default function PengaturanAnggaran() {
                       type="number"
                       step="0.01"
                       className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-100 rounded-lg focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none font-bold text-gray-800 text-sm"
-                      value={rabInput}
+                      value={rabValue}
                       onChange={(e) => setRabInput(e.target.value)}
                       required
                     />
@@ -234,11 +228,13 @@ export default function PengaturanAnggaran() {
                         <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="py-2.5 px-4 font-medium text-gray-800 text-xs">{item.tahun}</td>
                           <td className="py-2.5 px-4 font-bold text-brand-primary text-xs">
-                            {(parseFloat(item.tingkat_inflasi) * 100).toLocaleString('id-ID', { minimumFractionDigits: 2 })}%
+                            {(toNumber(item.tingkat_inflasi) * 100).toLocaleString('id-ID', { minimumFractionDigits: 2 })}%
                           </td>
                           <td className="py-2.5 px-4 text-right">
                             <button
-                              onClick={() => handleDeleteInflasi(item.id)}
+                              type="button"
+                              onClick={() => setDeleteId(item.id)}
+                              aria-label={`Hapus inflasi tahun ${item.tahun}`}
                               className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
                             >
                               <Trash2 size={14} />
@@ -257,11 +253,13 @@ export default function PengaturanAnggaran() {
       )}
 
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
+        isOpen={deleteId !== null}
         title="Hapus Data Inflasi"
         message="Apakah Anda yakin ingin menghapus data inflasi ini?"
+        confirmText="Ya, Hapus"
+        type="danger"
         onConfirm={confirmDeleteInflasi}
-        onCancel={() => setConfirmDialog({ isOpen: false, id: null })}
+        onCancel={() => setDeleteId(null)}
       />
     </div>
   );

@@ -5,8 +5,10 @@ import {
   Building2, Wrench, CheckCircle, Package
 } from 'lucide-react';
 import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
-import PemeliharaanApi from '../../../api/PemeliharaanApi';
+import { usePageTitle, usePemeliharaanDetail } from '../../../hooks';
+import { apiUrl } from '../../../config';
+import { formatDate } from '../../../utils/format';
+import StatusBadge from '../../../components/StatusBadge';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
@@ -17,53 +19,22 @@ export default function DetailReportPemeliharaan() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Kunci query memuat id, jadi data sebelumnya tidak pernah tampil di id yang baru
+  // atau tertinggal saat gagal memuat.
+  const { data: detail, isLoading: loading, isError } = usePemeliharaanDetail(id);
+  const data = detail || null;
+
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
 
   useEffect(() => {
-    fetchDetail();
-  }, [id]);
+    if (isError) showToast('Gagal memuat detail laporan', 'error');
+  }, [isError, showToast]);
 
-  const fetchDetail = async () => {
-    try {
-      setLoading(true);
-      const res = await PemeliharaanApi.getById(id);
-      setData(res.data || res);
-    } catch (error) {
-      console.error("Failed to fetch detail:", error);
-      showToast('Gagal memuat detail laporan', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
+  // Tautan unduhan (rute export di server tidak memakai middleware api.auth,
+  // sesi dibawa cookie), jadi autentikasi tidak diubah.
   const handleExport = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    window.open(`${apiUrl}/pemeliharaan/${id}/export-hasil`, '_blank');
+    window.open(apiUrl(`/pemeliharaan/${id}/export-hasil`), '_blank');
   };
 
   if (loading) {
@@ -77,10 +48,11 @@ export default function DetailReportPemeliharaan() {
         <h3 className="text-lg font-bold text-gray-800 mb-1">Data Tidak Ditemukan</h3>
         <p className="text-sm text-gray-500 mb-4">Laporan yang Anda cari tidak tersedia.</p>
         <button
+          type="button"
           onClick={() => navigate('/report/pemeliharaan')}
           className="px-4 py-2 bg-brand-primary text-white text-sm rounded-lg hover:bg-brand-primary/90 transition-colors"
         >
-          Kembali ke List
+          Kembali ke Daftar
         </button>
       </div>
     );
@@ -91,7 +63,9 @@ export default function DetailReportPemeliharaan() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate('/report/pemeliharaan')}
+            aria-label="Kembali ke daftar laporan pemeliharaan"
             className="p-1.5 hover:bg-white rounded-lg transition-colors hover:shadow-sm group"
           >
             <ArrowLeft size={20} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
@@ -107,11 +81,12 @@ export default function DetailReportPemeliharaan() {
                   </span>
                 </>
               )}
-              <StatusBadge status={data.status} />
+              <StatusBadge status={data.status} size="sm" />
             </div>
           </div>
         </div>
         <button
+          type="button"
           onClick={handleExport}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-lg shadow-sm hover:shadow text-xs transition-all duration-300"
         >
@@ -187,7 +162,7 @@ export default function DetailReportPemeliharaan() {
                 <div className="flex-1">
                   <p className="text-[10px] text-gray-600 font-medium">Tanggal Pemeriksaan</p>
                   <p className="text-xs font-bold text-gray-900">
-                    {data.tanggal_pemeriksaan ? formatDateTime(data.tanggal_pemeriksaan) : 'Belum Dilakukan'}
+                    {data.tanggal_pemeriksaan ? formatDate(data.tanggal_pemeriksaan) : 'Belum Dilakukan'}
                   </p>
                 </div>
               </div>
@@ -256,25 +231,6 @@ export default function DetailReportPemeliharaan() {
   );
 }
 
-const StatusBadge = ({ status }) => {
-  const statusConfig = {
-    'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200', icon: Clock },
-    'Selesai': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200', icon: CheckCircle },
-    'Dalam Proses': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', icon: Wrench }
-  };
-  const config = statusConfig[status] || statusConfig['Pending'];
-  const Icon = config.icon;
-
-  return (
-    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border ${config.bg} ${config.text} ${config.border} text-[10px] font-bold`}>
-      <Icon size={10} />
-      {status}
-    </div>
-  );
-};
-
-
-
 const InfoCard = ({ icon, label, value }) => (
   <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
     <div className="flex items-center gap-1 mb-0.5 text-gray-500">
@@ -286,18 +242,6 @@ const InfoCard = ({ icon, label, value }) => (
 );
 
 const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePreview }) => {
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 border ${borderColor} shadow-sm`}>
       <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-200">
@@ -318,7 +262,7 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
             <div>
               <label className="block text-[10px] font-bold text-gray-600 mb-1">Tanggal Pemeriksaan</label>
               <div className="px-2.5 py-1.5 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-[10px] font-semibold">
-                {formatDateTime(data.tanggal)}
+                {formatDate(data.tanggal)}
               </div>
             </div>
           )}
@@ -337,10 +281,10 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
 
             {data.ttd_kepala_ruang && (
               <SignatureCard
-                label="TTD Kepala Ruang"
+                label="TTD Kepala Ruangan"
                 name={data.kepala_ruang_nama}
                 image={data.ttd_kepala_ruang}
-                onPreview={() => onImagePreview(data.ttd_kepala_ruang, 'TTD Kepala Ruang')}
+                onPreview={() => onImagePreview(data.ttd_kepala_ruang, 'TTD Kepala Ruangan')}
               />
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { refreshAllData } from '../../../lib/queryClient';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft, Upload, FileText } from 'lucide-react';
@@ -6,11 +6,34 @@ import InventarisApi from '../../../api/InventarisApi';
 import NamaAlatApi from '../../../api/NamaAlatApi';
 import RuanganApi from '../../../api/RuanganApi';
 import DivisiApi from '../../../api/DivisiApi';
-import { usePageTitle, useToast } from '../../../hooks';
-import useAuth from '../../../hooks/utils/useAuth';
+import { usePageTitle, useToast, useAuth } from '../../../hooks';
+import { ROLES, isRole } from '../../auth/constants';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import SearchableSelect from '../../../components/SearchableSelect';
+
+// Kategori alat "Software" (id 23): tidak punya ruangan fisik, sama dengan aturan di backend.
+const KATEGORI_SOFTWARE_ID = '23';
+
+// Kolom opsional yang boleh dikosongkan. Saat mengubah data, nilai kosong harus tetap
+// dikirim sebagai string kosong supaya server mengosongkannya (Laravel: '' -> null).
+// Kolom wajib (ruangan_id, nama_alat_id, dst.) dan berkas tidak boleh dikirim kosong.
+const CLEARABLE_FIELDS = [
+  'daya',
+  'kategori_alkes',
+  'kondisi_alat',
+  'interval_maintenance',
+  'awal_kalibrasi',
+  'kadaluwarsa',
+];
+
+// Field yang hanya dipakai di antarmuka (bukan kolom di backend).
+// `kategori_alat_id` tetap dikirim karena aturan `required_unless:kategori_alat_id,23` di backend membacanya.
+const UI_ONLY_FIELDS = ['perlu_kalibrasi'];
+
+const LIST_PATH = '/inventaris/data';
+
+const toNamaAlatOption = (item) => ({ value: item.id, label: item.nama_nama_alat });
 
 export default function InventarisForm() {
   const navigate = useNavigate();
@@ -20,14 +43,18 @@ export default function InventarisForm() {
 
   const { showToast } = useToast();
   const { user } = useAuth();
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
+  const userDivisiId = user?.divisi_id;
+
+  // `loading` tetap true setelah sukses sampai halaman berpindah, supaya tombol Simpan
+  // tidak bisa ditekan dua kali (data ganda).
   const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [masterLoaded, setMasterLoaded] = useState(false);
+  const [detailLoaded, setDetailLoaded] = useState(!isEdit);
+  const dataLoading = !masterLoaded || !detailLoaded;
 
-
-  const [namaAlatOptions, setNamaAlatOptions] = useState([]);
   const [ruanganOptions, setRuanganOptions] = useState([]);
   const [divisiOptions, setDivisiOptions] = useState([]);
-
   const [namaAlatData, setNamaAlatData] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -36,6 +63,7 @@ export default function InventarisForm() {
     kategori_alat_id: '',
     ruangan_id: '',
     divisi_id: '',
+    no_inventaris: '',
     merk: '',
     model: '',
     seri: '',
@@ -65,11 +93,12 @@ export default function InventarisForm() {
     file_sop: null
   });
 
+  // Ruang sekarang saat data dimuat: lokasi saat ini diubah lewat endpoint tersendiri.
+  const [initialRuangSekarang, setInitialRuangSekarang] = useState('');
 
-  const generateYearOptions = () => {
-    const currentYear = new Date().getFullYear();
+  const yearOptions = useMemo(() => {
+    const endYear = new Date().getFullYear() + 5;
     const startYear = 2001;
-    const endYear = currentYear + 5;
     const years = [];
 
     for (let year = endYear; year >= startYear; year--) {
@@ -77,127 +106,139 @@ export default function InventarisForm() {
     }
 
     return years;
-  };
+  }, []);
 
-
+  // Tahun pengadaan awal = tahun berjalan (hanya saat tambah data).
   useEffect(() => {
-    if (!isEdit && !formData.tahun_pengadaan) {
-      setFormData(prev => ({ ...prev, tahun_pengadaan: new Date().getFullYear().toString() }));
+    if (!isEdit) {
+      setFormData(prev => (
+        prev.tahun_pengadaan ? prev : { ...prev, tahun_pengadaan: new Date().getFullYear().toString() }
+      ));
     }
   }, [isEdit]);
 
+  // Data master (nama alat, ruangan, divisi).
   useEffect(() => {
+    let cancelled = false;
+
     const fetchMasterData = async () => {
       try {
         const [alatRes, roomRes, divRes] = await Promise.all([
-          NamaAlatApi.getAll(),
+          NamaAlatApi.getAll({ all: 1 }),
           RuanganApi.getAll(),
-          DivisiApi.getAllRaw()
+          DivisiApi.getAll()
         ]);
+        if (cancelled) return;
 
-        const rawAlat = Array.isArray(alatRes) ? alatRes : [];
-        setNamaAlatData(rawAlat);
+        setNamaAlatData(Array.isArray(alatRes) ? alatRes : []);
 
-
-        setNamaAlatOptions(rawAlat.map(item => ({ value: item.id, label: item.nama_nama_alat })));
-
-
-        const ruanganOpts = Array.isArray(roomRes) ? roomRes.map(item => ({
+        setRuanganOptions(Array.isArray(roomRes) ? roomRes.map(item => ({
           value: item.id_ruangan,
           label: item.nama_ruangan
-        })) : [];
-        setRuanganOptions(ruanganOpts);
+        })) : []);
 
-
-        const divisiOpts = Array.isArray(divRes) ? divRes.map(item => ({
+        setDivisiOptions(Array.isArray(divRes) ? divRes.map(item => ({
           value: item.id_divisi,
           label: item.nama_divisi
-        })) : [];
-        setDivisiOptions(divisiOpts);
+        })) : []);
 
-
-        if (!isEdit && user && Number(user.kategori_user_id) === 4 && user.divisi_id) {
-          setFormData(prev => ({ ...prev, divisi_id: user.divisi_id }));
-
-
-          const filteredAlat = rawAlat.filter(item => String(item.divisi_id) === String(user.divisi_id));
-          setNamaAlatOptions(filteredAlat.map(item => ({ value: item.id, label: item.nama_nama_alat })));
+        // Admin Divisi hanya boleh menambah inventaris untuk divisinya sendiri.
+        if (!isEdit && isAdminDivisi && userDivisiId) {
+          setFormData(prev => ({ ...prev, divisi_id: userDivisiId }));
         }
-
       } catch (error) {
-        console.error("Failed to load master data", error);
+        if (cancelled) return;
+        console.error('Gagal memuat data master', error);
         showToast('Gagal memuat data master', 'error');
       } finally {
-        if (!isEdit) setDataLoading(false);
+        if (!cancelled) setMasterLoaded(true);
       }
     };
 
-    if (user) {
-      fetchMasterData();
-    }
-  }, [user]);
+    fetchMasterData();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, isAdminDivisi, userDivisiId, showToast]);
 
+  // Data inventaris yang diedit.
   useEffect(() => {
-    if (!isEdit && user) {
+    if (!isEdit) return undefined;
 
-    }
-  }, [isEdit, user]);
+    let cancelled = false;
 
-  useEffect(() => {
-    if (isEdit) {
-      const fetchInventaris = async () => {
-        try {
-          const data = await InventarisApi.getById(id);
-          setFormData({
-            nama_alat_id: data.nama_alat?.id || '',
-            ruang_sekarang: data.ruangan_sekarang?.id_ruangan || data.ruangan?.id_ruangan || '',
-            kategori_alat_id: data.nama_alat?.kategori_alat_id || '',
-            ruangan_id: data.ruangan?.id_ruangan || '',
-            divisi_id: data.divisi?.id_divisi || data.nama_alat?.divisi?.id_divisi || '',
-            merk: data.merk || '',
-            model: data.model || '',
-            seri: data.seri || '',
-            daya: data.daya || '',
-            no_inventaris: data.no_inventaris || '',
-            harga: data.harga || '',
-            tahun_pengadaan: data.tahun_pengadaan || '',
-            gedung: data.gedung || '',
-            kondisi_alat: data.kondisi_alat || '',
-            kategori_alkes: data.kategori_alkes || '',
-            alat_kesehatan: !!data.alat_kesehatan,
-            interval_maintenance: data.interval_maintenance || '',
-            perlu_kalibrasi: !!(data.awal_kalibrasi || data.kadaluwarsa || data.file_sertifikat_url),
-            awal_kalibrasi: data.awal_kalibrasi || '',
-            kadaluwarsa: data.kadaluwarsa || '',
-            img_alat: null,
-            file_sertifikat: null,
-            file_sop: null
-          });
+    const fetchInventaris = async () => {
+      try {
+        const data = await InventarisApi.getById(id);
+        if (cancelled) return;
 
+        const ruangSekarang = data.ruangan_sekarang?.id_ruangan || data.ruangan?.id_ruangan || '';
+        setInitialRuangSekarang(ruangSekarang);
+        setFormData({
+          nama_alat_id: data.nama_alat?.id || '',
+          ruang_sekarang: ruangSekarang,
+          kategori_alat_id: data.nama_alat?.kategori_alat_id || '',
+          ruangan_id: data.ruangan?.id_ruangan || '',
+          divisi_id: data.divisi?.id_divisi || data.nama_alat?.divisi?.id_divisi || '',
+          merk: data.merk || '',
+          model: data.model || '',
+          seri: data.seri || '',
+          daya: data.daya || '',
+          no_inventaris: data.no_inventaris || '',
+          harga: data.harga ?? '',
+          tahun_pengadaan: data.tahun_pengadaan || '',
+          gedung: data.gedung || '',
+          kondisi_alat: data.kondisi_alat || '',
+          kategori_alkes: data.kategori_alkes || '',
+          alat_kesehatan: !!data.alat_kesehatan,
+          interval_maintenance: data.interval_maintenance ?? '',
+          perlu_kalibrasi: !!(data.awal_kalibrasi || data.kadaluwarsa || data.file_sertifikat_url),
+          awal_kalibrasi: data.awal_kalibrasi || '',
+          kadaluwarsa: data.kadaluwarsa || '',
+          img_alat: null,
+          file_sertifikat: null,
+          file_sop: null
+        });
 
-          if (data.img_alat_url) {
-            setPreviews(prev => ({ ...prev, img_alat: data.img_alat_url }));
-          }
-
-          setExistingFiles({
-            file_sertifikat: data.file_sertifikat_url,
-            file_sop: data.file_sop_url
-          });
-
-
-
-
-        } catch (error) {
-          console.error("Failed to fetch inventaris", error);
-          showToast('Gagal memuat data inventaris', 'error');
-        } finally {
-          setDataLoading(false);
+        if (data.img_alat_url) {
+          setPreviews(prev => ({ ...prev, img_alat: data.img_alat_url }));
         }
-      };
-      fetchInventaris();
-    }
-  }, [id, isEdit]);
+
+        setExistingFiles({
+          file_sertifikat: data.file_sertifikat_url,
+          file_sop: data.file_sop_url
+        });
+
+        setDetailLoaded(true);
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Gagal memuat data inventaris', error);
+        showToast('Gagal memuat data inventaris', 'error');
+        // Form kosong pada mode edit berbahaya (bisa menimpa data), jadi kembali ke daftar.
+        navigate(LIST_PATH, { replace: true });
+      }
+    };
+
+    fetchInventaris();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isEdit, navigate, showToast]);
+
+  // Opsi nama alat mengikuti divisi terpilih. Nama alat yang sedang terpilih selalu ikut
+  // ditampilkan supaya label tidak hilang pada data lama yang divisinya tidak cocok.
+  const namaAlatOptions = useMemo(() => {
+    const selectedId = String(formData.nama_alat_id);
+    return namaAlatData
+      .filter(item => (
+        !formData.divisi_id
+        || String(item.divisi_id) === String(formData.divisi_id)
+        || String(item.id) === selectedId
+      ))
+      .map(toNamaAlatOption);
+  }, [namaAlatData, formData.divisi_id, formData.nama_alat_id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -211,9 +252,7 @@ export default function InventarisForm() {
         setPreviews(prev => ({ ...prev, [name]: objectUrl }));
       }
     } else if (type === 'checkbox') {
-
       if (name === 'perlu_kalibrasi' && !checked) {
-
         setFormData(prev => ({
           ...prev,
           [name]: checked,
@@ -223,97 +262,117 @@ export default function InventarisForm() {
       } else {
         setFormData(prev => ({ ...prev, [name]: checked }));
       }
+    } else if (name === 'divisi_id') {
+      // Mengganti divisi mengosongkan nama alat; select nama alat terbuka lagi untuk dipilih ulang.
+      setFormData(prev => ({ ...prev, divisi_id: value, nama_alat_id: '', kategori_alat_id: '' }));
+    } else if (name === 'nama_alat_id') {
+      const selectedAlat = namaAlatData.find(item => String(item.id) === String(value));
+      setFormData(prev => ({
+        ...prev,
+        nama_alat_id: value,
+        kategori_alat_id: selectedAlat?.kategori_alat_id ?? ''
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
-
-
-      if (name === 'divisi_id') {
-
-        const filteredAlat = value
-          ? namaAlatData.filter(item => String(item.divisi_id) === String(value))
-          : namaAlatData;
-
-        setNamaAlatOptions(filteredAlat.map(item => ({ value: item.id, label: item.nama_nama_alat })));
-
-
-        setFormData(prev => ({ ...prev, [name]: value, nama_alat_id: '', kategori_alat_id: '' }));
-      }
-
-      else if (name === 'nama_alat_id') {
-        const selectedAlat = namaAlatData.find(item => String(item.id) === String(value));
-        if (selectedAlat && selectedAlat.kategori_alat_id) {
-          setFormData(prev => ({ ...prev, kategori_alat_id: selectedAlat.kategori_alat_id, [name]: value }));
-        }
-      }
     }
   };
 
-  const isSoftware = String(formData.kategori_alat_id) === '23';
+  const isSoftware = String(formData.kategori_alat_id) === KATEGORI_SOFTWARE_ID;
 
-
+  // Pratinjau nomor inventaris (hanya saat tambah data).
   useEffect(() => {
+    const hasRoom = formData.ruangan_id;
+    if (isEdit || !formData.nama_alat_id || !formData.tahun_pengadaan || !(isSoftware || hasRoom)) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
     const previewNoInventaris = async () => {
-      const hasRoom = formData.ruangan_id;
+      try {
+        const response = await InventarisApi.previewNoInventaris({
+          nama_alat_id: formData.nama_alat_id,
+          ruangan_id: isSoftware ? '' : formData.ruangan_id,
+          tahun_pengadaan: formData.tahun_pengadaan
+        });
 
-      if (formData.nama_alat_id && formData.tahun_pengadaan && !isEdit && (isSoftware || hasRoom)) {
-        try {
-          const payload = {
-            nama_alat_id: formData.nama_alat_id,
-            ruangan_id: formData.ruangan_id,
-            tahun_pengadaan: formData.tahun_pengadaan
-          };
-
-          const response = await InventarisApi.previewNoInventaris(payload);
-
-          if (response.status === 'success' && response.data.no_inventaris) {
-            setFormData(prev => ({ ...prev, no_inventaris: response.data.no_inventaris }));
-          }
-        } catch (error) {
-          console.error('Failed to preview no_inventaris:', error);
-          console.error('Error response:', error.response?.data);
+        if (!cancelled && response.status === 'success' && response.data.no_inventaris) {
+          setFormData(prev => ({ ...prev, no_inventaris: response.data.no_inventaris }));
         }
+      } catch (error) {
+        console.error('Gagal membuat pratinjau nomor inventaris', error);
       }
     };
 
     previewNoInventaris();
+
+    return () => {
+      cancelled = true;
+    };
   }, [formData.nama_alat_id, formData.ruangan_id, formData.tahun_pengadaan, isEdit, isSoftware]);
+
+  const buildPayload = () => {
+    const payload = new FormData();
+
+    Object.keys(formData).forEach(key => {
+      if (UI_ONLY_FIELDS.includes(key)) return;
+      // Software tidak punya ruangan fisik.
+      if (isSoftware && (key === 'ruangan_id' || key === 'ruang_sekarang')) return;
+
+      let value = formData[key];
+
+      if (value === null || value === undefined) return;
+
+      // Kategori alkes hanya berlaku bila alat termasuk alat kesehatan.
+      if (key === 'kategori_alkes' && !formData.alat_kesehatan) {
+        value = '';
+      }
+
+      if (value === '') {
+        // Mode edit: kirim string kosong agar kolom opsional benar-benar dikosongkan.
+        if (isEdit && CLEARABLE_FIELDS.includes(key)) {
+          payload.append(key, '');
+        }
+        return;
+      }
+
+      if (typeof value === 'boolean') {
+        payload.append(key, value ? '1' : '0');
+      } else {
+        payload.append(key, value);
+      }
+    });
+
+    return payload;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {
-
-      const payload = new FormData();
-      Object.keys(formData).forEach(key => {
-        const value = formData[key];
-
-
-        if (value === null || value === undefined) {
-          return;
-        }
-
-
-        if ((key === 'awal_kalibrasi' || key === 'kadaluwarsa') && value === '') {
-          payload.append(key, '');
-          return;
-        }
-
-
-        if (value === '') {
-          return;
-        }
-
-
-        if (typeof value === 'boolean') {
-          payload.append(key, value ? '1' : '0');
-        } else {
-          payload.append(key, value);
-        }
-      });
+      const payload = buildPayload();
 
       if (isEdit) {
         await InventarisApi.update(id, payload);
+
+        // Letak saat ini tidak ikut disimpan oleh endpoint ubah data, jadi dikirim terpisah.
+        const locationChanged = !isSoftware
+          && formData.ruang_sekarang
+          && String(formData.ruang_sekarang) !== String(initialRuangSekarang);
+        if (locationChanged) {
+          try {
+            await InventarisApi.updateLocation(id, formData.ruang_sekarang);
+          } catch (locationError) {
+            console.error('Gagal memperbarui letak saat ini', locationError);
+            showToast('Data diperbarui, tetapi letak saat ini gagal diperbarui', 'warning');
+            await refreshAllData();
+            navigate(LIST_PATH);
+            return;
+          }
+        }
+
         await refreshAllData();
         showToast('Data berhasil diperbarui', 'success');
       } else {
@@ -322,21 +381,18 @@ export default function InventarisForm() {
         showToast('Data berhasil ditambahkan', 'success');
       }
 
-      setTimeout(() => navigate('/inventaris/data'), 1500);
-
+      // Tombol Simpan sengaja tetap nonaktif; halaman langsung berpindah.
+      navigate(LIST_PATH);
     } catch (error) {
-      console.error('Submit error:', error);
-      console.error('Error response:', error.response?.data);
+      console.error('Gagal menyimpan inventaris', error);
       const msg = error.response?.data?.message || 'Gagal menyimpan data';
       const errors = error.response?.data?.errors;
       if (errors) {
-        console.error('Validation errors:', errors);
         const errorMessages = Object.values(errors).flat().join(', ');
         showToast(`${msg}: ${errorMessages}`, 'error');
       } else {
         showToast(msg, 'error');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -400,7 +456,7 @@ export default function InventarisForm() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/inventaris/data')} className="p-1.5">
+        <Button variant="ghost" size="sm" onClick={() => navigate(LIST_PATH)} className="p-1.5">
           <ArrowLeft size={20} />
         </Button>
         <div>
@@ -428,7 +484,7 @@ export default function InventarisForm() {
                 placeholder="Pilih Divisi"
                 searchPlaceholder="Cari divisi..."
                 required
-                disabled={Number(user?.kategori_user_id) === 4}
+                disabled={isAdminDivisi}
               />
               <SearchableSelect
                 label="Nama Alat (Master)"
@@ -440,7 +496,7 @@ export default function InventarisForm() {
                 placeholder="Pilih Nama Alat"
                 searchPlaceholder="Cari nama alat..."
                 required
-                disabled={isEdit || !formData.divisi_id}
+                disabled={!formData.divisi_id || (isEdit && !!formData.nama_alat_id)}
               />
 
               {!isSoftware && (
@@ -476,7 +532,7 @@ export default function InventarisForm() {
                 size="sm"
                 value={formData.no_inventaris}
                 onChange={handleChange}
-                placeholder="Auto-generated"
+                placeholder="Dibuat otomatis"
                 readOnly
                 disabled
                 className="bg-gray-50"
@@ -535,7 +591,7 @@ export default function InventarisForm() {
                 size="sm"
                 value={formData.tahun_pengadaan}
                 onChange={handleChange}
-                options={generateYearOptions()}
+                options={yearOptions}
                 placeholder="Pilih Tahun"
                 searchPlaceholder="Cari tahun..."
                 required
@@ -625,13 +681,15 @@ export default function InventarisForm() {
               />
 
               <Input
-                label="Interval Maintenance (Tahun)"
+                label="Interval Maintenance (kali/tahun)"
                 name="interval_maintenance"
                 type="number"
+                min="0"
+                step="1"
                 size="sm"
                 value={formData.interval_maintenance}
                 onChange={handleChange}
-                placeholder="Masukkan Interval Maintenance"
+                placeholder="Jumlah pemeliharaan per tahun (0 = tanpa jadwal)"
                 required
               />
 
@@ -670,7 +728,7 @@ export default function InventarisForm() {
               <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors">
                 {previews.img_alat ? (
                   <div className="relative group">
-                    <img src={previews.img_alat} alt="Preview" className="h-24 mx-auto object-contain mb-2 rounded" />
+                    <img src={previews.img_alat} alt="Pratinjau foto alat" className="h-24 mx-auto object-contain mb-2 rounded" />
                     <button 
                       type="button" 
                       onClick={(e) => {
@@ -690,14 +748,14 @@ export default function InventarisForm() {
                   <div>
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <div className="relative hover:shadow-sm transition-shadow">
-                        <input type="file" name="img_alat" id="img_alat" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept="image/*" />
+                        <input type="file" name="img_alat" id="img_alat" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept=".jpg,.jpeg,.png" />
                         <div className="border border-gray-200 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-full pointer-events-none">
                           <Upload className="h-6 w-6 text-brand-primary/60 mb-1" />
                           <span className="text-xs font-bold text-brand-primary">Dari Galeri</span>
                         </div>
                       </div>
                       <div className="relative hover:shadow-sm transition-shadow">
-                        <input type="file" name="img_alat" id="img_alat_cam" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept="image/*" capture="environment" />
+                        <input type="file" name="img_alat" id="img_alat_cam" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleChange} accept=".jpg,.jpeg,.png" capture="environment" />
                         <div className="border border-gray-200 rounded-lg p-2 bg-white flex flex-col items-center justify-center h-full pointer-events-none">
                           <svg className="h-6 w-6 text-brand-primary/60 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                           <span className="text-xs font-bold text-brand-primary">Kamera</span>
@@ -705,7 +763,7 @@ export default function InventarisForm() {
                       </div>
                     </div>
                     <span className="font-bold text-sm text-gray-600 block mb-1">Foto Alat</span>
-                    <p className="text-[10px] text-gray-400">.jpg, .png (Max 2MB)</p>
+                    <p className="text-[10px] text-gray-400">.jpg, .png (Maks 10MB)</p>
                   </div>
                 )}
               </div>
@@ -716,7 +774,7 @@ export default function InventarisForm() {
                   <label htmlFor="file_sertifikat" className="cursor-pointer block">
                     <FileText className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                     <span className="font-bold text-sm text-brand-primary">Upload Sertifikat</span>
-                    <p className="text-[10px] text-gray-400 mt-1">.pdf (Max 5MB)</p>
+                    <p className="text-[10px] text-gray-400 mt-1">.pdf (Maks 5MB)</p>
 
                     {/* Show new file name */}
                     {formData.file_sertifikat && (
@@ -749,7 +807,7 @@ export default function InventarisForm() {
                 <label htmlFor="file_sop" className="cursor-pointer block">
                   <FileText className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                   <span className="font-bold text-sm text-brand-primary">Upload Manual Book / SOP</span>
-                  <p className="text-[10px] text-gray-400 mt-1">.pdf (Max 5MB)</p>
+                  <p className="text-[10px] text-gray-400 mt-1">.pdf (Maks 5MB)</p>
 
                   {/* Show new file name */}
                   {formData.file_sop && (
@@ -779,7 +837,7 @@ export default function InventarisForm() {
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/inventaris/data')} type="button">
+            <Button variant="ghost" size="sm" onClick={() => navigate(LIST_PATH)} type="button">
               Batal
             </Button>
             <Button variant="primary" size="sm" type="submit" loading={loading} className="px-6 shadow-xl shadow-brand-primary/20">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useToast, useCreateAduan, useInventarisDetail } from '../../../../hooks';
 import ImageUploadPreview from './ImageUploadPreview';
@@ -30,6 +30,7 @@ export default function AduanForm({ scannedInventarisId }) {
   const [namaDivisi, setNamaDivisi] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appliedScannedId, setAppliedScannedId] = useState(null);
 
 
   const handleInventarisChange = React.useCallback((selected) => {
@@ -60,25 +61,19 @@ export default function AduanForm({ scannedInventarisId }) {
   }, []);
 
 
-  useEffect(() => {
-    const inventarisData = scannedInventaris;
-
-    if (inventarisData && inventarisData.id) {
-
-      const formattedData = {
-        id_inventaris: inventarisData.id,
-        id_nama_alat: inventarisData.nama_alat?.id || inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
-        no_inventaris: inventarisData.no_inventaris,
-        divisi_id: inventarisData.divisi?.id_divisi || inventarisData.nama_alat?.divisi?.id_divisi || inventarisData.divisi_id,
-        nama_alat: inventarisData.nama_alat?.nama_nama_alat || '',
-        merk: inventarisData.merk || '',
-        nama_divisi: inventarisData.divisi?.nama_divisi || inventarisData.nama_alat?.divisi?.nama_divisi || '',
-      };
-
-
-      handleInventarisChange(formattedData);
-    }
-  }, [scannedInventaris, handleInventarisChange]);
+  // Alat hasil scan diterapkan satu kali ketika datanya selesai dimuat.
+  if (scannedInventaris?.id && appliedScannedId !== scannedInventaris.id) {
+    setAppliedScannedId(scannedInventaris.id);
+    handleInventarisChange({
+      id_inventaris: scannedInventaris.id,
+      id_nama_alat: scannedInventaris.nama_alat?.id || scannedInventaris.nama_alat?.id_nama_alat || scannedInventaris.id_nama_alat,
+      no_inventaris: scannedInventaris.no_inventaris,
+      divisi_id: scannedInventaris.divisi?.id_divisi ?? scannedInventaris.nama_alat?.divisi?.id_divisi ?? scannedInventaris.nama_alat?.divisi_id ?? scannedInventaris.divisi_id,
+      nama_alat: scannedInventaris.nama_alat?.nama_nama_alat || '',
+      merk: scannedInventaris.merk || '',
+      nama_divisi: scannedInventaris.divisi?.nama_divisi || scannedInventaris.nama_alat?.divisi?.nama_divisi || '',
+    });
+  }
 
   const validateForm = () => {
     const newErrors = {};
@@ -255,16 +250,15 @@ export default function AduanForm({ scannedInventarisId }) {
       {/* Image Upload */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
-          Upload Gambar <span className="text-gray-400 font-normal">(Opsional)</span>
+          Unggah Gambar <span className="text-gray-400 font-normal">(Opsional)</span>
         </label>
         <ImageUploadPreview
-          value={selectedImage}
           onChange={setSelectedImage}
           error={errors.img_keluhan}
         />
       </div>
 
-      {/* Nama Pengadu */}
+      {/* Nama Pelapor */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
           Nama Pelapor <span className="text-gray-400 font-normal">(Opsional)</span>

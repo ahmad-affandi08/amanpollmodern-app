@@ -3,44 +3,51 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { Loader2, CheckCircle, XCircle, ShieldCheck, Lock } from 'lucide-react';
 import Logo3d from '../../assets/img/icon-logo-3d-amanpoll.png';
+import usePageTitle from '../../hooks/utils/usePageTitle';
 
 const MaintenanceBypass = () => {
+  usePageTitle('Verifikasi Akses');
   const { token } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying');
-  const [message, setMessage] = useState('Verifying bypass token...');
+  const [result, setResult] = useState({ status: 'verifying', message: '' });
+
+  // Tanpa token di URL, langsung dianggap gagal (tanpa memanggil server).
+  const status = token ? result.status : 'error';
+  const message = token ? result.message : 'Token tidak ditemukan.';
 
   useEffect(() => {
-    const verifyToken = async () => {
-      if (!token) {
-        setStatus('error');
-        setMessage('No token provided.');
-        return;
-      }
+    if (!token) return undefined;
 
-      try {
-        await axiosClient.post('/system/bypass', { secret: token });
-        setStatus('success');
-        setMessage('Access granted! Redirecting to dashboard...');
+    let cancelled = false;
 
+    axiosClient.post('/system/bypass', { secret: token })
+      .then(() => {
+        if (cancelled) return;
+        setResult({ status: 'success', message: 'Akses diberikan! Mengalihkan ke dashboard...' });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        // Pesan server berbahasa Inggris, jadi dipetakan ke teks Indonesia berdasarkan status.
+        const httpStatus = error.response?.status;
+        let errorMessage = 'Gagal memverifikasi token bypass.';
+        if (httpStatus === 401) errorMessage = 'Token bypass tidak valid atau sudah kedaluwarsa.';
+        if (httpStatus === 400) errorMessage = 'Mode maintenance sedang tidak aktif.';
+        setResult({ status: 'error', message: errorMessage });
+      });
 
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
+    return () => { cancelled = true; };
+  }, [token]);
 
-      } catch (error) {
-        setStatus('error');
-        setMessage(error.response?.data?.message || 'Invalid or expired bypass token.');
-
-
-        setTimeout(() => {
-          navigate('/maintenance');
-        }, 3000);
-      }
-    };
-
-    verifyToken();
-  }, [token, navigate]);
+  // Pengalihan setelah hasil verifikasi; timer dibatalkan bila halaman ditinggalkan.
+  useEffect(() => {
+    let timer;
+    if (status === 'success') {
+      timer = setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+    } else if (status === 'error') {
+      timer = setTimeout(() => navigate('/maintenance'), 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [status, navigate]);
 
   return (
     <div className="min-h-screen bg-bg-light flex flex-col items-center justify-center p-6 relative overflow-hidden font-[Plus_Jakarta_Sans]">
@@ -59,7 +66,7 @@ const MaintenanceBypass = () => {
             <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full animate-pulse"></div>
             <img
               src={Logo3d}
-              alt="Logo"
+              alt="Logo AmanPoll"
               className="w-full h-full object-contain relative z-10 animate-float drop-shadow-lg"
             />
           </div>
@@ -71,8 +78,8 @@ const MaintenanceBypass = () => {
                   <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg animate-pulse"></div>
                   <Loader2 className="w-12 h-12 text-blue-600 animate-spin relative z-10" />
                 </div>
-                <h2 className="text-2xl font-bold text-text-dark mb-2">Verifying Access</h2>
-                <p className="text-gray-500 font-medium">Please wait while we check your credentials...</p>
+                <h2 className="text-2xl font-bold text-text-dark mb-2">Memverifikasi Akses</h2>
+                <p className="text-gray-500 font-medium">Mohon tunggu, kami sedang memeriksa token Anda...</p>
               </div>
             )}
 
@@ -82,7 +89,7 @@ const MaintenanceBypass = () => {
                   <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
                   <CheckCircle className="w-12 h-12 text-green-500 relative z-10 scale-110" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Granted</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Akses Diberikan</h2>
                 <p className="text-green-600 font-medium bg-green-50 px-4 py-2 rounded-xl text-sm">
                   {message}
                 </p>
@@ -95,20 +102,20 @@ const MaintenanceBypass = () => {
                   <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
                   <XCircle className="w-12 h-12 text-red-500 relative z-10" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Akses Ditolak</h2>
                 <p className="text-red-600 font-medium bg-red-50 px-4 py-2 rounded-xl text-sm mb-4">
                   {message}
                 </p>
-                <div className="text-xs text-gray-400">Redirecting to maintenance page...</div>
+                <div className="text-xs text-gray-400">Mengalihkan ke halaman maintenance...</div>
               </div>
             )}
           </div>
 
-          {/* Token Hash Display (Optional visual fluff) */}
+          {/* Token disamarkan agar tidak terbaca orang lain di layar */}
           <div className="mt-8 pt-6 border-t border-gray-100">
             <div className="flex items-center justify-center gap-2 text-xs text-gray-400 font-mono bg-gray-50 py-2 rounded-lg">
               <Lock size={12} />
-              <span className="truncate max-w-[200px]">{token || 'NO_TOKEN_PROVIDED'}</span>
+              <span className="truncate max-w-[200px]">{token ? '•'.repeat(Math.min(token.length, 16)) : 'TOKEN_TIDAK_ADA'}</span>
             </div>
           </div>
         </div>

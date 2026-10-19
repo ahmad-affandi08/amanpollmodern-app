@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, User, Calendar, AlertCircle, Wrench, CheckCircle, Clock,
+  ArrowLeft, User, Calendar, AlertCircle, Wrench, CheckCircle,
   FileText, MapPin, Building2, DollarSign, History, Package
 } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { useAduanDetail } from '../../../hooks/queries/useAduanQueries';
-import { formatDateTime, formatDate } from '../../../utils/format';
+import { usePageTitle, useAduanDetail } from '../../../hooks';
+import { apiUrl } from '../../../config';
+import { formatDateTime, formatDate, rupiah } from '../../../utils/format';
+import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
@@ -19,37 +20,6 @@ export default function MobileAduanDetail() {
   const [previewAlt, setPreviewAlt] = useState('');
 
   const { data: aduan, isLoading } = useAduanDetail(id);
-
-
-  const formatRupiah = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount || 0);
-  };
-
-
-  const StatusBadge = ({ status }) => {
-    const statusConfig = {
-      'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
-      'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-700', icon: Wrench },
-      'Selesai': { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
-      'Tindakan Lanjutan': { bg: 'bg-orange-100', text: 'text-orange-700', icon: AlertCircle }
-    };
-    const config = statusConfig[status] || statusConfig['Pending'];
-    const Icon = config.icon;
-
-    return (
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${config.bg} ${config.text} text-xs font-bold`}>
-        <Icon size={14} />
-        {status}
-      </div>
-    );
-  };
-
-
-
 
   if (isLoading) {
     return (
@@ -115,7 +85,7 @@ export default function MobileAduanDetail() {
             onError={(e) => { e.target.src = noImage; }}
           />
           <div className="absolute top-3 right-3">
-            <StatusBadge status={aduan.status_aduan} />
+            <StatusBadge status={aduan.status_aduan} size="lg" />
           </div>
         </div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">{aduan.nama_alat_nama}</h2>
@@ -130,7 +100,7 @@ export default function MobileAduanDetail() {
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
           <User size={16} className="mx-auto text-indigo-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Pengadu</p>
+          <p className="text-[10px] text-gray-500 mb-0.5">Pelapor</p>
           <p className="text-xs font-bold text-gray-800 line-clamp-1">{aduan.nama_pengadu || '-'}</p>
         </div>
         <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
@@ -190,7 +160,7 @@ export default function MobileAduanDetail() {
 
               {aduan.history[0].tindakan_teknisi && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Petugas</p>
+                  <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Teknisi</p>
                   <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-100">{aduan.history[0].tindakan_teknisi}</p>
                 </div>
               )}
@@ -234,11 +204,11 @@ export default function MobileAduanDetail() {
 
                   {aduan.history[0].ttd_kepala_ruang && (
                     <SignatureCard
-                      label="TTD Pengadu"
+                      label="TTD Kepala Ruangan"
                       image={aduan.history[0].ttd_kepala_ruang}
                       onPreview={() => {
                         setPreviewImage(aduan.history[0].ttd_kepala_ruang);
-                        setPreviewAlt(`TTD Pengadu - ${aduan.history[0].status_aduan}`);
+                        setPreviewAlt(`TTD Kepala Ruangan - ${aduan.history[0].status_aduan}`);
                       }}
                     />
                   )}
@@ -258,7 +228,7 @@ export default function MobileAduanDetail() {
               </div>
 
               <div>
-                <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Perbaikan</p>
+                <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Teknisi</p>
                 <p className="text-sm text-gray-700 bg-green-50 p-3 rounded-lg border border-green-100">{aduan.tindakan_teknisi}</p>
               </div>
 
@@ -285,12 +255,12 @@ export default function MobileAduanDetail() {
                 )}
               </div>
 
-              {aduan.biaya && parseFloat(aduan.biaya) > 0 && (
+              {parseFloat(aduan.biaya) > 0 && (
                 <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
                   <DollarSign size={16} className="text-blue-600" />
                   <div>
                     <p className="text-xs text-blue-600 font-medium">Biaya Perbaikan</p>
-                    <p className="text-sm font-bold text-blue-700">{formatRupiah(aduan.biaya)}</p>
+                    <p className="text-sm font-bold text-blue-700">{rupiah(aduan.biaya)}</p>
                   </div>
                 </div>
               )}
@@ -312,12 +282,12 @@ export default function MobileAduanDetail() {
 
                   {aduan.ttd_kepala_ruang && (
                     <SignatureCard
-                      label="TTD Pengadu"
+                      label="TTD Kepala Ruangan"
                       name={aduan.nama_pengadu}
                       image={aduan.ttd_kepala_ruang}
                       onPreview={() => {
                         setPreviewImage(aduan.ttd_kepala_ruang);
-                        setPreviewAlt('TTD Pengadu - Penyelesaian');
+                        setPreviewAlt('TTD Kepala Ruangan - Penyelesaian');
                       }}
                     />
                   )}
@@ -332,13 +302,13 @@ export default function MobileAduanDetail() {
       {aduan.status_aduan === 'Selesai' && (
         <div className="mt-4">
           <a
-            href={`/api/report/aduan/export/${aduan.id_aduan}`}
+            href={apiUrl(`/report/aduan/export/${aduan.id_aduan}`)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3.5 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg"
           >
             <FileText size={20} />
-            Download Hasil Aduan
+            Export PDF
           </a>
         </div>
       )}

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2, Calendar } from 'lucide-react';
 import KondisiBadge from '../../../components/KondisiBadge';
+import StatusBadge from '../../../components/StatusBadge';
 import {
   usePemeliharaan,
   useDeletePemeliharaan,
   useMasterRuangan,
-  useMasterUsers,
   useAuth,
+  useToast,
   usePagination,
   useFilters,
   useDebounce,
@@ -22,7 +23,9 @@ import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import AddPemeliharaanModal from './AddPemeliharaanModal';
 import EditPemeliharaanModal from './EditPemeliharaanModal';
-import { useToast } from '../../../components/Alert/useToast';
+import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
+import { formatDateShort } from '../../../utils/format';
+import useTeknisiList from './useTeknisiList';
 
 
 const COLUMN_DEFS = [
@@ -45,10 +48,21 @@ export default function PemeliharaanList() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = user?.kategori_user_id == ROLE_ADMIN_DIVISI;
-  const userDivisiId = user?.divisi_id;
+  const isSuperAdmin = isRole(user, ROLES.SUPER_ADMIN);
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
+  // Pimpinan hanya boleh melihat: tanpa tambah, ubah, dan hapus.
+  const canWrite = !isReadOnlyRole(user);
 
+  // Sama dengan laporan pemeliharaan: Super Admin boleh menghapus semua,
+  // Admin Divisi tidak boleh menghapus pemeliharaan yang sudah selesai.
+  const canDelete = (item) => {
+    if (isSuperAdmin) return true;
+    if (isAdminDivisi) return item.status !== 'Selesai';
+    return false;
+  };
+
+  // Jadwal/teknisi pemeliharaan yang sudah selesai tidak dapat diubah lagi.
+  const canEdit = (item) => canWrite && item.status !== 'Selesai';
 
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
     COLUMN_DEFS,
@@ -68,7 +82,7 @@ export default function PemeliharaanList() {
   const addModal = useModal();
   const editModal = useModal();
 
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const { data: pemeliharaanData, isLoading, refetch } = usePemeliharaan({
     ...filters,
@@ -79,60 +93,31 @@ export default function PemeliharaanList() {
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
 
-  // 2. Filter API
-  const userQueryFilters = {
-    per_page: 500,
-    category: 'teknisi' // Tambahkan filter kategori agar payload lebih kecil dan spesifik
-  };
-
-  if (isAdminDivisi && userDivisiId) {
-    userQueryFilters.divisi_id = userDivisiId;
-  }
-
-  const { data: usersData } = useMasterUsers(userQueryFilters);
+  const teknisiList = useTeknisiList();
 
   const deleteMutation = useDeletePemeliharaan();
 
   const data = pemeliharaanData?.data || [];
   const meta = pemeliharaanData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
     if (meta) {
-      pagination.setMetadata(meta);
+      setMetadata(meta);
     }
-  }, [meta]);
+  }, [meta, setMetadata]);
 
   const ruanganOptions = (ruanganData?.data || []);
-  let teknisi = (usersData?.data || []).filter(u => {
-    const role = (u.role || '').toLowerCase();
-    return role === 'teknisi';
-  });
 
-  // Double Safety: Filter client-side juga jika user admin divisi,
-  // untuk berjaga-jaga jika API mengembalikan data teknisi divisi lain
-  if (isAdminDivisi && userDivisiId) {
-    // Pastikan perbandingan ID divisi aman (loose equality)
-    teknisi = teknisi.filter(u => u.divisi_id == userDivisiId);
-  }
-
-  const teknisiOptions = teknisi;
-
-  const handleDelete = (id) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Konfirmasi Hapus',
-      message: 'Apakah Anda yakin ingin menghapus pemeliharaan ini?',
-      onConfirm: async () => {
-        try {
-          await deleteMutation.mutateAsync(id);
-          showToast('Pemeliharaan berhasil dihapus', 'success');
-          setConfirmDialog({ isOpen: false });
-        } catch (error) {
-          showToast('Gagal menghapus pemeliharaan', 'error');
-        }
-      },
-      onCancel: () => setConfirmDialog({ isOpen: false })
-    });
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id_pemeliharaan);
+      showToast('Pemeliharaan berhasil dihapus', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Gagal menghapus pemeliharaan', 'error');
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const handleFilterChange = (key, value) => {
@@ -140,22 +125,13 @@ export default function PemeliharaanList() {
     pagination.reset();
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      'Belum Selesai': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-      'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-800' },
-      'Tindakan Lanjutan': { bg: 'bg-purple-100', text: 'text-purple-800' },
-      'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
-    };
-
-    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
-        {status}
-      </span>
-    );
+  const handleResetFilters = () => {
+    resetFilters();
+    pagination.reset();
   };
+
+  // Jumlah kolom yang tampil, dipakai untuk colSpan skeleton dan keadaan kosong.
+  const visibleColumnCount = Math.max(1, COLUMN_DEFS.filter(col => isVisible(col.key)).length);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -164,14 +140,16 @@ export default function PemeliharaanList() {
           <h1 className="text-xl font-bold text-text-dark">Daftar Pemeliharaan</h1>
           <p className="text-text-gray text-xs mt-1">Kelola jadwal pemeliharaan berkala</p>
         </div>
-        <Button
-          onClick={addModal.open}
-          size="md"
-          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Pemeliharaan
-        </Button>
+        {canWrite && (
+          <Button
+            onClick={() => addModal.open()}
+            size="md"
+            className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Pemeliharaan
+          </Button>
+        )}
       </div>
 
       <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
@@ -210,7 +188,7 @@ export default function PemeliharaanList() {
               onChange={(e) => handleFilterChange('teknisi_id', e.target.value)}
               options={[
                 { label: 'Semua Teknisi', value: '' },
-                ...teknisiOptions.map(t => ({ label: t.nama_lengkap, value: t.id_user }))
+                ...teknisiList.map(t => ({ label: t.nama_lengkap, value: t.id_user }))
               ]}
               placeholder="Semua Teknisi"
               searchPlaceholder="Cari teknisi..."
@@ -244,7 +222,7 @@ export default function PemeliharaanList() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={resetFilters}
+                onClick={handleResetFilters}
                 className="w-full border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
               >
                 Reset Filter
@@ -281,10 +259,10 @@ export default function PemeliharaanList() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
               {isLoading ? (
-                <TableSkeleton columns={11} rows={10} />
+                <TableSkeleton columns={visibleColumnCount} rows={10} />
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="py-12 text-center">
+                  <td colSpan={visibleColumnCount} className="py-12 text-center">
                     <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="font-bold text-gray-600">Tidak ada data pemeliharaan</p>
                     <p className="text-sm text-gray-400 mt-1">Belum ada jadwal pemeliharaan</p>
@@ -334,9 +312,7 @@ export default function PemeliharaanList() {
                     )}
                     {isVisible('tanggal_jadwal') && (
                       <td className="py-3 px-4 text-text-dark font-medium text-xs">
-                        {item.jadwal_pemeliharaan ? new Date(item.jadwal_pemeliharaan).toLocaleDateString('id-ID', {
-                          day: '2-digit', month: '2-digit', year: 'numeric'
-                        }) : '-'}
+                        {formatDateShort(item.jadwal_pemeliharaan)}
                       </td>
                     )}
                     {isVisible('teknisi') && (
@@ -350,7 +326,7 @@ export default function PemeliharaanList() {
                     )}
                     {isVisible('status') && (
                       <td className="py-3 px-4">
-                        {getStatusBadge(item.status)}
+                        <StatusBadge status={item.status} />
                       </td>
                     )}
                     {isVisible('kondisi_alat') && (
@@ -363,21 +339,25 @@ export default function PemeliharaanList() {
                     {isVisible('actions') && (
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => editModal.open(item)}
-                            className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                            title="Edit"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id_pemeliharaan)}
-                            disabled={deleteMutation.isPending}
-                            className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                            title="Hapus"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {canEdit(item) && (
+                            <button
+                              onClick={() => editModal.open(item)}
+                              className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+                              title="Edit"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                          )}
+                          {canDelete(item) && (
+                            <button
+                              onClick={() => setDeleteTarget(item)}
+                              disabled={deleteMutation.isPending}
+                              className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+                              title="Hapus"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -389,15 +369,13 @@ export default function PemeliharaanList() {
         </div>
 
         <div className="mt-6">
-          {pagination.totalPages > 1 && (
-            <Pagination
-              size="sm"
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-              totalData={pagination.totalItems}
-            />
-          )}
+          <Pagination
+            size="sm"
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalData={pagination.totalItems}
+          />
         </div>
       </div>
 
@@ -414,16 +392,15 @@ export default function PemeliharaanList() {
         onSuccess={refetch}
       />
 
-      {confirmDialog.isOpen && (
-        <ConfirmDialog
-          isOpen={confirmDialog.isOpen}
-          title={confirmDialog.title}
-          message={confirmDialog.message}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={confirmDialog.onCancel}
-          type="danger"
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Hapus Pemeliharaan"
+        message={`Apakah Anda yakin ingin menghapus pemeliharaan ${deleteTarget?.no_pemeliharaan || 'ini'}?`}
+        type="danger"
+        confirmText="Ya, Hapus"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

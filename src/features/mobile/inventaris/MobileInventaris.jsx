@@ -1,45 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Package } from 'lucide-react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import InventarisApi from '../../../api/InventarisApi';
+import { queryKeys } from '../../../lib/queryKeys';
+import { useDebounce, useToast, usePageTitle } from '../../../hooks';
+import { toInputDate } from '../../../utils/format';
 import InventarisFilters from './components/InventarisFilters';
 import InventarisCard from './components/InventarisCard';
+import useInfiniteScroll from '../useInfiniteScroll';
+
+const PER_PAGE = 10;
+
+// Buang filter kosong supaya tidak ikut terkirim ke server.
+const cleanParams = (params) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+  );
 
 export default function MobileInventaris() {
+  usePageTitle('Inventaris');
+  const { showToast } = useToast();
   const [filters, setFilters] = useState({
     kondisi_alat: '',
     nama_alat: '',
     search: ''
   });
 
+  // Pencarian ditunda sebentar agar tidak memanggil server di setiap ketukan.
+  const search = useDebounce(filters.search.trim(), 400);
+  const queryFilters = cleanParams({ ...filters, search });
 
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetching,
+    isPlaceholderData,
     isLoading,
     isError,
-    error
+    error,
+    refetch,
   } = useInfiniteQuery({
-    queryKey: ['inventaris-mobile', filters],
-    queryFn: async ({ pageParam = 1 }) => {
-      const params = {
-        ...filters,
-        page: pageParam,
-        limit: 5
-      };
-
-
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
-          delete params[key];
-        }
-      });
-
-      const response = await InventarisApi.getAll(params);
-      return response;
-    },
+    // Berawalan ['inventaris', 'list'] supaya ikut disegarkan saat data inventaris berubah.
+    queryKey: [...queryKeys.inventaris.lists(), 'infinite', queryFilters],
+    initialPageParam: 1,
+    placeholderData: keepPreviousData,
+    queryFn: ({ pageParam }) =>
+      InventarisApi.getAll({ ...queryFilters, page: pageParam, per_page: PER_PAGE }),
     getNextPageParam: (lastPage) => {
       if (!lastPage.meta) return undefined;
       const { current_page, last_page } = lastPage.meta;
@@ -48,77 +56,39 @@ export default function MobileInventaris() {
     staleTime: 2 * 60 * 1000,
   });
 
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
-        if (hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
+  useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage: isFetchingNextPage || isPlaceholderData,
+    fetchNextPage,
+  });
 
   const inventarisList = data?.pages.flatMap(page => page.data || []) || [];
+  const isRefreshing = isFetching && !isFetchingNextPage && !isLoading;
+  const hasActiveFilter = !!(filters.kondisi_alat || filters.nama_alat);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
 
-
-  const handleExportCSV = async () => {
+  const handleExport = async () => {
     try {
+      const { blob, filename } = await InventarisApi.exportExcelFile(
+        cleanParams({ ...filters, search: filters.search.trim() })
+      );
 
-      const params = new URLSearchParams();
-
-      if (filters.kondisi_alat) params.append('kondisi_alat', filters.kondisi_alat);
-      if (filters.nama_alat) params.append('nama_alat', filters.nama_alat);
-
-
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      const token = localStorage.getItem('auth_token');
-
-
-      const response = await fetch(`${apiUrl}/inventaris/export?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.ms-excel',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Export failed');
-      }
-
-
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'inventaris_export.xls';
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
-
-
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename;
+      link.download = filename || `Inventaris_${toInputDate()}.xls`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export error:', error);
-      alert('Gagal export data. Silakan coba lagi.');
+
+      showToast('Export berhasil', 'success');
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('Gagal export data. Silakan coba lagi.', 'error');
     }
   };
 
@@ -141,7 +111,7 @@ export default function MobileInventaris() {
       <InventarisFilters
         filters={filters}
         onFilterChange={handleFilterChange}
-        onExport={handleExportCSV}
+        onExport={handleExport}
       />
 
       {/* Loading State */}
@@ -174,19 +144,26 @@ export default function MobileInventaris() {
       {/* Error State */}
       {isError && (
         <div className="bg-red-50 border border-red-200 rounded-[16px] p-4 text-center">
-          <p className="text-danger-700 text-sm font-medium">
+          <p className="text-danger-700 text-sm font-medium mb-3">
             {error?.response?.data?.message || 'Gagal memuat data inventaris'}
           </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+          >
+            Coba Lagi
+          </button>
         </div>
       )}
 
       {/* Inventaris List */}
       {!isLoading && !isError && (
-        <div className="space-y-3">
+        <div className={`space-y-3 transition-opacity ${isRefreshing ? 'opacity-60' : ''}`}>
           {inventarisList.length > 0 ? (
             <>
               {inventarisList.map((item) => (
-                <InventarisCard key={item.id_inventaris} item={item} />
+                <InventarisCard key={item.id} item={item} />
               ))}
 
               {/* Loading More Indicator */}
@@ -213,11 +190,13 @@ export default function MobileInventaris() {
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                 <Package size={40} className="text-gray-400" />
               </div>
-              <h3 className="text-lg font-bhover:text-brand-primary mb-2">Tidak Ada Data</h3>
+              <h3 className="text-lg font-bold text-text-dark mb-2">Tidak Ada Data</h3>
               <p className="text-sm text-gray-500">
-                {filters.kondisi_alat || filters.nama_alat
-                  ? 'Tidak ada inventaris yang sesuai dengan filter'
-                  : 'Belum ada data inventaris'}
+                {search
+                  ? `Tidak ada hasil untuk "${search}"`
+                  : hasActiveFilter
+                    ? 'Tidak ada inventaris yang sesuai dengan filter'
+                    : 'Belum ada data inventaris'}
               </p>
             </div>
           )}

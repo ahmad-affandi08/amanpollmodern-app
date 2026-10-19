@@ -28,7 +28,7 @@ export default function MasterDivisi() {
   const modal = useModal();
   const [formData, setFormData] = useState({ nama_divisi: '' });
 
-  const { confirm, dialogProps } = useConfirmAction();
+  const { askConfirm, dialogProps } = useConfirmAction();
 
   const { data: divisiData, isLoading } = useMasterDivisi({
     page: pagination.currentPage,
@@ -76,7 +76,7 @@ export default function MasterDivisi() {
   };
 
   const handleDelete = (item) => {
-    confirm({
+    askConfirm({
       title: 'Hapus Divisi',
       message: `Apakah Anda yakin ingin menghapus divisi "${item.nama_divisi}"? Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Ya, Hapus',

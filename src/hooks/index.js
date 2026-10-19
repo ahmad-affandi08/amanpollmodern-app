@@ -9,6 +9,7 @@ export * from './queries/useReportQueries';
 export * from './queries/useKonfigurasiQueries';
 export * from './queries/useProfileQueries';
 export * from './queries/useAlatBaruQueries';
+export * from './queries/useAnalisisQueries';
 
 
 export * from './mutations/useDisposisiMutations';

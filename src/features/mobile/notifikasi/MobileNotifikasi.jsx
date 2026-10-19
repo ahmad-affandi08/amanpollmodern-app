@@ -1,69 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, BellOff, Loader2, CheckCheck, Trash2 } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { useNotifications, useUnreadCount, useMarkAllAsRead, useDeleteAllNotifications } from '../../../hooks';
-import { useToast } from '../../../components/Alert/useToast';
+import { Bell, BellOff, CheckCheck, Trash2 } from 'lucide-react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import NotificationApi from '../../../api/NotificationApi';
+import { queryKeys } from '../../../lib/queryKeys';
+import {
+  usePageTitle,
+  useToast,
+  useUnreadCount,
+  useMarkAllAsRead,
+  useDeleteAllNotifications,
+} from '../../../hooks';
 import ConfirmDialog from '../../../components/Alert/Alert';
+import useInfiniteScroll from '../useInfiniteScroll';
+
+const PER_PAGE = 20;
 
 export default function MobileNotifikasi() {
   usePageTitle('Notifikasi');
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [allNotifications, setAllNotifications] = useState([]);
   const [showMarkAllDialog, setShowMarkAllDialog] = useState(false);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const { showToast } = useToast();
 
-  const { data, isLoading, error } = useNotifications(page, 20);
+  // Daftar langsung dari cache react-query (berawalan 'notifications'), sehingga tandai-dibaca
+  // dan hapus otomatis memperbarui daftar tanpa menyalin data ke state lokal.
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: [...queryKeys.notifications.all, 'infinite', PER_PAGE],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const res = await NotificationApi.getAll({ page: pageParam, per_page: PER_PAGE });
+      return {
+        data: Array.isArray(res.data?.data) ? res.data.data : [],
+        meta: res.data?.meta,
+      };
+    },
+    getNextPageParam: (lastPage) => {
+      const { current_page, last_page } = lastPage.meta || {};
+      return current_page && last_page && current_page < last_page ? current_page + 1 : undefined;
+    },
+  });
+
   const { data: unreadCount } = useUnreadCount();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteAllMutation = useDeleteAllNotifications();
 
+  useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
-  useEffect(() => {
-    if (data?.data) {
-      setAllNotifications(prev => {
-
-        const existingIds = new Set(prev.map(n => n.id_notifikasi));
-        const newItems = data.data.filter(n => !existingIds.has(n.id_notifikasi));
-        return [...prev, ...newItems];
-      });
-    }
-  }, [data]);
-
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-
-
-      if (scrollTop + clientHeight >= scrollHeight - 100 && !isLoading && data?.meta) {
-        const { current_page, last_page } = data.meta;
-        if (current_page < last_page) {
-          setPage(prev => prev + 1);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoading, data?.meta]);
-
-
-  const notifikasiList = allNotifications;
+  const notifikasiList = data?.pages.flatMap(page => page.data) || [];
+  const total = data?.pages[data.pages.length - 1]?.meta?.total ?? notifikasiList.length;
 
   const handleMarkAllRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
       showToast('Semua notifikasi ditandai sudah dibaca', 'success');
       setShowMarkAllDialog(false);
-
-      setAllNotifications([]);
-      setPage(1);
-    } catch (error) {
+    } catch {
       showToast('Gagal menandai notifikasi', 'error');
     }
   };
@@ -73,22 +73,10 @@ export default function MobileNotifikasi() {
       await deleteAllMutation.mutateAsync();
       showToast('Semua notifikasi berhasil dihapus', 'success');
       setShowDeleteAllDialog(false);
-
-      setAllNotifications([]);
-      setPage(1);
-    } catch (error) {
+    } catch {
       showToast('Gagal menghapus notifikasi', 'error');
     }
   };
-
-  if (error) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <BellOff className="mx-auto text-red-500 mb-2" size={48} />
-        <p className="text-danger-600">Gagal memuat notifikasi</p>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-md mx-auto px-4 pb-4">
@@ -107,7 +95,7 @@ export default function MobileNotifikasi() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowMarkAllDialog(true)}
-                disabled={markAllAsReadMutation.isPending || unreadCount === 0}
+                disabled={markAllAsReadMutation.isPending || !unreadCount}
                 className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title="Tandai semua sudah dibaca"
               >
@@ -128,7 +116,19 @@ export default function MobileNotifikasi() {
 
       {/* List */}
       <div className="space-y-3">
-        {isLoading ? (
+        {isError ? (
+          <div className="text-center py-12">
+            <BellOff className="mx-auto text-red-500 mb-2" size={48} />
+            <p className="text-danger-600 mb-3">Gagal memuat notifikasi</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        ) : isLoading ? (
 
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
@@ -151,7 +151,7 @@ export default function MobileNotifikasi() {
             <p className="text-gray-400 text-xs mt-1">Notifikasi baru akan muncul di sini</p>
           </div>
         ) : (
-          notifikasiList.map((item) => item && (
+          notifikasiList.map((item) => (
             <button
               key={item.id_notifikasi}
               onClick={() => navigate(`/mobile/notifikasi/${item.id_notifikasi}`)}
@@ -203,7 +203,7 @@ export default function MobileNotifikasi() {
       </div>
 
       {/* Loading More Indicator */}
-      {isLoading && page > 1 && (
+      {isFetchingNextPage && (
         <div className="flex justify-center items-center py-6">
           <div className="flex items-center gap-2 text-brand-primary">
             <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
@@ -214,9 +214,9 @@ export default function MobileNotifikasi() {
       )}
 
       {/* End of List */}
-      {!isLoading && data?.meta && data.meta.current_page >= data.meta.last_page && notifikasiList.length > 0 && (
+      {!isLoading && !isError && !hasNextPage && notifikasiList.length > 0 && (
         <div className="text-center py-6">
-          <p className="text-xs text-gray-400">Semua notifikasi telah ditampilkan ({data.meta.total} total)</p>
+          <p className="text-xs text-gray-400">Semua notifikasi telah ditampilkan ({total} total)</p>
         </div>
       )}
 
@@ -241,7 +241,7 @@ export default function MobileNotifikasi() {
         message="Apakah Anda yakin ingin menghapus semua notifikasi? Tindakan ini tidak dapat dibatalkan."
         confirmText="Ya, Hapus Semua"
         cancelText="Batal"
-        type="error"
+        type="danger"
       />
     </div>
   );

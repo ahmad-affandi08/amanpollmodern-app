@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { X, Save } from 'lucide-react';
 import SignaturePad from '../../../../components/SignaturePad';
 
@@ -7,12 +7,6 @@ export default function SignatureModal({ isOpen, onClose, onSubmit, title, isLoa
   const [nama, setNama] = useState('');
   const [error, setError] = useState('');
 
-
-  useEffect(() => {
-    if (isOpen && existingName) {
-      setNama(existingName);
-    }
-  }, [isOpen, existingName]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

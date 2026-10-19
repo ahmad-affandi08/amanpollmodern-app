@@ -1,10 +1,10 @@
 import React from 'react';
 import Logo3d from '../../assets/img/icon-logo-3d-amanpoll.png';
 import { RefreshCcw, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import usePageTitle from '../../hooks/utils/usePageTitle';
 
 export default function MaintenancePage() {
-  const navigate = useNavigate();
+  usePageTitle('Sedang Maintenance');
 
   const handleRefresh = () => {
     window.location.reload();
@@ -28,7 +28,7 @@ export default function MaintenancePage() {
           <div className="w-full h-full relative animate-float transition-transform duration-700 transform group-hover:scale-110">
             <img
               src={Logo3d}
-              alt="AmanPoll Maintenance"
+              alt="Logo AmanPoll"
               className="w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(108,93,211,0.3)]"
             />
             {/* Glow Effect behind logo */}
@@ -51,6 +51,7 @@ export default function MaintenancePage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
+            type="button"
             onClick={handleRefresh}
             className="px-8 py-3.5 bg-brand-primary text-white rounded-2xl font-bold shadow-lg shadow-brand-primary/25 hover:bg-brand-primary/90 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
           >
@@ -59,6 +60,7 @@ export default function MaintenancePage() {
           </button>
 
           <button
+            type="button"
             onClick={handleHome}
             className="px-8 py-3.5 bg-white text-gray-600 border border-gray-200 rounded-2xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
           >

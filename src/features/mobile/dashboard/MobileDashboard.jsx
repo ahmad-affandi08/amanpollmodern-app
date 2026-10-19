@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useMobileDashboard } from '../../../hooks/queries/useDashboardQueries';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { useMobileDashboard, useAuth, usePageTitle } from '../../../hooks';
+import { ROLES, isRole } from '../../auth/constants';
 import DonutChart from './components/DonutChart';
 import FilterBar from './components/FilterBar';
 import MenuGrid from './components/MenuGrid';
 
 export default function MobileDashboard() {
   usePageTitle('Dashboard');
-  const navigate = useNavigate();
+  const { user: authUser } = useAuth();
   const [filters, setFilters] = useState({
     tahun_filter: '',
     bulan_filter: '',
     kategori_filter: ''
   });
 
-  const { data, isLoading, error } = useMobileDashboard(filters);
+  const { data, isLoading, error, refetch } = useMobileDashboard(filters);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
@@ -62,29 +61,15 @@ export default function MobileDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-md mx-auto px-4 flex items-center justify-center min-h-[50vh]">
-        <div className="bg-white rounded-[20px] p-6 shadow-lg">
-          <div className="text-center">
-            <AlertCircle className="mx-auto text-danger-500 mb-4" size={48} />
-            <h3 className="text-lg font-bold text-text-dark mb-2">Terjadi Kesalahan</h3>
-            <p className="text-sm text-text-gray">{error.message}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const stats = data?.stats || {};
   const charts = data?.charts || {};
   const user = data?.user || {};
+  const isTeknisi = isRole(authUser, ROLES.TEKNISI);
 
   return (
     <div className="max-w-md mx-auto px-4 space-y-4">
       {/* Greeting Card */}
       <div className="bg-white rounded-[20px] p-4 mt-3 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-brand-primary">Hi, {user.nama_lengkap}! 👋</h2>
+        <h2 className="text-lg font-bold text-brand-primary">Hai, {user.nama_lengkap || authUser?.nama_lengkap}!</h2>
         <p className="text-sm text-text-gray">{user.ruangan_nama}</p>
         <p className="text-xs text-text-gray mt-1">Siap melakukan hal besar hari ini?</p>
       </div>
@@ -96,8 +81,24 @@ export default function MobileDashboard() {
       />
 
       {/* Charts Grid - Conditional based on Role */}
+      {error ? (
+        <div className="bg-white rounded-[20px] p-6 shadow-lg text-center">
+          <AlertCircle className="mx-auto text-danger-500 mb-3" size={40} />
+          <h3 className="text-base font-bold text-text-dark mb-1">Gagal memuat data dashboard</h3>
+          <p className="text-sm text-text-gray mb-4">
+            {error.response?.data?.message || 'Periksa koneksi Anda lalu coba lagi.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
-        {parseInt(user?.kategori_user_id) === 3 ? (
+        {isTeknisi ? (
 
           <>
             <DonutChart
@@ -127,12 +128,13 @@ export default function MobileDashboard() {
           </>
         )}
       </div>
+      )}
 
       {/* Main Menu */}
       <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-        <h3 className="text-lg font-bold text-text-dark mb-4 text-center">Main Menu</h3>
+        <h3 className="text-lg font-bold text-text-dark mb-4 text-center">Menu Utama</h3>
         <MenuGrid />
       </div>
-    </div >
+    </div>
   );
 }

@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Package } from 'lucide-react';
-import { useAlatBaruDetail, useDeleteAlatBaru } from '../../../hooks/queries/useAlatBaruQueries';
-import { useToast } from '../../../hooks';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { useAlatBaruDetail, useDeleteAlatBaru, useToast, usePageTitle } from '../../../hooks';
+import { formatDate } from '../../../utils/format';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import noImage from '../../../assets/img/no_image.png';
 
@@ -102,15 +101,7 @@ export default function MobileAlatBaruDetail() {
           <DetailRow label="Daya" value={alatBaru.daya ? `${alatBaru.daya} Watt` : '-'} />
           <DetailRow
             label="Tanggal Pengajuan"
-            value={
-              alatBaru.create_date
-                ? new Date(alatBaru.create_date).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })
-                : '-'
-            }
+            value={formatDate(alatBaru.create_date)}
           />
         </div>
       </div>
@@ -122,7 +113,7 @@ export default function MobileAlatBaruDetail() {
         message="Apakah Anda yakin ingin menghapus alat baru ini? Tindakan ini tidak dapat dibatalkan."
         confirmText="Ya, Hapus"
         cancelText="Batal"
-        type="error"
+        type="danger"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />

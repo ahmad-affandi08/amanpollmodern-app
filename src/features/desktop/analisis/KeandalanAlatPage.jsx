@@ -1,44 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, Clock, Wrench, AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Activity, Clock, Wrench, AlertTriangle } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend
 } from 'recharts';
-import AnalisisApi from '../../../api/AnalisisApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { usePageTitle } from '../../../hooks';
+import { useAnalisisKeandalan } from '../../../hooks/queries/useAnalisisQueries';
+import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
 
 export default function KeandalanAlatPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Analisis Keandalan Alat');
   const { showToast } = useToast();
+  const { data, isLoading, isError, isFetching, refetch } = useAnalisisKeandalan();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal mengambil data analitik', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await AnalisisApi.getKeandalanAlat();
-      setData(response.data.data);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal mengambil data analitik', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <AnalisisLoading text="Menganalisis data, mohon tunggu..." />;
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center justify-center min-h-[70vh]">
-        <RefreshCw className="animate-spin text-brand-primary mb-4" size={32} />
-        <p className="text-gray-500 font-medium">Menganalisis data, mohon tunggu...</p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
+  // Gagal dimuat (atau kosong): tampilkan pesan + tombol coba lagi, bukan halaman kosong.
+  if (!data) return <AnalisisError message="Gagal mengambil data analitik." onRetry={() => refetch()} retrying={isFetching} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -53,9 +36,7 @@ export default function KeandalanAlatPage() {
             Menampilkan statistik MTBF (Mean Time Between Failures) dan waktu perbaikan (downtime).
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold">
-          <RefreshCw size={16} /> Segarkan Data
-        </button>
+        <RefreshButton onClick={() => refetch()} isFetching={isFetching} />
       </div>
 
       {/* KPI Cards */}
@@ -102,7 +83,7 @@ export default function KeandalanAlatPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.top_broken}
+                data={data.top_broken || []}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
               >
@@ -132,7 +113,7 @@ export default function KeandalanAlatPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={data.trend_aduan}
+                data={data.trend_aduan || []}
                 margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />

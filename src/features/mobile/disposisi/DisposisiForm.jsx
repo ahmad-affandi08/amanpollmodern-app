@@ -1,54 +1,49 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SignaturePad from '../../../../components/SignaturePad';
-import { useCreateDisposisiAduan } from '../../../../hooks/mutations/useDisposisiMutations';
+import SignaturePad from '../../../components/SignaturePad';
+import { useToast, useCreateDisposisiAduan, useCreateDisposisiPemeliharaan } from '../../../hooks';
+import { toInputDate } from '../../../utils/format';
+import { DISPOSISI_CONFIG } from './disposisiConfig';
 
 /**
- * Disposisi Form for Aduan
- * Allows Pimpinan to add disposition with signature
+ * Form disposisi pimpinan (halaman publik, tanpa login).
+ * `jenis` memilih mutation, label, dan blok info: 'aduan' | 'pemeliharaan'.
  */
-export default function DisposisiForm({ aduan }) {
-  const navigate = useNavigate();
+export default function DisposisiForm({ jenis, data }) {
+  const config = DISPOSISI_CONFIG[jenis];
+  const { showToast } = useToast();
   const signaturePadRef = useRef(null);
   const [formData, setFormData] = useState({
     isi_disposisi: '',
     nama_pimpinan: '',
   });
 
-  const createDisposisi = useCreateDisposisiAduan();
+  // Toast sukses/gagal ditampilkan oleh mutation; di sini hanya memilih yang sesuai jenis.
+  const createAduan = useCreateDisposisiAduan();
+  const createPemeliharaan = useCreateDisposisiPemeliharaan();
+  const isPending = jenis === 'aduan' ? createAduan.isPending : createPemeliharaan.isPending;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
+    if (isPending) return;
 
     if (signaturePadRef.current?.isEmpty()) {
-      alert('Silakan tanda tangan terlebih dahulu.');
+      showToast('Silakan tanda tangan terlebih dahulu.', 'warning');
       return;
     }
 
+    const payload = { ...formData, ttd_base64: signaturePadRef.current?.toDataURL() };
 
-    const ttd_base64 = signaturePadRef.current?.toDataURL();
-
-
-    createDisposisi.mutate(
-      {
-        aduanId: aduan.id_aduan,
-        data: {
-          ...formData,
-          ttd_base64,
-        },
-      },
-      {
-        onSuccess: () => {
-          // Stay on page to show Disposisi Detail
-        },
-      }
-    );
+    // Setelah berhasil, data di-refresh sehingga halaman otomatis menampilkan detail disposisi.
+    if (jenis === 'aduan') {
+      createAduan.mutate({ aduanId: data[config.idKey], data: payload });
+    } else {
+      createPemeliharaan.mutate({ pemeliharaanId: data[config.idKey], data: payload });
+    }
   };
 
   return (
@@ -57,52 +52,40 @@ export default function DisposisiForm({ aduan }) {
         Disposisi Pimpinan
       </h4>
 
-      {/* Aduan Info */}
+      {/* Info {config.title} */}
       <div className="bg-gray-50 p-3 rounded-lg mb-4 space-y-2">
         <div>
           <strong className="text-sm">No. Inventaris:</strong>
           <br />
-          <span className="text-sm">{aduan.no_inventaris}</span>
+          <span className="text-sm">{data.no_inventaris}</span>
         </div>
         <div>
           <strong className="text-sm">Nama Alat:</strong>
           <br />
-          <span className="text-sm">{aduan.nama_alat_nama}</span>
+          <span className="text-sm">{data.nama_alat_nama}</span>
         </div>
-        <hr className="my-2" />
-        <div>
-          <strong className="text-sm">Uraian Aduan:</strong>
-          <br />
-          <span className="text-sm">{aduan.keluhan}</span>
-        </div>
-        <hr className="my-2" />
-        <div>
-          <strong className="text-sm">Tindakan Petugas:</strong>
-          <br />
-          <span className="text-sm">{aduan.tindakan_teknisi || '-'}</span>
-        </div>
-        <hr className="my-2" />
-        <div>
-          <strong className="text-sm">Rekomendasi Petugas:</strong>
-          <br />
-          <span className="text-sm">{aduan.rekomendasi || '-'}</span>
-        </div>
+        {config.fields.map((field) => (
+          <div key={field.key}>
+            <hr className="my-2" />
+            <strong className="text-sm">{field.label}:</strong>
+            <br />
+            <span className="text-sm">{data[field.key] || '-'}</span>
+          </div>
+        ))}
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Tanggal (Read-only) */}
+        {/* Tanggal (hanya baca) */}
         <div>
           <label className="block text-sm font-semibold mb-1">Tanggal</label>
           <input
             type="date"
-            value={new Date().toISOString().split('T')[0]}
+            value={toInputDate()}
             readOnly
             className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
           />
         </div>
 
-        {/* Isi Disposisi */}
         <div>
           <label className="block text-sm font-semibold mb-1">
             Isi Disposisi <span className="text-red-500">*</span>
@@ -118,7 +101,6 @@ export default function DisposisiForm({ aduan }) {
           />
         </div>
 
-        {/* Nama Pimpinan */}
         <div>
           <label className="block text-sm font-semibold mb-1">
             Nama Pimpinan <span className="text-red-500">*</span>
@@ -134,18 +116,16 @@ export default function DisposisiForm({ aduan }) {
           />
         </div>
 
-        {/* Signature */}
         <div>
           <SignaturePad ref={signaturePadRef} label="Tanda Tangan *" />
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          disabled={createDisposisi.isPending}
+          disabled={isPending}
           className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {createDisposisi.isPending ? 'Menyimpan...' : 'Simpan Disposisi'}
+          {isPending ? 'Menyimpan...' : 'Simpan Disposisi'}
         </button>
       </form>
     </div>

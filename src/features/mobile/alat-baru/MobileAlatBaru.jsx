@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PackagePlus } from 'lucide-react';
-import { useAlatBaru } from '../../../hooks/queries/useAlatBaruQueries';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { useAlatBaruInfinite, usePageTitle } from '../../../hooks';
 import AlatBaruCard from './components/AlatBaruCard';
 import Button from '../../../components/Button';
 
@@ -15,10 +14,11 @@ export default function MobileAlatBaru() {
     isLoading,
     isError,
     error,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useAlatBaru({ per_page: 10 });
+  } = useAlatBaruInfinite({ per_page: 10 });
 
   const alatBaruList = data?.pages || [];
 
@@ -48,7 +48,10 @@ export default function MobileAlatBaru() {
         <div className="bg-white rounded-[20px] p-6 text-center border border-gray-100">
           <PackagePlus className="mx-auto text-danger-500 mb-3" size={48} />
           <h3 className="text-lg font-bold text-text-dark mb-2">Terjadi Kesalahan</h3>
-          <p className="text-sm text-text-gray">{error?.message || 'Gagal memuat data'}</p>
+          <p className="text-sm text-text-gray mb-4">
+            {error?.response?.data?.message || 'Gagal memuat data alat baru'}
+          </p>
+          <Button onClick={() => refetch()} className="mx-auto">Coba Lagi</Button>
         </div>
       </div>
     );

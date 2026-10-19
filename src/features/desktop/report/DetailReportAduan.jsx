@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, FileText, Download, User, Calendar, Clock, MapPin,
-  Building2, Wrench, CheckCircle, AlertCircle, DollarSign, History, Package
+  ArrowLeft, FileText, Download, User, Calendar, MapPin,
+  Building2, Wrench, CheckCircle, DollarSign, History, Package
 } from 'lucide-react';
 import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
-import AduanApi from '../../../api/AduanApi';
+import { usePageTitle, useAduanDetail } from '../../../hooks';
+import { apiUrl } from '../../../config';
+import { rupiah, formatDate, formatDateTime } from '../../../utils/format';
+import StatusBadge from '../../../components/StatusBadge';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
@@ -17,61 +19,22 @@ export default function DetailReportAduan() {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Kunci query memuat id, jadi data aduan sebelumnya tidak pernah tampil di id yang baru
+  // atau tertinggal saat gagal memuat.
+  const { data: detail, isLoading: loading, isError } = useAduanDetail(id);
+  const data = detail?.data || detail || null;
+
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
 
   useEffect(() => {
-    fetchDetail();
-  }, [id]);
+    if (isError) showToast('Gagal memuat detail laporan', 'error');
+  }, [isError, showToast]);
 
-  const fetchDetail = async () => {
-    try {
-      setLoading(true);
-      const res = await AduanApi.getById(id);
-      setData(res.data || res);
-    } catch (error) {
-      console.error("Failed to fetch detail:", error);
-      showToast('Gagal memuat detail laporan', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatRupiah = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount || 0);
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
+  // Tautan unduhan (rute export di server tidak memakai middleware api.auth,
+  // sesi dibawa cookie), jadi autentikasi tidak diubah.
   const handleExport = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    window.open(`${apiUrl}/report/aduan/export/${id}`, '_blank');
+    window.open(apiUrl(`/report/aduan/export/${id}`), '_blank');
   };
 
   if (loading) {
@@ -85,10 +48,11 @@ export default function DetailReportAduan() {
         <h3 className="text-xl font-bold text-gray-800 mb-2">Data Tidak Ditemukan</h3>
         <p className="text-gray-500 mb-6">Laporan yang Anda cari tidak tersedia.</p>
         <button
+          type="button"
           onClick={() => navigate('/report/aduan')}
           className="px-6 py-2 bg-brand-primary text-white rounded-xl hover:bg-brand-primary/90 transition-colors"
         >
-          Kembali ke List
+          Kembali ke Daftar
         </button>
       </div>
     );
@@ -100,7 +64,9 @@ export default function DetailReportAduan() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={() => navigate('/report/aduan')}
+            aria-label="Kembali ke daftar laporan aduan"
             className="p-2 hover:bg-white rounded-xl transition-colors hover:shadow-sm group"
           >
             <ArrowLeft size={24} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
@@ -112,11 +78,12 @@ export default function DetailReportAduan() {
               <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded-md border border-purple-200">
                 {data.no_aduan || '-'}
               </span>
-              <StatusBadge status={data.status_aduan} />
+              <StatusBadge status={data.status_aduan} size="sm" />
             </div>
           </div>
         </div>
         <button
+          type="button"
           onClick={handleExport}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-sm"
         >
@@ -196,7 +163,7 @@ export default function DetailReportAduan() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <InfoCard icon={<User size={14} />} label="Nama Pengadu" value={data.nama_pengadu} />
+              <InfoCard icon={<User size={14} />} label="Nama Pelapor" value={data.nama_pengadu} />
               <InfoCard icon={<Calendar size={14} />} label="Tanggal Laporan" value={formatDate(data.create_date)} />
               <InfoCard icon={<Building2 size={14} />} label="Divisi" value={data.divisi_nama} />
               <InfoCard icon={<MapPin size={14} />} label="Ruangan" value={data.ruangan_nama} />
@@ -228,13 +195,13 @@ export default function DetailReportAduan() {
         {/* Right Column - Inspection Timeline & Summary */}
         <div className="space-y-4">
           {/* Biaya */}
-          {data.biaya && parseFloat(data.biaya) > 0 && (
+          {Number(data.biaya) > 0 && (
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200 shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <DollarSign className="text-orange-600" size={18} />
                 <h3 className="text-xs font-bold text-gray-700">Biaya Perbaikan</h3>
               </div>
-              <p className="text-xl font-bold text-orange-600">{formatRupiah(data.biaya)}</p>
+              <p className="text-xl font-bold text-orange-600">{rupiah(data.biaya)}</p>
             </div>
           )}
 
@@ -277,7 +244,6 @@ export default function DetailReportAduan() {
                     rekomendasi: data.rekomendasi,
                     kondisi: data.kondisi_alat,
                     tanggal: data.tanggal_pemeriksaan,
-                    biaya: data.biaya,
                     ttd_teknisi: data.ttd_teknisi,
                     ttd_pengadu: data.ttd_kepala_ruang,
                     teknisi_nama: data.teknisi_nama,
@@ -314,26 +280,6 @@ export default function DetailReportAduan() {
 }
 
 
-const StatusBadge = ({ status }) => {
-  const statusConfig = {
-    'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200', icon: Clock },
-    'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', icon: Wrench },
-    'Selesai': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200', icon: CheckCircle },
-    'Tindakan Lanjutan': { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200', icon: AlertCircle }
-  };
-  const config = statusConfig[status] || statusConfig['Pending'];
-  const Icon = config.icon;
-
-  return (
-    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border ${config.bg} ${config.text} ${config.border} text-[10px] font-bold`}>
-      <Icon size={12} />
-      {status}
-    </div>
-  );
-};
-
-
-
 const InfoCard = ({ icon, label, value }) => (
   <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
     <div className="flex items-center gap-1.5 mb-1 text-gray-500">
@@ -344,37 +290,7 @@ const InfoCard = ({ icon, label, value }) => (
   </div>
 );
 
-const StatItem = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-    <div className="text-white/80">{icon}</div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-white/70">{label}</p>
-      <p className="text-sm font-bold text-white truncate">{value}</p>
-    </div>
-  </div>
-);
-
 const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePreview }) => {
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatRupiah = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount || 0);
-  };
-
   return (
     <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 border ${borderColor} shadow-sm`}>
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
@@ -385,7 +301,7 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
       <div className="space-y-4">
         {data.tindakan && (
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">Tindakan Petugas</label>
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">Tindakan Teknisi</label>
             <div className="px-3 py-2 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-xs">
               {data.tindakan}
             </div>
@@ -419,16 +335,6 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
           )}
         </div>
 
-        {data.biaya && parseFloat(data.biaya) > 0 && (
-          <div className="flex items-center gap-2 bg-white/80 p-3 rounded-xl border border-yellow-200">
-            <DollarSign size={16} className="text-orange-600" />
-            <div>
-              <p className="text-[10px] text-gray-600 font-medium">Biaya Perbaikan</p>
-              <p className="text-sm font-bold text-orange-600">{formatRupiah(data.biaya)}</p>
-            </div>
-          </div>
-        )}
-
         {/* Signatures */}
         {(data.ttd_teknisi || data.ttd_pengadu) && (
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
@@ -443,10 +349,10 @@ const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePrevie
 
             {data.ttd_pengadu && (
               <SignatureCard
-                label="TTD Pengadu"
+                label="TTD Pelapor"
                 name={data.pengadu_nama}
                 image={data.ttd_pengadu}
-                onPreview={() => onImagePreview(data.ttd_pengadu, 'TTD Pengadu')}
+                onPreview={() => onImagePreview(data.ttd_pengadu, 'TTD Pelapor')}
               />
             )}
           </div>

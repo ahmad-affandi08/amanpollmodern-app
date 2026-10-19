@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { RotateCcw, Download, Search } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import axiosClient from '../../../../api/axiosClient';
+import { useMasterNamaAlat } from '../../../../hooks';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import Input from '../../../../components/Input';
 
@@ -9,22 +8,15 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
   const [isExporting, setIsExporting] = useState(false);
 
 
-  const { data: namaAlatData } = useQuery({
-    queryKey: ['nama-alat'],
-    queryFn: async () => {
-      const response = await axiosClient.get('/nama-alat');
-      return response.data.data;
-    },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const namaAlatList = Array.isArray(namaAlatData) ? namaAlatData : [];
+  const { data: namaAlatData } = useMasterNamaAlat({ all: 1 });
+  const namaAlatList = Array.isArray(namaAlatData?.data) ? namaAlatData.data : [];
 
   const kondisiOptions = [
     { value: '', label: 'Semua Kondisi' },
     { value: 'Baik', label: 'Baik' },
     { value: 'Rusak Ringan', label: 'Rusak Ringan' },
     { value: 'Rusak Berat', label: 'Rusak Berat' },
+    { value: 'Dalam Perbaikan', label: 'Dalam Perbaikan' },
   ];
 
   const handleChange = (field, value) => {
@@ -58,12 +50,12 @@ export default function InventarisFilters({ filters, onFilterChange, onExport })
         {isExporting ? (
           <>
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Exporting...</span>
+            <span>Mengekspor...</span>
           </>
         ) : (
           <>
             <Download size={16} />
-            <span>Download Excel</span>
+            <span>Export Excel</span>
           </>
         )}
       </button>

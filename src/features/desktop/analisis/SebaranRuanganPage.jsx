@@ -1,46 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Map, AlertCircle, Package, RefreshCw, BarChart2 } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Map, AlertCircle, Package, BarChart2 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell
 } from 'recharts';
-import AnalisisApi from '../../../api/AnalisisApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { usePageTitle } from '../../../hooks';
+import { useAnalisisRuangan } from '../../../hooks/queries/useAnalisisQueries';
+import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
 
 const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6'];
 
 export default function SebaranRuanganPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Analisis Sebaran Ruangan');
   const { showToast } = useToast();
+  const { data, isLoading, isError, isFetching, refetch } = useAnalisisRuangan();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal mengambil data sebaran', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await AnalisisApi.getSebaranRuangan();
-      setData(response.data.data);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal mengambil data sebaran', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <AnalisisLoading text="Memetakan data ruangan, mohon tunggu..." />;
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center justify-center min-h-[70vh]">
-        <RefreshCw className="animate-spin text-brand-primary mb-4" size={32} />
-        <p className="text-gray-500 font-medium">Memetakan data ruangan, mohon tunggu...</p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
+  // Gagal dimuat (atau kosong): tampilkan pesan + tombol coba lagi, bukan halaman kosong.
+  if (!data) return <AnalisisError message="Gagal mengambil data sebaran." onRetry={() => refetch()} retrying={isFetching} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -55,9 +38,7 @@ export default function SebaranRuanganPage() {
             Memetakan asal ruang laporan kerusakan untuk mengidentifikasi area dengan risiko tinggi.
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold">
-          <RefreshCw size={16} /> Segarkan Data
-        </button>
+        <RefreshButton onClick={() => refetch()} isFetching={isFetching} />
       </div>
 
       {/* KPI Cards */}
@@ -104,7 +85,7 @@ export default function SebaranRuanganPage() {
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.sebaran_aduan}
+                data={data.sebaran_aduan || []}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
@@ -123,8 +104,8 @@ export default function SebaranRuanganPage() {
                   contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
                 />
                 <Bar dataKey="total_aduan" radius={[0, 4, 4, 0]} barSize={16} name="Total Aduan">
-                  {data.sebaran_aduan.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {(data.sebaran_aduan || []).map((entry, index) => (
+                    <Cell key={entry.ruangan_id ?? index} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -141,7 +122,7 @@ export default function SebaranRuanganPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={data.sebaran_aduan.slice(0, 5)}
+                      data={(data.sebaran_aduan || []).slice(0, 5)}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -150,8 +131,8 @@ export default function SebaranRuanganPage() {
                       dataKey="total_aduan"
                       nameKey="nama_ruangan"
                     >
-                      {data.sebaran_aduan.slice(0, 5).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {(data.sebaran_aduan || []).slice(0, 5).map((entry, index) => (
+                        <Cell key={entry.ruangan_id ?? index} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
@@ -163,8 +144,8 @@ export default function SebaranRuanganPage() {
           <div className="bg-white border border-gray-100 rounded-2xl p-5 flex-1">
             <h3 className="font-bold text-gray-800 text-base mb-4">Top 5 Ruangan Terpadat (Alat)</h3>
             <div className="space-y-4">
-              {data.sebaran_alat.map((room, idx) => (
-                <div key={idx} className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+              {(data.sebaran_alat || []).map((room, idx) => (
+                <div key={`${room.nama_ruangan}-${idx}`} className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex justify-center items-center text-xs font-bold">
                       {idx + 1}

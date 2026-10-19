@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, FileDown, RotateCcw, Search, AlertCircle } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { usePemeliharaanAssignments } from '../../../hooks/queries/usePemeliharaanQueries';
-import { formatDateTime, formatDate } from '../../../utils/format';
+import { Calendar, FileDown, RotateCcw, AlertCircle } from 'lucide-react';
+import { usePageTitle, useToast, usePemeliharaanAssignments } from '../../../hooks';
+import { apiUrl } from '../../../config';
+import { formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
+import StatusBadge from '../../../components/StatusBadge';
+import useInfiniteScroll from '../useInfiniteScroll';
 
 export default function MobilePemeliharaanHistory() {
   usePageTitle('Riwayat Pemeliharaan');
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
@@ -20,28 +23,14 @@ export default function MobilePemeliharaanHistory() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
+    isError,
+    refetch,
   } = usePemeliharaanAssignments(20, '', statusFilter, 'all', null, null, startDate || null, endDate || null);
 
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-
-      if (scrollTop + clientHeight >= scrollHeight - 100 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
   const pemeliharaanList = data?.pages.flatMap(page => page.data).filter(Boolean) || [];
-
-  const filteredList = pemeliharaanList;
+  const hasActiveFilter = statusFilter !== 'all' || !!startDate || !!endDate;
 
   const handleReset = () => {
     setStatusFilter('all');
@@ -50,30 +39,27 @@ export default function MobilePemeliharaanHistory() {
   };
 
   const handleExport = () => {
-    const params = new URLSearchParams();
-    if (statusFilter) params.append('status', statusFilter);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    if (startDate && endDate && startDate > endDate) {
+      showToast('Tanggal mulai tidak boleh lebih besar dari tanggal akhir', 'warning');
+      return;
+    }
 
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    window.open(`${apiBaseUrl}/pemeliharaan/export-excel?${params.toString()}`, '_blank');
-  };
-
-  if (error) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <AlertCircle className="mx-auto text-red-500 mb-2" size={48} />
-        <p className="text-danger-600">Gagal memuat data</p>
-      </div>
+    window.open(
+      apiUrl('/pemeliharaan/export-excel', {
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        start_date: startDate,
+        end_date: endDate,
+      }),
+      '_blank'
     );
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto px-4 pb-4">
       {/* Header */}
       <div className="py-4">
         <h1 className="text-lg font-bold text-gray-800">Riwayat Pemeliharaan</h1>
-        <p className="text-sm text-gray-500">History pemeliharaan yang pernah dikerjakan</p>
+        <p className="text-sm text-gray-500">Riwayat pemeliharaan yang pernah dikerjakan</p>
       </div>
 
       {/* Filters */}
@@ -93,9 +79,10 @@ export default function MobilePemeliharaanHistory() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
         >
-          <option value="all">-- Semua Status --</option>
+          <option value="all">Semua Status</option>
           <option value="Belum Selesai">Belum Selesai</option>
           <option value="Selesai">Selesai</option>
+          <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
         </select>
 
         {/* Date Range */}
@@ -113,6 +100,7 @@ export default function MobilePemeliharaanHistory() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              min={startDate}
               className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
             />
           </div>
@@ -130,7 +118,19 @@ export default function MobilePemeliharaanHistory() {
 
       {/* List */}
       <div className="space-y-3">
-        {isLoading ? (
+        {isError ? (
+          <div className="text-center py-12">
+            <AlertCircle className="mx-auto text-red-500 mb-2" size={48} />
+            <p className="text-danger-600 mb-3">Gagal memuat data</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        ) : isLoading ? (
 
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
@@ -147,16 +147,16 @@ export default function MobilePemeliharaanHistory() {
               </div>
             </div>
           ))
-        ) : filteredList.length === 0 ? (
+        ) : pemeliharaanList.length === 0 ? (
 
           <div className="text-center py-12">
             <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
             <p className="text-gray-500 text-sm">
-              {pemeliharaanList.length === 0 ? 'Tidak ada riwayat pemeliharaan' : 'Tidak ada hasil yang sesuai dengan filter'}
+              {hasActiveFilter ? 'Tidak ada hasil yang sesuai dengan filter' : 'Tidak ada riwayat pemeliharaan'}
             </p>
           </div>
         ) : (
-          filteredList.map((item) => item && (
+          pemeliharaanList.map((item) => (
             <div
               key={item.id_pemeliharaan}
               className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"
@@ -192,12 +192,7 @@ export default function MobilePemeliharaanHistory() {
 
               {/* Status & Actions */}
               <div className="flex justify-between items-center gap-2">
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${item.status === 'Belum Selesai'
-                  ? 'bg-warning-100 text-warning-700'
-                  : 'bg-success-100 text-success-700'
-                  }`}>
-                  {item.status}
-                </span>
+                <StatusBadge status={item.status} size="sm" />
 
                 {/* Detail Button */}
                 <button
@@ -224,7 +219,7 @@ export default function MobilePemeliharaanHistory() {
       )}
 
       {/* End of List */}
-      {!hasNextPage && filteredList.length > 0 && (
+      {!hasNextPage && pemeliharaanList.length > 0 && (
         <div className="text-center py-6">
           <p className="text-xs text-gray-400">Semua data telah ditampilkan</p>
         </div>

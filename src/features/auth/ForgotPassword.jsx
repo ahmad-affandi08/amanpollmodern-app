@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/utils/useAuth';
+import usePageTitle from '../../hooks/utils/usePageTitle';
 import Button from '../../components/Button';
 import Logo from '../../assets/img/icon-logo-amanpoll.png';
 import LogoAmanpoll3d from '../../assets/img/icon-logo-3d-amanpoll.png';
@@ -18,12 +19,20 @@ const ThickInput = ({ label, type = "text", ...props }) => (
 );
 
 export default function ForgotPassword() {
+  usePageTitle('Lupa Password');
   const navigate = useNavigate();
   const { forgotPassword } = useAuth();
   const [form, setForm] = useState({ username: '', wa: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Setelah berhasil, pindah ke login setelah 3 detik; timer dibatalkan bila halaman ditinggalkan.
+  useEffect(() => {
+    if (!success) return undefined;
+    const timer = setTimeout(() => navigate('/login'), 3000);
+    return () => clearTimeout(timer);
+  }, [success, navigate]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -33,11 +42,8 @@ export default function ForgotPassword() {
     setError(null);
 
     try {
-      const response = await forgotPassword(form);
+      await forgotPassword(form);
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
     } catch (err) {
       setError(err?.message || 'Gagal mereset password. Periksa kembali data Anda.');
     } finally {
@@ -160,8 +166,8 @@ export default function ForgotPassword() {
           </div>
 
           <div className="mt-auto hidden lg:flex justify-center lg:justify-start gap-6 text-xs text-gray-400 font-medium pt-4">
-            <a href="#" className="hover:text-brand-primary">Privacy Policy</a>
-            <a href="#" className="hover:text-brand-primary">Terms & Condition</a>
+            <a href="#" className="hover:text-brand-primary">Kebijakan Privasi</a>
+            <a href="#" className="hover:text-brand-primary">Syarat &amp; Ketentuan</a>
           </div>
         </div>
       </div>

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Calendar, User, Wrench, AlertCircle, Eye, Trash2, ClipboardCheck } from 'lucide-react';
+import { Search, Plus, Calendar, AlertCircle, Trash2 } from 'lucide-react';
 import {
   useAduan,
   useDeleteAduan,
   useMasterRuangan,
-  useMasterUsers,
   useAuth,
   useToast,
   usePagination,
@@ -15,7 +14,6 @@ import {
 } from '../../../hooks';
 import TableSkeleton from '../../../components/TableSkeleton';
 import Pagination from '../../../components/Pagination';
-import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
@@ -24,6 +22,11 @@ import Button from '../../../components/Button';
 import AddAduanModal from './AddAduanModal';
 import AssignTeknisiModal from './AssignTeknisiModal';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import ConfirmDialog from '../../../components/Alert/Alert';
+import StatusBadge from '../../../components/StatusBadge';
+import { isReadOnlyRole } from '../../auth/constants';
+import { formatDateTime } from '../../../utils/format';
+import useTeknisiList from '../pemeliharaan/useTeknisiList';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
@@ -52,9 +55,8 @@ export default function AduanList() {
   const { user } = useAuth();
 
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-  const userDivisiId = user?.divisi_id;
+  // Pimpinan hanya boleh melihat: tanpa tambah, tugaskan, dan hapus.
+  const canWrite = !isReadOnlyRole(user);
 
 
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
@@ -76,8 +78,8 @@ export default function AduanList() {
 
   const addModal = useModal();
   const assignModal = useModal();
-  const detailModal = useModal();
   const imagePreviewModal = useModal();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
 
   const { data: aduanData, isLoading, refetch } = useAduan({
@@ -88,7 +90,7 @@ export default function AduanList() {
   });
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
-  const { data: usersData } = useMasterUsers({ per_page: 500 });
+  const teknisiList = useTeknisiList();
 
   const deleteMutation = useDeleteAduan();
 
@@ -97,11 +99,12 @@ export default function AduanList() {
   const meta = aduanData?.meta;
 
 
+  const { setMetadata } = pagination;
   useEffect(() => {
     if (meta) {
-      pagination.setMetadata(meta);
+      setMetadata(meta);
     }
-  }, [meta]);
+  }, [meta, setMetadata]);
 
 
   const ruanganOptions = (ruanganData?.data || []).map(r => ({
@@ -110,45 +113,19 @@ export default function AduanList() {
   }));
 
 
-  const getFilteredTeknisiOptions = (aduanDivisiId) => {
-
-    let teknisi = (usersData?.data || []).filter(u => {
-      const role = (u.role || '').toLowerCase();
-      return role === 'teknisi';
-    });
-
-
-    if (aduanDivisiId) {
-      const targetDivisiId = parseInt(aduanDivisiId);
-      teknisi = teknisi.filter(u => parseInt(u.divisi_id) === targetDivisiId);
-    }
-
-    return teknisi.map(u => ({
-      label: u.nama_lengkap,
-      value: u.id_user
-    }));
-  };
-
-
-  const allTeknisi = (usersData?.data || []).filter(u => {
-    const role = (u.role || '').toLowerCase();
-    return role === 'teknisi';
-  });
-
-  const teknisiOptions = allTeknisi.map(u => ({
+  const teknisiOptions = teknisiList.map(u => ({
     label: u.nama_lengkap,
     value: u.id_user
   }));
 
-
-  const handleDelete = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus aduan ini?')) return;
-
+  const handleConfirmDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteTarget.id_aduan);
       showToast('Aduan berhasil dihapus', 'success');
     } catch (error) {
-      showToast('Gagal menghapus aduan', 'error');
+      showToast(error.response?.data?.message || 'Gagal menghapus aduan', 'error');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -162,22 +139,8 @@ export default function AduanList() {
     pagination.reset();
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Sedang Dikerjakan' },
-      'Selesai': { bg: 'bg-green-100', text: 'text-green-800', label: 'Selesai' },
-      'Tindakan Lanjutan': { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Tindakan Lanjutan' },
-    };
-
-    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
+  // Jumlah kolom yang tampil, dipakai untuk colSpan skeleton dan keadaan kosong.
+  const visibleColumnCount = Math.max(1, COLUMN_DEFS.filter(col => isVisible(col.key)).length);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -187,14 +150,16 @@ export default function AduanList() {
           <h1 className="text-xl font-bold text-text-dark">Daftar Aduan</h1>
           <p className="text-[#808191] text-xs mt-1">Kelola aduan kerusakan alat</p>
         </div>
-        <Button
-          size="md"
-          onClick={addModal.open}
-          className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Aduan
-        </Button>
+        {canWrite && (
+          <Button
+            size="md"
+            onClick={() => addModal.open()}
+            className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Aduan
+          </Button>
+        )}
       </div>
 
       <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
@@ -301,10 +266,10 @@ export default function AduanList() {
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
               {isLoading ? (
-                <TableSkeleton columns={10} rows={10} />
+                <TableSkeleton columns={visibleColumnCount} rows={10} />
               ) : aduan.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-12 text-center">
+                  <td colSpan={visibleColumnCount} className="py-12 text-center">
                     <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="font-bold text-gray-600">Tidak ada data aduan</p>
                     <p className="text-sm text-gray-400 mt-1">Belum ada aduan yang masuk</p>
@@ -327,10 +292,7 @@ export default function AduanList() {
                     )}
                     {isVisible('tanggal') && (
                       <td className="py-3 px-4 text-text-dark">
-                        {item.create_date ? new Date(item.create_date).toLocaleString('id-ID', {
-                          day: '2-digit', month: '2-digit', year: 'numeric',
-                          hour: '2-digit', minute: '2-digit'
-                        }).replace(/\./g, ':') : '-'}
+                        {formatDateTime(item.create_date)}
                       </td>
                     )}
                     {isVisible('divisi_ruang') && (
@@ -376,14 +338,14 @@ export default function AduanList() {
                                 style={{ width: '48px', height: '48px', display: 'block' }}
                                 placeholderSrc={noImage}
                                 onError={(e) => { e.target.src = noImage; }}
-                                onClick={() => imagePreviewModal.open({ url: item.img_keluhan, alt: `Foto Keluhan - ${item.keluhan}` })}
+                                onClick={() => imagePreviewModal.open({ url: item.img_keluhan, alt: `Foto Keluhan - ${item.no_aduan || ''}` })}
                               />
                             </div>
                           ) : (
                             <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
                               <img
                                 src={noImage}
-                                alt="No Image"
+                                alt="Tidak ada foto"
                                 className="w-full h-full object-cover opacity-50"
                               />
                             </div>
@@ -407,13 +369,13 @@ export default function AduanList() {
                     )}
                     {isVisible('status') && (
                       <td className="py-3 px-4">
-                        {getStatusBadge(item.status_aduan)}
+                        <StatusBadge status={item.status_aduan} />
                       </td>
                     )}
                     {isVisible('actions') && (
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {!item.teknisi_id && (
+                          {canWrite && !item.teknisi_id && (
                             <button
                               onClick={() => assignModal.open(item)}
                               className="group w-12 h-12 p-1 bg-white rounded-xl shadow-lg hover:-translate-y-1 transition-all overflow-hidden flex items-center justify-center border border-gray-100"
@@ -421,9 +383,20 @@ export default function AduanList() {
                             >
                               <img
                                 src={technicianIcon}
-                                alt="Assign Teknisi"
+                                alt="Tugaskan Teknisi"
                                 className="w-full h-full object-cover mix-blend-multiply"
                               />
+                            </button>
+                          )}
+                          {/* Sama dengan laporan aduan: hanya aduan yang belum ditugaskan yang boleh dihapus. */}
+                          {canWrite && !item.teknisi_id && (
+                            <button
+                              onClick={() => setDeleteTarget(item)}
+                              disabled={deleteMutation.isPending}
+                              className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+                              title="Hapus"
+                            >
+                              <Trash2 size={16} />
                             </button>
                           )}
                         </div>
@@ -438,15 +411,13 @@ export default function AduanList() {
 
         {/* Pagination */}
         <div className="mt-6">
-          {pagination.totalPages > 1 && (
-            <Pagination
-              size="sm"
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-              totalData={pagination.totalItems}
-            />
-          )}
+          <Pagination
+            size="sm"
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalData={pagination.totalItems}
+          />
         </div>
       </div>
 
@@ -461,8 +432,18 @@ export default function AduanList() {
         isOpen={assignModal.isOpen}
         onClose={assignModal.close}
         aduan={assignModal.data}
-        teknisiOptions={getFilteredTeknisiOptions(assignModal.data?.divisi_id)}
+        teknisi={teknisiList}
         onSuccess={refetch}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Hapus Aduan"
+        message={`Apakah Anda yakin ingin menghapus aduan ${deleteTarget?.no_aduan || 'ini'}?`}
+        type="danger"
+        confirmText="Ya, Hapus"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <ImagePreviewModal

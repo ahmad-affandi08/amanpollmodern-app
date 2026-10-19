@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '../../hooks/utils/useAuth';
+import usePageTitle from '../../hooks/utils/usePageTitle';
+import { ROLES } from './constants';
 import * as AuthApi from '../../api/AuthApi';
 import Button from '../../components/Button';
 import SearchableSelect from '../../components/SearchableSelect';
@@ -45,6 +47,7 @@ const ThickSelect = ({ label, children, ...props }) => (
 );
 
 export default function Register() {
+  usePageTitle('Daftar Akun');
   const navigate = useNavigate();
   const { register } = useAuth();
   const [step, setStep] = useState(1);
@@ -81,14 +84,25 @@ export default function Register() {
         setKategoriUserList(Array.isArray(kategori) ? kategori : []);
         setRuanganList(Array.isArray(ruangan) ? ruangan : []);
         setDivisiList(Array.isArray(divisi) ? divisi : []);
-      } catch (err) {
-        console.error('Failed to fetch master data:', err);
+      } catch {
+        setError('Gagal memuat data peran, ruangan, dan divisi. Muat ulang halaman ini.');
       } finally {
         setDataLoading(false);
       }
     };
     fetchMasterData();
   }, []);
+
+  // Success -> pindah ke login setelah 3 detik; timer dibatalkan bila halaman ditinggalkan.
+  useEffect(() => {
+    if (!success) return undefined;
+    const timer = setTimeout(() => navigate('/login'), 3000);
+    return () => clearTimeout(timer);
+  }, [success, navigate]);
+
+  const kategoriId = Number(form.kategori_user_id);
+  const needsRuangan = kategoriId === ROLES.USER_RUANGAN;
+  const needsDivisi = kategoriId === ROLES.TEKNISI;
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -98,6 +112,18 @@ export default function Register() {
 
       if (!form.kategori_user_id || !form.nama_lengkap || !form.username) {
         setError("Lengkapi data langkah 1 dulu ya!");
+        return;
+      }
+      if (!/^[A-Za-z0-9]{5,}$/.test(form.username)) {
+        setError('Username minimal 5 karakter dan hanya berisi huruf atau angka.');
+        return;
+      }
+      if (needsRuangan && !form.ruangan_id) {
+        setError('Pilih ruangan kamu dulu ya!');
+        return;
+      }
+      if (needsDivisi && !form.divisi_id) {
+        setError('Pilih divisi kamu dulu ya!');
         return;
       }
       setError(null);
@@ -129,9 +155,10 @@ export default function Register() {
         kategori_user_id: '', nama_lengkap: '', username: '', wa: '',
         email: '', password: '', password_confirmation: '', ruangan_id: '', divisi_id: '',
       });
-      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      const message = err.message || (err.errors ? Object.values(err.errors).flat().join(', ') : 'Terjadi kesalahan saat registrasi');
+      const message = err.errors
+        ? Object.values(err.errors).flat().join(' ')
+        : (err.message || 'Terjadi kesalahan saat registrasi');
       setError(message);
     } finally {
       setLoading(false);
@@ -219,7 +246,7 @@ export default function Register() {
                   </ThickSelect>
 
                   {/* Conditional Fields */}
-                  {kategoriUserList.find(k => String(k.id_kategori_user) === String(form.kategori_user_id))?.display_kategori === 'User Ruangan' && (
+                  {needsRuangan && (
                     <SearchableSelect
                       label="Ruangan"
                       name="ruangan_id"
@@ -237,7 +264,7 @@ export default function Register() {
                     />
                   )}
 
-                  {kategoriUserList.find(k => String(k.id_kategori_user) === String(form.kategori_user_id))?.display_kategori === 'Teknisi' && (
+                  {needsDivisi && (
                     <SearchableSelect
                       label="Divisi"
                       name="divisi_id"
@@ -256,7 +283,7 @@ export default function Register() {
                   )}
 
                   <ThickInput label="Nama Lengkap" name="nama_lengkap" placeholder="Nama lengkap kamu" value={form.nama_lengkap} onChange={handleChange} required />
-                  <ThickInput label="Username" name="username" placeholder="Buat username unik" value={form.username} onChange={handleChange} required />
+                  <ThickInput label="Username" name="username" placeholder="Buat username unik (min. 5 huruf/angka)" value={form.username} onChange={handleChange} required minLength={5} pattern="[A-Za-z0-9]+" title="Hanya huruf dan angka, minimal 5 karakter" />
 
                   <div className="mt-6">
                     <Button
@@ -274,7 +301,7 @@ export default function Register() {
               {step === 2 && (
                 <div className="animate-fade-in space-y-3">
                   <ThickInput label="Email" name="email" type="email" placeholder="email@kamu.com" value={form.email} onChange={handleChange} required />
-                  <ThickInput label="WhatsApp" name="wa" placeholder="08xxxxx" value={form.wa} onChange={handleChange} required />
+                  <ThickInput label="WhatsApp" name="wa" type="tel" placeholder="08xxxxx" value={form.wa} onChange={handleChange} required pattern="[0-9]{10,14}" title="Nomor WhatsApp 10 sampai 14 digit angka" />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <ThickInput
@@ -285,6 +312,7 @@ export default function Register() {
                       value={form.password}
                       onChange={handleChange}
                       required
+                      minLength={8}
                       suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-brand-primary hover:text-brand-primary/80">{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>}
                     />
                     <ThickInput
@@ -312,7 +340,7 @@ export default function Register() {
                       loading={loading}
                       className="w-2/3 bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"
                     >
-                      {loading ? 'Daftar...' : 'Selesai & Daftar'}
+                      {loading ? 'Mendaftar...' : 'Selesai & Daftar'}
                     </Button>
                   </div>
                 </div>

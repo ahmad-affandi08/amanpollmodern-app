@@ -121,3 +121,15 @@ export const formatTime = (date) => {
 
   return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(parsed);
 };
+
+/**
+ * Pecahan menjadi persen: 0.035 -> "3,50%".
+ * @param {number|string} fraction
+ * @returns {string}
+ */
+export const formatPercent = (fraction) => {
+  const number = typeof fraction === 'string' ? parseFloat(fraction) : fraction;
+  const safe = Number.isFinite(number) ? number : 0;
+
+  return `${(safe * 100).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+};

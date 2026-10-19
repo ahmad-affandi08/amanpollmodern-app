@@ -32,7 +32,7 @@ export default function MasterRuangan() {
     kode_ruangan: ''
   });
 
-  const { confirm, dialogProps } = useConfirmAction();
+  const { askConfirm, dialogProps } = useConfirmAction();
 
   const { data: ruanganData, isLoading } = useMasterRuangan({
     page: pagination.currentPage,
@@ -86,7 +86,7 @@ export default function MasterRuangan() {
   };
 
   const handleDelete = (item) => {
-    confirm({
+    askConfirm({
       title: 'Hapus Ruangan',
       message: `Apakah Anda yakin ingin menghapus ruangan "${item.nama_ruangan}"? Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Ya, Hapus',

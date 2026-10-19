@@ -13,10 +13,12 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import usePageTitle from '../hooks/utils/usePageTitle';
 import logo from '../assets/img/logo3-amanpoll.png';
 import Logo3d from '../assets/img/icon-logo-3d-amanpoll.png';
 
 export default function LandingPage() {
+  usePageTitle('Selamat Datang');
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,12 +47,12 @@ export default function LandingPage() {
     {
       icon: Bell,
       title: 'Sistem Aduan',
-      description: 'Laporkan kerusakan dengan cepat dan pantau progress secara real-time',
+      description: 'Laporkan kerusakan dengan cepat dan pantau perkembangannya secara langsung',
       color: 'from-info-500 to-info-700'
     },
     {
       icon: QrCode,
-      title: 'QR Code Scanner',
+      title: 'Pemindai QR Code',
       description: 'Scan QR code untuk akses informasi dan riwayat dengan instan',
       color: 'from-success-500 to-success-700'
     },
@@ -63,7 +65,7 @@ export default function LandingPage() {
     {
       icon: Shield,
       title: 'Keamanan Terjamin',
-      description: 'Role-based access control untuk keamanan dan privasi data',
+      description: 'Hak akses berbasis peran untuk menjaga keamanan dan privasi data',
       color: 'from-danger-500 to-danger-700'
     }
   ];
@@ -89,7 +91,9 @@ export default function LandingPage() {
             </div>
 
             <button
+              type="button"
               className="md:hidden p-2 text-text-dark"
+              aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -152,7 +156,7 @@ export default function LandingPage() {
                   className="w-full sm:w-auto px-7 py-3 bg-white text-text-dark border-2 border-gray-200 rounded-xl font-bold hover:bg-gray-50 hover:border-brand-primary/30 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <UserPlus size={18} />
-                  <span>Daftar Gratis</span>
+                  <span>Daftar Akun</span>
                 </button>
               </div>
             </div>
@@ -184,9 +188,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
+            {features.map((feature) => (
               <div
-                key={index}
+                key={feature.title}
                 className="group relative bg-bg-light rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-brand-primary/20"
               >
                 <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
@@ -222,7 +226,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto px-8 py-3.5 bg-transparent text-white border-2 border-white rounded-xl font-bold hover:bg-white hover:text-brand-primary transition-all duration-300 flex items-center justify-center gap-2"
             >
               <LogIn size={18} />
-              <span>Login</span>
+              <span>Masuk</span>
             </button>
           </div>
         </div>

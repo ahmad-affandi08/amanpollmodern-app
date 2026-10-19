@@ -67,6 +67,27 @@ const InventarisApi = {
   },
 
 
+  /**
+   * Seperti exportExcel, tetapi mengembalikan juga nama file dari header Content-Disposition
+   * (bila terbaca oleh browser): { blob, filename }. filename bernilai null bila header tidak ada.
+   */
+  exportExcelFile: async (filters = {}) => {
+    const response = await axiosClient.get('/inventaris/export', {
+      params: filters,
+      responseType: 'blob'
+    });
+    const disposition = response.headers?.['content-disposition'] || '';
+    const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+    let filename = match ? match[1].trim() : null;
+    try {
+      if (filename) filename = decodeURIComponent(filename);
+    } catch {
+      // Nama file bukan hasil encode URL: pakai apa adanya.
+    }
+    return { blob: response.data, filename };
+  },
+
+
   printLabel: async (filters = {}) => {
     const response = await axiosClient.get('/print/label', {
       params: filters,

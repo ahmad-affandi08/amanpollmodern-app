@@ -8,6 +8,15 @@ const NotificationApi = {
   getAll: (params) => axiosClient.get('/notifications', { params }),
 
 
+  // Detail satu notifikasi: GET /mobile/notifikasi/{id} (respons berupa objek notifikasi langsung).
+  getById: (id) => {
+    if (!id || id === 'undefined') {
+      return Promise.reject(new Error('Invalid notification ID'));
+    }
+    return axiosClient.get(`/mobile/notifikasi/${id}`);
+  },
+
+
   getUnreadCount: () => axiosClient.get('/notifications/unread-count'),
 
 

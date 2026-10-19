@@ -61,7 +61,7 @@ export default function MasterUser() {
   const modal = useModal();
 
   const [formData, setFormData] = useState(EMPTY_FORM);
-  const { confirm, dialogProps } = useConfirmAction();
+  const { askConfirm, dialogProps } = useConfirmAction();
 
   const [kategoriOptions, setKategoriOptions] = useState([]);
 
@@ -120,7 +120,7 @@ export default function MasterUser() {
       return;
     }
 
-    confirm({
+    askConfirm({
       title: `${newStatus ? 'Aktifkan' : 'Nonaktifkan'} User`,
       message: `Apakah Anda yakin ingin ${newStatus ? 'mengaktifkan' : 'menonaktifkan'} user "${item.nama_lengkap}"?`,
       confirmText: newStatus ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan',
@@ -198,7 +198,7 @@ export default function MasterUser() {
       return;
     }
 
-    confirm({
+    askConfirm({
       title: 'Hapus User',
       message: `Apakah Anda yakin ingin menghapus user "${item.nama_lengkap}"? Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Ya, Hapus',

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, CheckCircle, Smartphone, Calendar, FileText, Zap } from 'lucide-react';
 import Button from '../../../../components/Button';
 import noImage from '../../../../assets/img/no_image.png';
+import { formatDate } from '../../../../utils/format';
 
 export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }) {
   if (!isOpen || !data) return null;
@@ -14,7 +15,9 @@ export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }
         <div className="flex items-center justify-between p-3 border-b border-gray-100">
           <h3 className="text-base font-bold text-text-dark">Detail Pengajuan Alat</h3>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Tutup"
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X size={18} className="text-gray-500" />
@@ -29,7 +32,7 @@ export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }
               <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 relative group">
                 <img
                   src={data.img_alat_baru_url || noImage}
-                  alt={data.nama_alat?.nama_nama_alat}
+                  alt={data.nama_alat?.nama_nama_alat || 'Foto alat'}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.src = noImage;
@@ -68,15 +71,7 @@ export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }
                 <DetailItem
                   icon={<Calendar size={16} />}
                   label="Tanggal Pengajuan"
-                  value={
-                    data.create_date
-                      ? new Date(data.create_date).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                      : '-'
-                  }
+                  value={formatDate(data.create_date)}
                 />
               </div>
             </div>

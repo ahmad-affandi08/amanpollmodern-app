@@ -1,17 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, AlertCircle, FileSpreadsheet, ChevronRight } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { useAduanListInfinite } from '../../../hooks/queries/useAduanQueries';
+import { useAuth, useToast, useDebounce, usePageTitle, useAduanListInfinite } from '../../../hooks';
+import { ROLES, isRole } from '../../auth/constants';
+import { apiUrl } from '../../../config';
 import { formatDateTime } from '../../../utils/format';
-import { useAuthContext } from '../../../context/AuthContext';
+import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import useInfiniteScroll from '../useInfiniteScroll';
+
+const STATUS_FILTERS = [
+  { label: 'Semua', value: '' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Sedang Dikerjakan', value: 'Sedang Dikerjakan' },
+  { label: 'Selesai', value: 'Selesai' },
+  { label: 'Tindakan Lanjutan', value: 'Tindakan Lanjutan' },
+];
 
 export default function MobileAduanHistory() {
   usePageTitle('Riwayat Aduan');
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -19,76 +30,47 @@ export default function MobileAduanHistory() {
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
 
+  const isTeknisi = isRole(user, ROLES.TEKNISI);
 
-  const isTeknisi = parseInt(user?.kategori_user_id) === 3;
-
+  // Pencarian dikirim ke server (bukan menyaring halaman yang sudah dimuat).
+  const search = useDebounce(searchQuery.trim(), 400);
 
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetching,
+    isPlaceholderData,
     isLoading,
-    isError
+    isError,
+    refetch,
   } = useAduanListInfinite({
-    status_aduan: statusFilter,
-    start_date: startDate,
-    end_date: endDate,
+    search: search || undefined,
+    status_aduan: statusFilter || undefined,
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
   }, 10);
 
   const aduanList = data?.pages.flatMap(page => page.data) || [];
+  const isRefreshing = isFetching && !isFetchingNextPage && !isLoading;
+  const hasActiveFilter = !!(search || statusFilter || startDate || endDate);
 
-  const filteredList = aduanList.filter(item => {
-    const matchesSearch = searchQuery === '' ||
-      item.nama_alat_nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.no_inventaris?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesSearch;
+  useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage: isFetchingNextPage || isPlaceholderData,
+    fetchNextPage,
   });
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
-        if (hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-
   const handleExport = () => {
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+    if (startDate && endDate && startDate > endDate) {
+      showToast('Tanggal mulai tidak boleh lebih besar dari tanggal akhir', 'warning');
       return;
     }
 
-
-    const params = new URLSearchParams();
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
-
-
-    window.open(`/api/report/aduan/export-excel-teknisi?${params.toString()}`, '_blank');
-  };
-
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-      'Sedang Dikerjakan': { bg: 'bg-blue-100', text: 'text-blue-800' },
-      'Selesai': { bg: 'bg-green-100', text: 'text-green-800' },
-      'Tindakan Lanjutan': { bg: 'bg-orange-100', text: 'text-orange-800' },
-    };
-    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800' };
-
-    return (
-      <span className={`px-2 py-1 text-[10px] font-bold rounded-md ${config.bg} ${config.text}`}>
-        {status}
-      </span>
+    window.open(
+      apiUrl('/report/aduan/export-excel-teknisi', { start_date: startDate, end_date: endDate }),
+      '_blank'
     );
   };
 
@@ -105,15 +87,6 @@ export default function MobileAduanHistory() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="p-8 text-center text-danger-500">
-        <AlertCircle className="mx-auto mb-2" size={48} />
-        <p>Gagal memuat riwayat aduan</p>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-md mx-auto px-4 pt-4 pb-20">
       <div className="mb-4">
@@ -122,13 +95,7 @@ export default function MobileAduanHistory() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-2 no-scrollbar">
-        {[
-          { label: 'Semua', value: '' },
-          { label: 'Pending', value: 'Pending' },
-          { label: 'Proses', value: 'Sedang Dikerjakan' },
-          { label: 'Selesai', value: 'Selesai' },
-          { label: 'Lanjut', value: 'Tindakan Lanjutan' },
-        ].map((filter) => (
+        {STATUS_FILTERS.map((filter) => (
           <button
             key={filter.value}
             onClick={() => setStatusFilter(filter.value)}
@@ -185,34 +152,53 @@ export default function MobileAduanHistory() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="Cari nama alat..."
+            placeholder="Cari nama alat, no. inventaris, keluhan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-sm"
+            className="w-full pl-10 pr-10 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 text-sm"
           />
+          {isRefreshing && (
+            <span
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"
+              aria-label="Memuat"
+            />
+          )}
         </div>
       </div>
 
       {/* List */}
-      <div className="space-y-3">
-        {aduanList.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <AlertCircle className="mx-auto mb-3 text-gray-300" size={48} />
-            <p>Belum ada riwayat aduan</p>
+      <div className={`space-y-3 transition-opacity ${isRefreshing ? 'opacity-60' : ''}`}>
+        {isError ? (
+          <div className="text-center py-12 text-danger-500">
+            <AlertCircle className="mx-auto mb-3" size={48} />
+            <p className="mb-3">Gagal memuat riwayat aduan</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+            >
+              Coba Lagi
+            </button>
           </div>
-        ) : filteredList.length === 0 ? (
+        ) : aduanList.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <AlertCircle className="mx-auto mb-3 text-gray-300" size={48} />
-            <p>Tidak ada hasil yang sesuai dengan pencarian</p>
+            <p>
+              {search
+                ? `Tidak ada hasil untuk "${search}"`
+                : hasActiveFilter
+                  ? 'Tidak ada aduan yang sesuai dengan filter'
+                  : 'Belum ada riwayat aduan'}
+            </p>
           </div>
         ) : (
-          filteredList.map(item => (
+          aduanList.map(item => (
             <div
               key={item.id_aduan}
               className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all"
             >
               <div className="flex justify-between items-start mb-3">
-                {getStatusBadge(item.status_aduan)}
+                <StatusBadge status={item.status_aduan} size="sm" />
                 <span className="text-[10px] text-gray-400 font-medium">
                   {formatDateTime(item.create_date)}
                 </span>

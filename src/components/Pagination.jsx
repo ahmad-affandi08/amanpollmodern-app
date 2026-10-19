@@ -82,7 +82,7 @@ export default function Pagination({
               onClick={() => onPageChange(1)}
               disabled={currentPage === 1}
               className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              title="First Page"
+              title="Halaman pertama"
             >
               <ChevronsLeft size={iconSizes[size]} />
             </button>
@@ -93,7 +93,7 @@ export default function Pagination({
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            title="Previous"
+            title="Sebelumnya"
           >
             <ChevronLeft size={iconSizes[size]} />
           </button>
@@ -140,7 +140,7 @@ export default function Pagination({
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            title="Next"
+            title="Berikutnya"
           >
             <ChevronRight size={iconSizes[size]} />
           </button>
@@ -151,7 +151,7 @@ export default function Pagination({
               onClick={() => onPageChange(totalPages)}
               disabled={currentPage >= totalPages}
               className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              title="Last Page"
+              title="Halaman terakhir"
             >
               <ChevronsRight size={iconSizes[size]} />
             </button>

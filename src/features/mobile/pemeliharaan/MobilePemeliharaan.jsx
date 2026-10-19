@@ -1,33 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Loader2, AlertCircle, Search } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { usePemeliharaanAssignments, useUpdateSignature } from '../../../hooks/queries/usePemeliharaanQueries';
-import { formatDateTime, formatDate } from '../../../utils/format';
+import { Calendar, AlertCircle, Search } from 'lucide-react';
+import {
+  usePageTitle,
+  useToast,
+  useDebounce,
+  usePemeliharaanAssignments,
+  useUpdateSignature,
+} from '../../../hooks';
+import { formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 import SignatureModal from './components/SignatureModal';
-import { ToastDialog } from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import StatusBadge from '../../../components/StatusBadge';
+import KondisiBadge from '../../../components/KondisiBadge';
+import useInfiniteScroll from '../useInfiniteScroll';
 
 export default function MobilePemeliharaan() {
   usePageTitle('Daftar Pemeliharaan');
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [kondisiFilter, setKondisiFilter] = useState('all');
-
-  const currentDate = new Date();
-  const [periodFilter, setPeriodFilter] = useState('bulan_ini');
-  const [monthFilter, setMonthFilter] = useState(currentDate.getMonth() + 1);
-  const [yearFilter, setYearFilter] = useState(currentDate.getFullYear());
+  // Default "Semua Data" supaya pekerjaan Belum Selesai dari bulan lalu tetap terlihat.
+  const [periodFilter, setPeriodFilter] = useState('semua');
 
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [signatureType, setSignatureType] = useState('');
   const [selectedPemeliharaanId, setSelectedPemeliharaanId] = useState(null);
-  const [toast, setToast] = useState(null);
 
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAlt, setPreviewAlt] = useState('');
+
+  const search = useDebounce(searchQuery.trim(), 400);
+  const now = new Date();
+  const isBulanIni = periodFilter === 'bulan_ini';
 
   const {
     data,
@@ -35,47 +43,28 @@ export default function MobilePemeliharaan() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
+    isError,
+    refetch,
   } = usePemeliharaanAssignments(
     20,
-    searchQuery,
+    search,
     statusFilter,
     kondisiFilter,
-    periodFilter === 'bulan_ini' ? monthFilter : null,
-    periodFilter === 'bulan_ini' ? yearFilter : null
+    isBulanIni ? now.getMonth() + 1 : null,
+    isBulanIni ? now.getFullYear() : null
   );
 
   const updateSignature = useUpdateSignature();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-
-      if (scrollTop + clientHeight >= scrollHeight - 100 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
   const pemeliharaanList = data?.pages.flatMap(page => page.data) || [];
+  const hasActiveFilter = !!(search || statusFilter !== 'all' || kondisiFilter !== 'all' || isBulanIni);
 
   const handleOpenSignatureModal = (item, type) => {
     setSelectedPemeliharaanId(item.id_pemeliharaan);
     setSignatureType(type);
     setSignatureModalOpen(true);
-  };
-
-  const handlePeriodFilterChange = (period) => {
-    setPeriodFilter(period);
-    if (period === 'bulan_ini') {
-      setMonthFilter(currentDate.getMonth() + 1);
-      setYearFilter(currentDate.getFullYear());
-    }
   };
 
   const handleSignatureSubmit = async (formData) => {
@@ -89,24 +78,12 @@ export default function MobilePemeliharaan() {
         }
       });
 
-      setToast({ type: 'success', message: 'Tanda tangan berhasil disimpan' });
+      showToast('Tanda tangan berhasil disimpan', 'success');
       setSignatureModalOpen(false);
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: error.response?.data?.message || 'Gagal menyimpan tanda tangan'
-      });
+      showToast(error.response?.data?.message || 'Gagal menyimpan tanda tangan', 'error');
     }
   };
-
-  if (error) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <AlertCircle className="mx-auto text-red-500 mb-2" size={48} />
-        <p className="text-red-600">Gagal memuat data pemeliharaan</p>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-md mx-auto px-4 pb-4">
@@ -169,11 +146,11 @@ export default function MobilePemeliharaan() {
         <div className="relative">
           <select
             value={periodFilter}
-            onChange={(e) => handlePeriodFilterChange(e.target.value)}
+            onChange={(e) => setPeriodFilter(e.target.value)}
             className="w-full px-3 py-3 pr-8 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer transition-all"
           >
-            <option value="bulan_ini">Bulan Ini</option>
             <option value="semua">Semua Data</option>
+            <option value="bulan_ini">Bulan Ini</option>
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +161,19 @@ export default function MobilePemeliharaan() {
       </div>
 
       <div className="space-y-3">
-        {isLoading && pemeliharaanList.length === 0 ? (
+        {isError ? (
+          <div className="text-center py-12">
+            <AlertCircle className="mx-auto text-red-500 mb-2" size={48} />
+            <p className="text-red-600 mb-3">Gagal memuat data pemeliharaan</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="px-4 py-2 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        ) : isLoading && pemeliharaanList.length === 0 ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
               <div className="flex gap-3 mb-3">
@@ -204,7 +193,13 @@ export default function MobilePemeliharaan() {
         ) : pemeliharaanList.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
-            <p className="text-gray-500 text-sm">Tidak ada pemeliharaan yang ditugaskan</p>
+            <p className="text-gray-500 text-sm">
+              {search
+                ? `Tidak ada hasil untuk "${search}"`
+                : hasActiveFilter
+                  ? 'Tidak ada pemeliharaan yang sesuai dengan filter'
+                  : 'Tidak ada pemeliharaan yang ditugaskan'}
+            </p>
           </div>
         ) : (
           pemeliharaanList.map((item) => (
@@ -243,30 +238,23 @@ export default function MobilePemeliharaan() {
                     <Calendar size={12} />
                     <span>{formatDate(item.jadwal_pemeliharaan)}</span>
                   </div>
-                  {/* Status Alat (Inventory) */}
-                  <div className="flex items-center gap-2 text-xs mt-1">
-                    <span className={`px-1.5 py-0.5 rounded font-medium bg-${item.inventaris_kondisi_color}-50 text-${item.inventaris_kondisi_color}-700 border border-${item.inventaris_kondisi_color}-200`}>
-                      {item.inventaris_kondisi_label}
-                    </span>
+                  {/* Kondisi alat (inventaris) */}
+                  <div className="mt-1">
+                    <KondisiBadge kondisi={item.inventaris_kondisi_label} size="sm" />
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-between items-center gap-2">
                 <div className="flex flex-wrap gap-1">
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${item.status === 'Belum Selesai' ? 'bg-warning-100 text-warning-700' :
-                    item.status === 'Tindakan Lanjutan' ? 'bg-purple-100 text-purple-700' :
-                      'bg-success-100 text-success-700'
-                    }`}>
-                    {item.status}
-                  </span>
+                  <StatusBadge status={item.status} size="sm" />
 
                   {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
                     <button
                       onClick={() => handleOpenSignatureModal(item, 'teknisi')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"
                     >
-                      {item.status_ttd_teknisi}
+                      Belum TTD Teknisi
                     </button>
                   )}
                   {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_karu && item.status_ttd_karu !== 'Sudah TTD' && (
@@ -274,7 +262,7 @@ export default function MobilePemeliharaan() {
                       onClick={() => handleOpenSignatureModal(item, 'karu')}
                       className="text-[10px] font-bold px-2 py-1 rounded-md bg-pending-100 text-pending-700 hover:bg-pending-200"
                     >
-                      {item.status_ttd_karu}
+                      Belum TTD Kepala Ruangan
                     </button>
                   )}
                 </div>
@@ -308,24 +296,17 @@ export default function MobilePemeliharaan() {
       )}
 
       <SignatureModal
+        key={`${selectedPemeliharaanId}-${signatureType}`}
         isOpen={signatureModalOpen}
         onClose={() => setSignatureModalOpen(false)}
         onSubmit={handleSignatureSubmit}
-        title={signatureType === 'teknisi' ? 'Tanda Tangan Teknisi' : 'Tanda Tangan Kepala Ruang'}
+        title={signatureType === 'teknisi' ? 'Tanda Tangan Teknisi' : 'Tanda Tangan Kepala Ruangan'}
         isLoading={updateSignature.isPending}
         existingName={
           signatureType === 'karu'
             ? pemeliharaanList.find(item => item.id_pemeliharaan === selectedPemeliharaanId)?.nama_kepala_ruangan || ''
             : ''
         }
-      />
-
-      <ToastDialog
-        isOpen={!!toast}
-        type={toast?.type || 'info'}
-        message={toast?.message}
-        onClose={() => setToast(null)}
-        duration={3000}
       />
 
       <ImagePreviewModal
