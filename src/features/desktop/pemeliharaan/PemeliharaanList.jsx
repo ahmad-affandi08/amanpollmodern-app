@@ -404,7 +404,7 @@ export default function PemeliharaanList() {
       <AddPemeliharaanModal
         isOpen={addModal.isOpen}
         onClose={addModal.close}
-        onSuccess={refetch}
+        onSuccess={() => { pagination.reset(); refetch(); }}
       />
 
       <EditPemeliharaanModal

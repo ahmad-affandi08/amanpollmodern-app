@@ -54,7 +54,7 @@ export const useMasterRuangan = (filters = {}) => {
     queryKey: queryKeys.master.ruangan(filters),
     queryFn: async () => {
 
-      const params = { ...filters, all: 1 };
+      const params = filters.page ? filters : { ...filters, all: 1 };
       const res = await MasterApi.getAllRuangan(params);
       return {
         data: res.data || res || [],

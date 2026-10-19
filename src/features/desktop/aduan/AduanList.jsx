@@ -454,7 +454,7 @@ export default function AduanList() {
       <AddAduanModal
         isOpen={addModal.isOpen}
         onClose={addModal.close}
-        onSuccess={refetch}
+        onSuccess={() => { pagination.reset(); refetch(); }}
       />
 
       <AssignTeknisiModal
