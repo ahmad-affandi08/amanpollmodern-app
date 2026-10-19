@@ -28,7 +28,7 @@ export default function DashboardLayoutMobile() {
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
         { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Inventaris', path: '/mobile/inventaris' },
-        { icon: User, label: 'Profile', path: '/mobile/profile' },
+        { icon: User, label: 'Profil', path: '/mobile/profile' },
       ];
     } else if (roleId === ROLES.TEKNISI) {
       return [
@@ -36,7 +36,7 @@ export default function DashboardLayoutMobile() {
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
         { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Pemeliharaan', path: '/mobile/pemeliharaan' },
-        { icon: User, label: 'Profile', path: '/mobile/profile' },
+        { icon: User, label: 'Profil', path: '/mobile/profile' },
       ];
     }
 
@@ -44,7 +44,7 @@ export default function DashboardLayoutMobile() {
       { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
       { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
       { type: 'qr', path: '/mobile/scan' },
-      { icon: User, label: 'Profile', path: '/mobile/profile' },
+      { icon: User, label: 'Profil', path: '/mobile/profile' },
     ];
   };
 
