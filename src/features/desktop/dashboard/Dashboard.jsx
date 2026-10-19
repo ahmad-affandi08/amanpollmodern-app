@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar, Legend
+  PieChart, Pie, Cell
 } from 'recharts';
 import {
-  Package, DollarSign, Activity, CheckCircle2, TrendingUp, AlertCircle,
-  Clock, Plus, QrCode, Wrench, Search, Filter, Calendar, FileText
+  Package, DollarSign, Activity, CheckCircle2, AlertCircle, Plus, QrCode, FileText
 } from 'lucide-react';
 import { useDashboardStats, useMasterDivisi, useFilters, useAuth, usePageTitle } from '../../../hooks';
 import { useNavigate, Link } from 'react-router-dom';
+import StatusBadge from '../../../components/StatusBadge';
+import { getStatusHex } from '../../../utils/status';
+import { formatDateShort, formatNumber, rupiah } from '../../../utils/format';
+import { ACCESS, ROLES, hasRole, isRole, isReadOnlyRole, canManageInventaris } from '../../auth/constants';
+import { getActivityIcon, getActivityColor } from '../activities/activityMeta';
 
 const COLORS = ['#6C5DD3', '#FF754C', '#FFAF4E', '#3F8CFF', '#A0D7E7', '#F0C782'];
+
+// Seri grafik: warna diambil dari utils/status berdasarkan nama status, sama dengan badge di halaman lain.
+const ADUAN_SERIES = ['Pending', 'Sedang Dikerjakan', 'Tindakan Lanjutan', 'Selesai'];
+const PEMELIHARAAN_SERIES = ['Selesai', 'Belum Selesai'];
+
+// Backend mengirim nama bulan dalam bahasa Inggris.
+const MONTH_LABELS = { May: 'Mei', Aug: 'Agu', Oct: 'Okt', Dec: 'Des' };
+const localizeMonths = (rows) => (rows || []).map(row => ({ ...row, name: MONTH_LABELS[row.name] || row.name }));
+
+const gradientId = (prefix, status) => `${prefix}-${status.replace(/\s+/g, '')}`;
+
+/** Daya di form inventaris diisi dalam Watt; ditampilkan dalam kW. '-' bila tidak ada data valid. */
+const formatPower = (watt) => {
+  const value = Number(watt);
+  if (!Number.isFinite(value) || value <= 0) return '-';
+  return `${(value / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} kW`;
+};
 
 export default function Dashboard() {
   usePageTitle('Dashboard');
@@ -22,14 +43,21 @@ export default function Dashboard() {
     ruangan_filter: ''
   });
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
 
   const { data, isLoading } = useDashboardStats(filters);
   const { data: divisiData } = useMasterDivisi({ all: 1 });
 
   const divisions = divisiData?.data || divisiData || [];
+
+  // Aksi cepat disaring per peran: Pimpinan hanya-baca, jadi tanpa tambah alat/aduan.
+  const canWrite = !isReadOnlyRole(user);
+  const quickActions = [
+    { key: 'scan', label: 'Scan QR', icon: QrCode, path: '/scanner', visible: hasRole(user, ACCESS.scanner) },
+    { key: 'alat', label: 'Tambah Alat', icon: Plus, path: '/inventaris/baru', visible: canManageInventaris(user) },
+    { key: 'aduan', label: 'Buat Aduan', icon: AlertCircle, path: '/aduan', visible: canWrite && hasRole(user, ACCESS.aduan) },
+    { key: 'laporan', label: 'Laporan', icon: FileText, path: '/report/aduan', visible: hasRole(user, ACCESS.report) },
+  ].filter(action => action.visible);
 
   if (isLoading) {
     return (
@@ -92,20 +120,22 @@ export default function Dashboard() {
   const recent = dashboardData.recent || dashboardData.recent_activities || [];
 
 
-  const hour = new Date().getHours();
-  let greeting = 'Selamat Pagi';
-  if (hour >= 12) greeting = 'Selamat Siang';
-  if (hour >= 15) greeting = 'Selamat Sore';
-  if (hour >= 18) greeting = 'Selamat Malam';
+  const totalInventaris = Number(stats.total_inventaris) || 0;
+  const totalKalibrasi = Number(stats.total_kalibrasi) || 0;
+  const totalNilai = Number(stats.total_nilai) || 0;
+  const kalibrasiPercent = totalInventaris > 0 ? Math.round((totalKalibrasi / totalInventaris) * 100) : 0;
+
+  const aduanChart = localizeMonths(charts.aduan);
+  const pemeliharaanChart = localizeMonths(charts.pemeliharaan);
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-dark">Dashboard Overview</h1>
+          <h1 className="text-xl font-bold text-text-dark">Ringkasan Dashboard</h1>
           <p className="text-[#808191] text-xs mt-1">
-            Monitoring real-time aset dan kinerja pemeliharaan.
+            Pantau aset dan kinerja pemeliharaan secara langsung.
           </p>
         </div>
 
@@ -147,9 +177,7 @@ export default function Dashboard() {
         <StatCard
           icon={<Package size={20} />}
           title="Total Aset Inventaris"
-          value={stats.total_inventaris || 0}
-          trend="+2.5% vs bulan lalu"
-          trendUp={true}
+          value={formatNumber(totalInventaris)}
           bgColor="bg-gradient-to-br from-[#F2F0FF] via-[#E2DBFF] to-[#C4B5FD]"
           iconColor="text-brand-primary"
           cardBgColor="bg-gradient-to-br from-purple-50/50 via-white to-purple-50/30"
@@ -157,10 +185,8 @@ export default function Dashboard() {
         <StatCard
           icon={<DollarSign size={20} />}
           title="Nilai Aset Keseluruhan"
-          value={`Rp ${(stats.total_nilai || 0).toLocaleString('id-ID', { notation: 'compact' })}`}
-          subValue={`Rp ${(stats.total_nilai || 0).toLocaleString('id-ID')}`}
-          trend="+5% vs tahun lalu"
-          trendUp={true}
+          value={`Rp ${totalNilai.toLocaleString('id-ID', { notation: 'compact' })}`}
+          subValue={rupiah(totalNilai)}
           bgColor="bg-gradient-to-br from-[#F0FDF9] via-[#D1FBEA] to-[#6EE7B7]"
           iconColor="text-[#059669]"
           cardBgColor="bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/30"
@@ -168,19 +194,17 @@ export default function Dashboard() {
         <StatCard
           icon={<CheckCircle2 size={20} />}
           title="Alat Terkalibrasi"
-          value={`${stats.total_kalibrasi || 0} Unit`}
-          trend="Wajib Kalibrasi"
-          trendUp={true}
+          value={`${formatNumber(totalKalibrasi)} Unit`}
+          subValue={totalInventaris > 0 ? `${kalibrasiPercent}% dari total aset` : undefined}
           bgColor="bg-gradient-to-br from-[#FFF7ED] via-[#FFE5D3] to-[#FDBA74]"
           iconColor="text-[#EA580C]"
           cardBgColor="bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30"
         />
         <StatCard
           icon={<Activity size={20} />}
-          title="Konsumsi Daya Total"
-          value={`${(stats.total_daya / 1000).toFixed(1)} kVA`}
-          trend="Stabil"
-          trendUp={true}
+          title="Total Daya Terpasang"
+          value={formatPower(stats.total_daya)}
+          subValue={Number(stats.total_daya) > 0 ? `${formatNumber(Number(stats.total_daya))} Watt` : undefined}
           bgColor="bg-gradient-to-br from-[#F0F9FF] via-[#E3F2FF] to-[#93C5FD]"
           iconColor="text-[#2563EB]"
           cardBgColor="bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30"
@@ -198,53 +222,37 @@ export default function Dashboard() {
                 <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
                 <p className="text-xs text-gray-500">Performa penanganan kerusakan per bulan</p>
               </div>
-              <div className="flex gap-4 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B6B]"></span> Pending
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#4ECDC4]"></span> Sedang Dikerjakan
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFAF4E]"></span> Tindakan Lanjutan
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#6C5DD3]"></span> Selesai
-                </div>
-              </div>
+              <ChartLegend series={ADUAN_SERIES} />
             </div>
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={charts.aduan || []}>
+                <AreaChart data={aduanChart}>
                   <defs>
-                    <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#FF6B6B" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorSedangDikerjakan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#4ECDC4" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorTindakanLanjutan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FFAF4E" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#FFAF4E" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorSelesai" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
-                    </linearGradient>
+                    {ADUAN_SERIES.map(status => (
+                      <linearGradient key={status} id={gradientId('aduan', status)} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={getStatusHex(status)} stopOpacity={0.1} />
+                        <stop offset="95%" stopColor={getStatusHex(status)} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} allowDecimals={false} />
                   <RechartsTooltip
                     cursor={{ stroke: '#6C5DD3', strokeWidth: 1, strokeDasharray: '5 5' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
                   />
-                  <Area type="monotone" dataKey="Pending" stroke="#FF6B6B" strokeWidth={2} fillOpacity={1} fill="url(#colorPending)" />
-                  <Area type="monotone" dataKey="Sedang Dikerjakan" stroke="#4ECDC4" strokeWidth={2} fillOpacity={1} fill="url(#colorSedangDikerjakan)" />
-                  <Area type="monotone" dataKey="Tindakan Lanjutan" stroke="#FFAF4E" strokeWidth={2} fillOpacity={1} fill="url(#colorTindakanLanjutan)" />
-                  <Area type="monotone" dataKey="Selesai" stroke="#6C5DD3" strokeWidth={2} fillOpacity={1} fill="url(#colorSelesai)" />
+                  {ADUAN_SERIES.map(status => (
+                    <Area
+                      key={status}
+                      type="monotone"
+                      dataKey={status}
+                      stroke={getStatusHex(status)}
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill={`url(#${gradientId('aduan', status)})`}
+                    />
+                  ))}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -257,37 +265,37 @@ export default function Dashboard() {
                 <h3 className="font-bold text-lg text-text-dark">Statistik Pemeliharaan</h3>
                 <p className="text-xs text-gray-500">Performa pemeliharaan alat per bulan</p>
               </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span> Selesai
-                </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Belum Selesai
-                </div>
-              </div>
+              <ChartLegend series={PEMELIHARAAN_SERIES} />
             </div>
             <div className="h-[320px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={charts.pemeliharaan || []}>
+                <AreaChart data={pemeliharaanChart}>
                   <defs>
-                    <linearGradient id="colorPemSelesai" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorPemBelum" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
+                    {PEMELIHARAAN_SERIES.map(status => (
+                      <linearGradient key={status} id={gradientId('pemeliharaan', status)} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={getStatusHex(status)} stopOpacity={0.1} />
+                        <stop offset="95%" stopColor={getStatusHex(status)} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EFF0F6" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#92929D', fontSize: 12 }} allowDecimals={false} />
                   <RechartsTooltip
                     cursor={{ stroke: '#10B981', strokeWidth: 1, strokeDasharray: '5 5' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
                   />
-                  <Area type="monotone" dataKey="Selesai" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorPemSelesai)" />
-                  <Area type="monotone" dataKey="Belum Selesai" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorPemBelum)" />
+                  {PEMELIHARAAN_SERIES.map(status => (
+                    <Area
+                      key={status}
+                      type="monotone"
+                      dataKey={status}
+                      stroke={getStatusHex(status)}
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill={`url(#${gradientId('pemeliharaan', status)})`}
+                    />
+                  ))}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -306,24 +314,21 @@ export default function Dashboard() {
               <div className="text-center py-10 text-gray-400 text-sm">Belum ada aktivitas</div>
             ) : (
               recent.map((activity, index) => (
-                <div key={index} className="flex gap-4 group">
-                  <div className={`mt-1 min-w-[32px] h-[32px] rounded-full flex items-center justify-center ${getActivityColor(activity.type)} bg-opacity-10 text-current`}>
+                <div key={`${activity.type}-${activity.date}-${index}`} className="flex gap-4 group">
+                  <div className={`mt-1 min-w-[32px] h-[32px] rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
                     {getActivityIcon(activity.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start w-full">
                       <h4 className="text-sm font-bold text-text-dark line-clamp-1">{activity.title}</h4>
                       <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
-                        {new Date(activity.date).toLocaleDateString('id-ID')}
+                        {formatDateShort(activity.date)}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{activity.description}</p>
 
                     <div className="mt-2 flex items-center gap-2">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${activity.status === 'Selesai' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
-                        }`}>
-                        {activity.status}
-                      </span>
+                      {activity.status && <StatusBadge status={activity.status} size="sm" />}
                       {activity.meta && (
                         <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md line-clamp-1">
                           {activity.meta}
@@ -362,7 +367,7 @@ export default function Dashboard() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <span className="block text-xl font-bold text-text-dark">{stats.total_inventaris}</span>
+              <span className="block text-xl font-bold text-text-dark">{formatNumber(totalInventaris)}</span>
               <span className="text-[10px] uppercase tracking-wider text-gray-400">Total Unit</span>
             </div>
           </div>
@@ -380,27 +385,24 @@ export default function Dashboard() {
         {/* 2. Quick Actions (Dark Card) */}
         <div className="bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-brand-primary/20 rounded-2xl p-4 text-white flex flex-col justify-between shadow-xl shadow-brand-primary/20">
           <div>
-            <h3 className="font-bold text-base">Quick Actions</h3>
+            <h3 className="font-bold text-base">Aksi Cepat</h3>
             <p className="text-indigo-100 text-xs mt-1">Akses cepat menu yang sering digunakan.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mt-6">
-            <button onClick={() => navigate('/scanner')} className="bg-white/10 hover:bg-white/20 transition-all p-3 rounded-xl flex flex-col items-center gap-2 text-center group border border-white/5">
-              <QrCode className="text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Scan QR</span>
-            </button>
-            <button onClick={() => navigate('/inventaris/baru')} className="bg-white/10 hover:bg-white/20 transition-all p-3 rounded-xl flex flex-col items-center gap-2 text-center group border border-white/5">
-              <Plus className="text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Tambah Alat</span>
-            </button>
-            <button onClick={() => navigate('/aduan')} className="bg-white/10 hover:bg-white/20 transition-all p-3 rounded-xl flex flex-col items-center gap-2 text-center group border border-white/5">
-              <AlertCircle className="text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Buat Aduan</span>
-            </button>
-            <button onClick={() => navigate('/report/aduan')} className="bg-white/10 hover:bg-white/20 transition-all p-3 rounded-xl flex flex-col items-center gap-2 text-center group border border-white/5">
-              <FileText className="text-white group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Laporan</span>
-            </button>
+            {quickActions.map((action) => {
+              const ActionIcon = action.icon;
+              return (
+                <button
+                  key={action.key}
+                  onClick={() => navigate(action.path)}
+                  className="bg-white/10 hover:bg-white/20 transition-all p-3 rounded-xl flex flex-col items-center gap-2 text-center group border border-white/5"
+                >
+                  <ActionIcon className="text-white group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-medium">{action.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -408,27 +410,28 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl p-4  border border-gray-100 flex flex-col">
           <h3 className="font-bold text-text-dark mb-4 text-sm">Kondisi Aset</h3>
           <div className="space-y-5">
-            {/* Direct usage of charts.kondisi array */}
-            {(charts.kondisi || []).map((item, index) => {
-              const value = item.value || 0;
-              const label = item.name || 'Lainnya';
-              const percentage = Math.round((value / (stats.total_inventaris || 1)) * 100);
-              const color = index === 0 ? 'bg-green-500' : index === 1 ? 'bg-yellow-400' : index === 2 ? 'bg-orange-400' : 'bg-red-500';
+            {(charts.kondisi || []).length === 0 && (
+              <p className="text-xs text-gray-400 text-center py-6">Belum ada data kondisi aset</p>
+            )}
+            {(charts.kondisi || []).map((item) => {
+              const value = Number(item.value) || 0;
+              const label = item.name || 'Belum Ditentukan';
+              const percentage = totalInventaris > 0 ? Math.round((value / totalInventaris) * 100) : 0;
 
               return (
-                <div key={index}>
+                <div key={label}>
                   <div className="flex justify-between text-xs font-semibold text-text-dark mb-2">
                     <span>{label}</span>
-                    <span>{value} Unit ({percentage}%)</span>
+                    <span>{formatNumber(value)} Unit ({percentage}%)</span>
                   </div>
                   <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${color}`}
-                      style={{ width: `${percentage}%` }}
+                      className="h-full rounded-full"
+                      style={{ width: `${percentage}%`, backgroundColor: getStatusHex(item.name) }}
                     ></div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -437,32 +440,26 @@ export default function Dashboard() {
   );
 }
 
-
-function QuickActionButton({ icon, label, onClick, color }) {
+/** Legenda seri grafik; warna titik sama dengan warna garis (utils/status). */
+function ChartLegend({ series }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold  hover:-translate-y-1 transition-all whitespace-nowrap ${color}`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  )
+    <div className="flex gap-4 flex-wrap">
+      {series.map(status => (
+        <div key={status} className="flex items-center gap-2 text-xs font-medium text-gray-600">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusHex(status) }}></span> {status}
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function StatCard({ icon, title, value, subValue, trend, trendUp, bgColor, iconColor, cardBgColor }) {
+function StatCard({ icon, title, value, subValue, bgColor, iconColor, cardBgColor }) {
   return (
     <div className={`${cardBgColor || 'bg-gradient-to-br from-white via-white to-gray-50/30'} rounded-2xl p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50 hover:shadow-xl hover:shadow-gray-300/30 transition-all duration-300 backdrop-blur-sm`}>
       <div className="flex justify-between items-start mb-4">
         <div className={`${bgColor} ${iconColor} p-2.5 rounded-xl shadow-inner border border-white/60`}>
           {icon}
         </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md ${trendUp ? 'bg-[#EFFFF6] text-[#34D399]' : 'bg-red-50 text-red-500'}`}>
-            {trendUp && <TrendingUp size={10} />}
-            {trend}
-          </div>
-        )}
       </div>
       <div>
         <p className="text-[#92929D] text-xs font-medium mb-1">{title}</p>
@@ -473,22 +470,4 @@ function StatCard({ icon, title, value, subValue, trend, trendUp, bgColor, iconC
       </div>
     </div>
   );
-}
-
-function getActivityIcon(type) {
-  const icons = {
-    aduan: <AlertCircle size={14} />,
-    pemeliharaan: <Wrench size={14} />,
-    inventaris: <Package size={14} />,
-  };
-  return icons[type] || <Activity size={14} />;
-}
-
-function getActivityColor(type) {
-  const colors = {
-    aduan: 'bg-red-100 text-red-600',
-    pemeliharaan: 'bg-blue-100 text-blue-600',
-    inventaris: 'bg-purple-100 text-purple-600',
-  };
-  return colors[type] || 'bg-gray-100 text-gray-600';
 }

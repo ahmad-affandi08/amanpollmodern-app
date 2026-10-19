@@ -2,8 +2,24 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QrScanner from 'qr-scanner';
 import { Camera, SwitchCamera, CheckCircle } from 'lucide-react';
-import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
+import { useToast, usePageTitle } from '../../../hooks';
+import InventarisApi from '../../../api/InventarisApi';
+
+// Jeda sebelum QR yang sama boleh diproses lagi (mencegah toast beruntun saat kamera masih mengarah ke QR tak valid).
+const INVALID_QR_COOLDOWN_MS = 2000;
+// Jeda singkat agar pengguna sempat melihat pesan berhasil sebelum pindah halaman.
+const NAVIGATE_DELAY_MS = 500;
+
+const getCameraErrorMessage = (err) => {
+  const text = `${err?.name || ''} ${err?.message || err || ''}`;
+  if (/NotAllowed|Permission|denied/i.test(text)) {
+    return 'Izin kamera ditolak. Aktifkan izin kamera untuk situs ini di pengaturan browser, lalu coba lagi.';
+  }
+  if (/not found|NotFound|Camera not found/i.test(text)) {
+    return 'Kamera tidak ditemukan pada perangkat ini.';
+  }
+  return 'Kamera tidak dapat dibuka. Pastikan tidak sedang dipakai aplikasi lain, lalu coba lagi.';
+};
 
 export default function Scanner() {
   usePageTitle('QR Scanner');
@@ -11,121 +27,120 @@ export default function Scanner() {
   const { showToast } = useToast();
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
+  const handleScanRef = useRef(() => { });
+  const processingRef = useRef(false);
+  const navigateTimerRef = useRef(null);
 
   const [currentCamera, setCurrentCamera] = useState('environment');
   const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState(false);
   const [error, setError] = useState(null);
+  // Naik setiap kali pengguna menekan "Coba Lagi" agar scanner dibuat ulang.
+  const [attempt, setAttempt] = useState(0);
 
+  // Satu instance scanner untuk seluruh masa pakai halaman ini (dibuat ulang hanya saat "Coba Lagi").
+  // Ganti kamera memakai setCamera, bukan membuat scanner baru.
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!videoRef.current) {
-        setError('Video element tidak ditemukan');
-        setLoading(false);
-        return;
+    if (!videoRef.current) return undefined;
+
+    const instance = new QrScanner(
+      videoRef.current,
+      (result) => handleScanRef.current(result),
+      {
+        onDecodeError: () => { },
+        maxScansPerSecond: 2,
+        preferredCamera: 'environment',
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
       }
+    );
+    scannerRef.current = instance;
+    processingRef.current = false;
 
-      let qrScanner = null;
-
-      try {
-        qrScanner = new QrScanner(
-          videoRef.current,
-          (result) => {
-            if (typeof result?.data === 'string') {
-              showToast('QR Code Valid!', 'success');
-
-              if (qrScanner) {
-                qrScanner.stop();
-              }
-
-              setTimeout(() => {
-                navigate(`/inventaris/detail/${result.data}`);
-              }, 500);
-            }
-          },
-          {
-            maxScansPerSecond: 1,
-            preferredCamera: currentCamera,
-            highlightScanRegion: true,
-            highlightCodeOutline: true,
-          }
-        );
-
-        scannerRef.current = qrScanner;
-
-        qrScanner.start()
-          .then(() => {
-            setLoading(false);
-          })
-          .catch((err) => {
-            console.error('Scanner start error:', err);
-            setError('Gagal memulai kamera: ' + err.message);
-            setLoading(false);
-          });
-
-      } catch (err) {
-        console.error('Scanner init error:', err);
-        setError(err.message || 'Gagal menginisialisasi scanner');
+    instance
+      .start()
+      .then(() => {
+        if (scannerRef.current === instance) setLoading(false);
+      })
+      .catch((err) => {
+        // Instance sudah diganti/dihancurkan (mis. pindah halaman): abaikan.
+        if (scannerRef.current !== instance) return;
+        console.error('Kamera tidak dapat dibuka:', err);
+        setError(getCameraErrorMessage(err));
         setLoading(false);
-      }
-    }, 100);
+      });
 
     return () => {
-      clearTimeout(timer);
-      if (scannerRef.current) {
-        try {
-          scannerRef.current.stop();
-          scannerRef.current.destroy();
-        } catch (e) {
-          console.error('Cleanup error:', e);
-        }
-      }
+      if (scannerRef.current === instance) scannerRef.current = null;
+      clearTimeout(navigateTimerRef.current);
+      instance.destroy();
     };
-  }, [currentCamera, navigate, showToast]);
+  }, [attempt]);
+
+  const handleScan = async (result) => {
+    // Hanya satu hasil diproses sekaligus; hasil lain diabaikan sampai pemrosesan selesai.
+    if (processingRef.current || typeof result?.data !== 'string') return;
+
+    const code = result.data.trim();
+    if (!code) return;
+
+    processingRef.current = true;
+
+    try {
+      // Validasi dulu ke server: QR harus milik inventaris yang ada sebelum pindah halaman.
+      const res = await InventarisApi.getById(encodeURIComponent(code));
+      const item = res?.data || res;
+      const itemId = item?.id;
+
+      if (itemId === undefined || itemId === null) {
+        throw Object.assign(new Error('QR tidak dikenali'), { notFound: true });
+      }
+
+      showToast('QR Code valid', 'success');
+      scannerRef.current?.stop();
+
+      navigateTimerRef.current = setTimeout(() => {
+        navigate(`/inventaris/detail/${itemId}`);
+      }, NAVIGATE_DELAY_MS);
+    } catch (err) {
+      const notFound = err.notFound || err.response?.status === 404;
+      if (!notFound) console.error('Gagal memvalidasi QR Code:', err);
+
+      showToast(notFound ? 'QR Code tidak dikenali' : 'Gagal memvalidasi QR Code. Periksa koneksi lalu coba lagi.', 'error');
+
+      // Scanner tetap hidup; setelah jeda singkat QR berikutnya boleh diproses.
+      setTimeout(() => {
+        processingRef.current = false;
+      }, INVALID_QR_COOLDOWN_MS);
+    }
+  };
+
+  useEffect(() => {
+    handleScanRef.current = handleScan;
+  });
 
   const toggleCamera = async () => {
-    if (scannerRef.current) {
-      try {
-        setLoading(true);
+    const active = scannerRef.current;
+    if (!active || switching) return;
 
-        await scannerRef.current.stop();
-        scannerRef.current.destroy();
-
-        const newMode = currentCamera === 'environment' ? 'user' : 'environment';
-        setCurrentCamera(newMode);
-
-        const qrScanner = new QrScanner(
-          videoRef.current,
-          (result) => {
-            if (typeof result?.data === 'string') {
-              showToast('QR Code Valid!', 'success');
-
-              if (qrScanner) {
-                qrScanner.stop();
-              }
-
-              setTimeout(() => {
-                navigate(`/inventaris/detail/${result.data}`);
-              }, 500);
-            }
-          },
-          {
-            maxScansPerSecond: 1,
-            preferredCamera: newMode,
-            highlightScanRegion: true,
-            highlightCodeOutline: true,
-          }
-        );
-
-        scannerRef.current = qrScanner;
-
-        await qrScanner.start();
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to switch camera:', err);
-        setError('Gagal mengganti kamera: ' + err.message);
-        setLoading(false);
-      }
+    const nextMode = currentCamera === 'environment' ? 'user' : 'environment';
+    setSwitching(true);
+    try {
+      await active.setCamera(nextMode);
+      setCurrentCamera(nextMode);
+    } catch (err) {
+      console.error('Gagal mengganti kamera:', err);
+      showToast('Gagal mengganti kamera', 'error');
+    } finally {
+      setSwitching(false);
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    setCurrentCamera('environment');
+    setAttempt((value) => value + 1);
   };
 
   return (
@@ -150,7 +165,7 @@ export default function Scanner() {
               <h3 className="font-bold text-red-900 mb-1.5 text-sm">Gagal Mengakses Kamera</h3>
               <p className="text-red-700 text-xs mb-3">{error}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={handleRetry}
                 className="px-5 py-1.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-sm"
               >
                 Coba Lagi
@@ -192,7 +207,7 @@ export default function Scanner() {
                 {!loading && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-brand-primary text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                    Scanning...
+                    Memindai...
                   </div>
                 )}
               </div>
@@ -201,10 +216,11 @@ export default function Scanner() {
                 <div className="mt-4 flex justify-center">
                   <button
                     onClick={toggleCamera}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-lg transition-all shadow-sm text-sm"
+                    disabled={switching}
+                    className="flex items-center gap-1.5 px-5 py-2 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-lg transition-all shadow-sm text-sm disabled:opacity-60"
                   >
                     <SwitchCamera size={16} />
-                    Switch Camera
+                    Ganti Kamera
                   </button>
                 </div>
               )}

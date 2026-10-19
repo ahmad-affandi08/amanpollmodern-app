@@ -1,8 +1,8 @@
 import axiosClient from './axiosClient';
 
 const KategoriAlatApi = {
-  getAll: async () => {
-    const response = await axiosClient.get('/kategori-alat');
+  getAll: async (params) => {
+    const response = await axiosClient.get('/kategori-alat', { params });
     return response.data.data;
   },
 

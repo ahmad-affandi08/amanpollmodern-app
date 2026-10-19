@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, Eye, Trash2, Calendar, Layers, MapPin, User, FileText, AlertCircle, Edit } from 'lucide-react';
+import { Search, Download, Eye, Trash2, FileText, AlertCircle, Edit } from 'lucide-react';
 import {
   useReportAduan,
   useDeleteAduan,
   useMasterRuangan,
   useMasterDivisi,
-  useMasterUsers,
   useAuth,
   useToast,
   usePagination,
@@ -27,6 +26,12 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
+import StatusBadge from '../../../components/StatusBadge';
+import { apiUrl } from '../../../config';
+import { formatDateTime, formatDateShort, formatTime } from '../../../utils/format';
+import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
+import useConfirmAction from '../master-data/useConfirmAction';
+import useTeknisiOptions from './useTeknisiOptions';
 
 export default function ReportAduan() {
   usePageTitle('Laporan Aduan');
@@ -34,13 +39,10 @@ export default function ReportAduan() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
-  const userDivisiId = user?.divisi_id;
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
+  const isPimpinan = isReadOnlyRole(user);
 
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
+  const { askConfirm, dialogProps } = useConfirmAction();
   const [selectedImage, setSelectedImage] = useState(null);
   const imagePreviewModal = useModal();
 
@@ -67,26 +69,22 @@ export default function ReportAduan() {
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
-  const { data: usersData } = useMasterUsers({ per_page: 500 });
+  const teknisiOptions = useTeknisiOptions();
   const deleteMutation = useDeleteAduan();
 
 
   const data = aduanData?.data || [];
   const meta = aduanData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (meta) pagination.setMetadata(meta);
-  }, [meta]);
+    if (meta) setMetadata(meta);
+  }, [meta, setMetadata]);
 
 
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
   const divisiOptions = (divisiData?.data || []).map(d => ({ label: d.nama_divisi, value: d.id_divisi }));
 
-  let teknisi = (usersData?.data || []).filter(u => (u.role || '').toLowerCase() === 'teknisi');
-  if (isAdminDivisi && userDivisiId) {
-    teknisi = teknisi.filter(u => parseInt(u.divisi_id) === parseInt(userDivisiId));
-  }
-  const teknisiOptions = teknisi.map(u => ({ label: u.nama_lengkap, value: u.id_user }));
 
   const statusOptions = [
     { label: 'Pending', value: 'Pending' },
@@ -95,30 +93,20 @@ export default function ReportAduan() {
     { label: 'Selesai', value: 'Selesai' }
   ];
 
-  const kondisiAlatOptions = [
-    { label: 'Baik', value: 'Baik' },
-    { label: 'Rusak Ringan', value: 'Rusak Ringan' },
-    { label: 'Rusak Berat', value: 'Rusak Berat' },
-    { label: 'Dalam Perbaikan', value: 'Dalam Perbaikan' }
-  ];
-
-
   const handleDelete = (id) => {
-    setConfirmDialog({
-      isOpen: true,
-      id,
+    askConfirm({
       title: 'Hapus Aduan',
       message: 'Apakah Anda yakin ingin menghapus data laporan ini?',
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(id);
           showToast('Laporan berhasil dihapus', 'success');
-          setConfirmDialog({ isOpen: false, id: null });
-        } catch (error) {
+        } catch {
           showToast('Gagal menghapus laporan', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false, id: null })
     });
   };
 
@@ -127,20 +115,24 @@ export default function ReportAduan() {
     pagination.reset();
   };
 
-  const getStatusBadge = (status) => {
-    const config = {
-      'Pending': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-      'Sedang Dikerjakan': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      'Selesai': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-      'Tindakan Lanjutan': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-    };
-    const c = config[status] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
+  const handleResetFilters = () => {
+    resetFilters();
+    pagination.reset();
+  };
 
-    return (
-      <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold rounded-full border ${c.bg} ${c.text} ${c.border}`}>
-        {status}
-      </span>
-    );
+  // Unduhan lewat tautan (rute export di server tidak memakai middleware api.auth,
+  // sesi dibawa cookie), jadi autentikasi tidak diubah.
+  const handleExport = () => {
+    window.open(apiUrl('/aduan/export-excel', {
+      search: filters.search,
+      ruangan_id: filters.ruangan_id,
+      divisi_id: filters.divisi_id,
+      teknisi_id: filters.teknisi_id,
+      status_aduan: filters.status_aduan,
+      kondisi_alat: filters.kondisi_alat,
+      start_date: filters.start_date,
+      end_date: filters.end_date,
+    }), '_blank');
   };
 
   return (
@@ -152,24 +144,12 @@ export default function ReportAduan() {
           <p className="text-text-gray text-xs mt-1">Rekapitulasi seluruh data aduan dan perbaikan</p>
         </div>
         <Button
-          onClick={() => {
-            const params = new URLSearchParams();
-            if (filters.search) params.append('search', filters.search);
-            if (filters.ruangan_id) params.append('ruangan_id', filters.ruangan_id);
-            if (filters.divisi_id) params.append('divisi_id', filters.divisi_id);
-            if (filters.teknisi_id) params.append('teknisi_id', filters.teknisi_id);
-            if (filters.status_aduan) params.append('status_aduan', filters.status_aduan);
-            if (filters.kondisi_alat) params.append('kondisi_alat', filters.kondisi_alat);
-            if (filters.start_date) params.append('start_date', filters.start_date);
-            if (filters.end_date) params.append('end_date', filters.end_date);
-
-            window.open(`/api/aduan/export-excel?${params.toString()}`, '_blank');
-          }}
+          onClick={handleExport}
           size="md"
           className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
         >
           <Download className="w-4 h-4" />
-          Export Data
+          Export Excel
         </Button>
       </div>
 
@@ -251,7 +231,7 @@ export default function ReportAduan() {
             <Button
               variant="outline"
               size="sm"
-              onClick={resetFilters}
+              onClick={handleResetFilters}
               className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
             >
               Reset Filter
@@ -274,15 +254,15 @@ export default function ReportAduan() {
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Keluhan Kerusakan</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Foto</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Pengadu</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Pelapor</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal Pemeriksaan</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Jam Pemeriksaan</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tindakan Petugas</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tindakan Teknisi</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Rekomendasi</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi Alat</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
@@ -308,10 +288,7 @@ export default function ReportAduan() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.create_date ? new Date(item.create_date).toLocaleString('id-ID', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit', second: '2-digit'
-                      }).replace(/\./g, ':') : '-'}
+                      {formatDateTime(item.create_date)}
                     </td>
                     <td className="py-3 px-4 text-gray-600 text-xs">{item.divisi_nama || '-'}</td>
                     <td className="py-3 px-4 text-gray-600 font-medium text-xs">{item.ruangan_nama || '-'}</td>
@@ -353,14 +330,10 @@ export default function ReportAduan() {
                     </td>
                     <td className="py-3 px-4 text-gray-600 text-xs">{item.nama_pengadu || '-'}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
-                        day: '2-digit', month: '2-digit', year: 'numeric'
-                      }) : 'Belum Ditentukan'}
+                      {item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleTimeString('id-ID', {
-                        hour: '2-digit', minute: '2-digit'
-                      }) : 'Belum Ditentukan'}
+                      {item.tanggal_pemeriksaan ? formatTime(item.tanggal_pemeriksaan) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-3 px-4 text-brand-primary font-medium text-xs">
                       {item.teknisi_nama || 'Belum Ditentukan'}
@@ -371,7 +344,7 @@ export default function ReportAduan() {
                       {item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>}
                     </td>
                     <td className="py-3 px-4">
-                      {getStatusBadge(item.status_aduan)}
+                      <StatusBadge status={item.status_aduan} size="sm" />
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2 text-xs">
@@ -414,30 +387,23 @@ export default function ReportAduan() {
                         )}
                       </div>
                     </td>
-                  </tr >
+                  </tr>
                 ))
               )}
-            </tbody >
-          </table >
-        </div >
+            </tbody>
+          </table>
+        </div>
 
-        {
-          pagination.totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination
-                size="sm"
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                onPageChange={pagination.goToPage}
-                totalData={pagination.totalItems}
-              />
-            </div>
-          )
-        }
-      </div >
-
-
-
+        <div className="mt-6">
+          <Pagination
+            size="sm"
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalData={pagination.totalItems}
+          />
+        </div>
+      </div>
 
       {/* Image Preview Modal */}
       <ImagePreviewModal
@@ -446,18 +412,7 @@ export default function ReportAduan() {
         onClose={imagePreviewModal.close}
       />
 
-      {
-        confirmDialog.isOpen && (
-          <ConfirmDialog
-            isOpen={confirmDialog.isOpen}
-            title={confirmDialog.title}
-            message={confirmDialog.message}
-            onConfirm={confirmDialog.onConfirm}
-            onCancel={confirmDialog.onCancel}
-            type="danger"
-          />
-        )
-      }
-    </div >
+      <ConfirmDialog {...dialogProps} />
+    </div>
   );
 }

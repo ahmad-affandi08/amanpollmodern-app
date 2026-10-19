@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Eye, EyeOff, Save, TestTube, CheckCircle, XCircle, Loader2, BookOpen, ExternalLink, MessageCircle, Info, AlertTriangle } from 'lucide-react';
 import { useFonnteConfig, useSaveFonnteConfig, useTestFonnteConnection } from '../../../hooks';
 import { useToast } from '../../../components/Alert/useToast';
@@ -8,9 +8,8 @@ const KonfigurasiIntegrasi = () => {
   usePageTitle('Konfigurasi Integrasi Fonnte');
   const { showToast } = useToast();
 
-  const [formData, setFormData] = useState({
-    api_token: '',
-  });
+  // null = belum diubah pengguna, tampilkan token dari server.
+  const [tokenInput, setTokenInput] = useState(null);
   const [showToken, setShowToken] = useState(false);
   const [testStatus, setTestStatus] = useState(null);
 
@@ -18,17 +17,10 @@ const KonfigurasiIntegrasi = () => {
   const saveMutation = useSaveFonnteConfig();
   const testMutation = useTestFonnteConnection();
 
-  useEffect(() => {
-    if (config) {
-      setFormData({
-        api_token: config.api_token || '',
-      });
-    }
-  }, [config]);
+  const formData = { api_token: tokenInput ?? config?.api_token ?? '' };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setTokenInput(e.target.value);
     setTestStatus(null);
   };
 

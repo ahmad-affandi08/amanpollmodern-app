@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import PemeliharaanApi from '../../api/PemeliharaanApi';
 import { queryKeys } from '../../lib/queryKeys';
 
@@ -13,6 +13,7 @@ export const usePemeliharaan = (filters = {}) => {
         meta: res.meta,
       };
     },
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -29,6 +30,8 @@ export const usePemeliharaanAssignments = (limit = 10, search = '', status = 'al
       return currentPage < lastPageNum ? currentPage + 1 : undefined;
     },
     initialPageParam: 1,
+    // Daftar lama bertahan saat filter/pencarian berubah (tanpa skeleton penuh).
+    placeholderData: keepPreviousData,
   });
 };
 

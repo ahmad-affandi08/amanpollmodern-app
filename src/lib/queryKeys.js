@@ -32,13 +32,7 @@ export const queryKeys = {
     all: ['notifications'],
     unread: () => [...queryKeys.notifications.all, 'unread'],
     unreadCount: () => [...queryKeys.notifications.all, 'unreadCount'],
-    list: (page) => [...queryKeys.notifications.all, 'list', page],
-  },
-
-
-  dashboard: {
-    all: ['dashboard'],
-    stats: () => [...queryKeys.dashboard.all, 'stats'],
+    list: (page, perPage) => [...queryKeys.notifications.all, 'list', page, perPage],
   },
 
 
@@ -48,12 +42,6 @@ export const queryKeys = {
     divisi: (filters) => ['master', 'divisi', filters],
     namaAlat: (filters) => ['master', 'namaAlat', filters],
     kategori: (filters) => ['master', 'kategori', filters],
-  },
-
-
-  reports: {
-    aduan: (filters) => ['reports', 'aduan', filters],
-    pemeliharaan: (filters) => ['reports', 'pemeliharaan', filters],
   },
 
 

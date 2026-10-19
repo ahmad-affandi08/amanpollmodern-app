@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RotateCcw, Download, Eye, Trash2, Calendar, MapPin, Layers, User, AlertCircle, FileText, Edit } from 'lucide-react';
+import { Search, Download, Eye, Trash2, AlertCircle, FileText, Edit } from 'lucide-react';
 import {
   useReportPemeliharaan,
   useDeletePemeliharaan,
   useMasterRuangan,
   useMasterDivisi,
-  useMasterUsers,
   useAuth,
   usePagination,
   useFilters,
@@ -22,6 +21,12 @@ import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import { useToast } from '../../../components/Alert/useToast';
 import KondisiBadge from '../../../components/KondisiBadge';
+import StatusBadge from '../../../components/StatusBadge';
+import { apiUrl } from '../../../config';
+import { formatDateShort } from '../../../utils/format';
+import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
+import useConfirmAction from '../master-data/useConfirmAction';
+import useTeknisiOptions from './useTeknisiOptions';
 
 export default function ReportPemeliharaan() {
   usePageTitle('Laporan Pemeliharaan');
@@ -29,13 +34,10 @@ export default function ReportPemeliharaan() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
-  const userDivisiId = user?.divisi_id;
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
+  const isPimpinan = isReadOnlyRole(user);
 
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null });
+  const { askConfirm, dialogProps } = useConfirmAction();
 
   const pagination = usePagination(10);
   const { filters, updateFilter, resetFilters } = useFilters({
@@ -60,26 +62,22 @@ export default function ReportPemeliharaan() {
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
-  const { data: usersData } = useMasterUsers({ per_page: 500 });
+  const teknisiOptions = useTeknisiOptions();
   const deleteMutation = useDeletePemeliharaan();
 
 
   const data = pemeliharaanData?.data || [];
   const meta = pemeliharaanData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (meta) pagination.setMetadata(meta);
-  }, [meta, pagination]);
+    if (meta) setMetadata(meta);
+  }, [meta, setMetadata]);
 
 
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
   const divisiOptions = (divisiData?.data || []).map(d => ({ label: d.nama_divisi, value: d.id_divisi }));
 
-  let teknisi = (usersData?.data || []).filter(u => (u.role || '').toLowerCase() === 'teknisi');
-  if (isAdminDivisi && userDivisiId) {
-    teknisi = teknisi.filter(u => parseInt(u.divisi_id) === parseInt(userDivisiId));
-  }
-  const teknisiOptions = teknisi.map(u => ({ label: u.nama_lengkap, value: u.id_user }));
 
   const statusOptions = [
     { value: 'Selesai', label: 'Selesai' },
@@ -87,9 +85,11 @@ export default function ReportPemeliharaan() {
     { value: 'Tindakan Lanjutan', label: 'Tindakan Lanjutan' }
   ];
 
+  // Super Admin boleh menghapus semua; Admin Divisi hanya yang belum 'Selesai'
+  // (aturan yang sama dengan daftar Pemeliharaan).
   const canDelete = (item) => {
-    if (Number(user?.kategori_user_id) === 1) return true;
-    if (Number(user?.kategori_user_id) === 4) return item.status !== 'Selesai';
+    if (isRole(user, ROLES.SUPER_ADMIN)) return true;
+    if (isAdminDivisi) return item.status !== 'Selesai';
     return false;
   };
 
@@ -99,21 +99,19 @@ export default function ReportPemeliharaan() {
       return;
     }
 
-    setConfirmDialog({
-      isOpen: true,
-      id: item.id_pemeliharaan,
+    askConfirm({
       title: 'Hapus Pemeliharaan',
       message: 'Apakah Anda yakin ingin menghapus data laporan ini?',
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
       onConfirm: async () => {
         try {
           await deleteMutation.mutateAsync(item.id_pemeliharaan);
           showToast('Laporan berhasil dihapus', 'success');
-          setConfirmDialog({ isOpen: false, id: null });
         } catch {
           showToast('Gagal menghapus laporan', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false, id: null })
     });
   };
 
@@ -122,19 +120,24 @@ export default function ReportPemeliharaan() {
     pagination.reset();
   };
 
-  const getStatusBadge = (status) => {
-    const config = {
-      'Selesai': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-      'Belum Selesai': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-      'Tindakan Lanjutan': { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-    };
-    const c = config[status] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
+  const handleResetFilters = () => {
+    resetFilters();
+    pagination.reset();
+  };
 
-    return (
-      <span className={`inline-flex items-center px-2.5 py-1 text-[10px] font-semibold rounded-full border ${c.bg} ${c.text} ${c.border}`}>
-        {status}
-      </span>
-    );
+  // Unduhan lewat tautan (rute export di server tidak memakai middleware api.auth,
+  // sesi dibawa cookie), jadi autentikasi tidak diubah.
+  const handleExport = () => {
+    window.open(apiUrl('/pemeliharaan/export-excel', {
+      search: filters.search,
+      ruangan_id: filters.ruangan_id,
+      divisi_id: filters.divisi_id,
+      teknisi_id: filters.teknisi_id,
+      status: filters.status,
+      kondisi_alat: filters.kondisi_alat,
+      start_date: filters.start_date,
+      end_date: filters.end_date,
+    }), '_blank');
   };
 
   return (
@@ -146,24 +149,12 @@ export default function ReportPemeliharaan() {
           <p className="text-text-gray text-xs mt-1">Rekapitulasi jadwal dan hasil pemeliharaan alat</p>
         </div>
         <Button
-          onClick={() => {
-            const params = new URLSearchParams();
-            if (filters.search) params.append('search', filters.search);
-            if (filters.ruangan_id) params.append('ruangan_id', filters.ruangan_id);
-            if (filters.divisi_id) params.append('divisi_id', filters.divisi_id);
-            if (filters.teknisi_id) params.append('teknisi_id', filters.teknisi_id);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.kondisi_alat) params.append('kondisi_alat', filters.kondisi_alat);
-            if (filters.start_date) params.append('start_date', filters.start_date);
-            if (filters.end_date) params.append('end_date', filters.end_date);
-
-            window.open(`/api/pemeliharaan/export-excel?${params.toString()}`, '_blank');
-          }}
+          onClick={handleExport}
           className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
           size="md"
         >
           <Download className="w-4 h-4" />
-          Export Data
+          Export Excel
         </Button>
       </div>
 
@@ -245,7 +236,7 @@ export default function ReportPemeliharaan() {
             <Button
               variant="outline"
               size="sm"
-              onClick={resetFilters}
+              onClick={handleResetFilters}
               className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
             >
               Reset Filter
@@ -270,7 +261,7 @@ export default function ReportPemeliharaan() {
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi</th>
                 <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
+                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-sm">
@@ -301,17 +292,17 @@ export default function ReportPemeliharaan() {
                     <td className="py-3 px-4 text-gray-600 font-mono text-[10px]">{item.no_inventaris || '-'}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs">{item.merk || '-'}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.jadwal_pemeliharaan ? new Date(item.jadwal_pemeliharaan).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
+                      {item.jadwal_pemeliharaan ? formatDateShort(item.jadwal_pemeliharaan) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-3 px-4 text-brand-primary font-medium text-xs">{item.teknisi_nama || '-'}</td>
                     <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.tanggal_pemeriksaan ? new Date(item.tanggal_pemeriksaan).toLocaleDateString('id-ID') : 'Belum Ditentukan'}
+                      {item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'}
                     </td>
                     <td className="py-3 px-4">
                       {item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">Belum Ditentukan</span>}
                     </td>
                     <td className="py-3 px-4">
-                      {getStatusBadge(item.status)}
+                      <StatusBadge status={item.status} size="sm" />
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2 text-xs">
@@ -356,30 +347,18 @@ export default function ReportPemeliharaan() {
           </table>
         </div>
 
-        {pagination.totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination
-              size="sm"
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={pagination.goToPage}
-              totalData={pagination.totalItems}
-            />
-          </div>
-        )}
+        <div className="mt-6">
+          <Pagination
+            size="sm"
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+            totalData={pagination.totalItems}
+          />
+        </div>
       </div>
 
-
-      {confirmDialog.isOpen && (
-        <ConfirmDialog
-          isOpen={confirmDialog.isOpen}
-          title={confirmDialog.title}
-          message={confirmDialog.message}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={confirmDialog.onCancel}
-          type="danger"
-        />
-      )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

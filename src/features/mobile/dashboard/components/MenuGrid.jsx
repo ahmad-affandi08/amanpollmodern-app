@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../../../context/AuthContext';
+import { useAuth } from '../../../../hooks';
+import { ROLES, isRole } from '../../../auth/constants';
 import IconAduan from '../../../../assets/img/icon-aduan.png';
 import IconRiwayat from '../../../../assets/img/icon-riwayat-pengaduan.png';
 import IconInventaris from '../../../../assets/img/icon-inventaris.png';
@@ -10,7 +11,7 @@ import IconRiwayatPemeliharaan from '../../../../assets/img/icon-riwayat-pemelih
 
 export default function MenuGrid() {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user } = useAuth();
 
 
   const userRuanganMenuItems = [
@@ -77,13 +78,13 @@ export default function MenuGrid() {
   ];
 
 
-  const menuItems = parseInt(user?.kategori_user_id) === 3 ? teknisiMenuItems : userRuanganMenuItems;
+  const menuItems = isRole(user, ROLES.TEKNISI) ? teknisiMenuItems : userRuanganMenuItems;
 
   return (
     <div className="grid grid-cols-2 gap-4">
       {menuItems.map((item, index) => (
         <button
-          key={index}
+          key={item.path}
           onClick={() => navigate(item.path)}
           className={`bg-gradient-to-br ${item.gradient} cursor-pointer rounded-[20px] p-6 shadow-lg shadow-gray-200/50 border border-white/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group`}
           style={{ animationDelay: `${index * 50}ms` }}

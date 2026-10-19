@@ -1,10 +1,10 @@
-import React, { useRef, useState, useContext, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, Edit2, X, ClipboardCheck } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { useAduanDetail, useUpdateInspection } from '../../../hooks/queries/useAduanQueries';
-import { useAuthContext } from '../../../context/AuthContext';
-import { ToastContext } from '../../../components/Alert/ToastProvider';
+import { usePageTitle, useAuth, useToast, useAduanDetail, useUpdateInspection } from '../../../hooks';
+import { formatDateTime } from '../../../utils/format';
+import StatusBadge from '../../../components/StatusBadge';
+import KondisiBadge from '../../../components/KondisiBadge';
 import SignaturePad from '../../../components/SignaturePad';
 import SearchableSelect from '../../../components/SearchableSelect';
 import axiosClient from '../../../api/axiosClient';
@@ -13,8 +13,8 @@ export default function MobileAduanFormTeknisi() {
   usePageTitle('Form Pemeriksaan');
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthContext();
-  const { showToast } = useContext(ToastContext);
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
   const { data: aduan, isLoading } = useAduanDetail(id);
   const updateInspection = useUpdateInspection();
@@ -100,9 +100,11 @@ export default function MobileAduanFormTeknisi() {
     }
 
     if (ttdKepalaRuangRef.current?.isEmpty()) {
-      showToast('Tanda tangan pengadu harus diisi!', 'error');
+      showToast('Tanda tangan Kepala Ruangan harus diisi!', 'error');
       return;
     }
+
+    if (updateInspection.isPending) return;
 
     try {
       const inspectionData = {
@@ -265,24 +267,14 @@ export default function MobileAduanFormTeknisi() {
               {aduan.kondisi_alat && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${aduan.kondisi_alat === 'Baik' ? 'bg-green-100 text-green-700' :
-                    aduan.kondisi_alat === 'Rusak Ringan' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                    {aduan.kondisi_alat}
-                  </span>
+                  <KondisiBadge kondisi={aduan.kondisi_alat} />
                 </div>
               )}
 
               {aduan.status_aduan && (
                 <div className="bg-white rounded-xl p-3 border border-orange-100">
                   <p className="text-xs text-gray-600 mb-1">Status</p>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium inline-block ${aduan.status_aduan === 'Selesai' ? 'bg-green-100 text-green-700' :
-                    aduan.status_aduan === 'Tindakan Lanjutan' ? 'bg-orange-100 text-orange-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                    {aduan.status_aduan}
-                  </span>
+                  <StatusBadge status={aduan.status_aduan} />
                 </div>
               )}
             </div>
@@ -292,13 +284,7 @@ export default function MobileAduanFormTeknisi() {
               <div className="bg-white rounded-xl p-3 border border-orange-100">
                 <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
                 <p className="text-sm font-medium text-gray-800">
-                  {new Date(aduan.tanggal_pemeriksaan).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatDateTime(aduan.tanggal_pemeriksaan)}
                 </p>
               </div>
             )}
@@ -306,7 +292,7 @@ export default function MobileAduanFormTeknisi() {
             {/* Info Badge */}
             <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
               <p className="text-xs text-orange-800 font-medium">
-                ℹ️ Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
+                Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
               </p>
             </div>
           </div>
@@ -318,7 +304,7 @@ export default function MobileAduanFormTeknisi() {
         {/* Tindakan Teknisi */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Safety Check / Tindakan Teknisi <span className='text-red-500'>*</span>
+            Tindakan Teknisi <span className='text-red-500'>*</span>
           </label>
           <textarea
             name="tindakan_teknisi"
@@ -359,7 +345,7 @@ export default function MobileAduanFormTeknisi() {
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
             required
           >
-            <option value="">-- Pilih Kondisi Alat --</option>
+            <option value="">Pilih kondisi alat</option>
             <option value="Baik">Baik</option>
             <option value="Rusak Ringan">Rusak Ringan</option>
             <option value="Rusak Berat">Rusak Berat</option>
@@ -375,13 +361,13 @@ export default function MobileAduanFormTeknisi() {
           <p className="text-xs text-gray-500 mt-2">{user?.nama_lengkap}</p>
         </div>
 
-        {/* Tanda Tangan Pengadu */}
+        {/* Tanda Tangan Kepala Ruangan */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
           <SignaturePad
             ref={ttdKepalaRuangRef}
-            label="Tanda Tangan Pengadu *"
+            label="Tanda Tangan Kepala Ruangan *"
           />
-          <p className="text-xs text-gray-500 mt-2">{aduan.nama_pengadu}</p>
+          <p className="text-xs text-gray-500 mt-2">Pelapor: {aduan.nama_pengadu}</p>
         </div>
 
         {/* Status */}
@@ -396,7 +382,7 @@ export default function MobileAduanFormTeknisi() {
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
             required
           >
-            <option value="">-- Pilih Status Aduan --</option>
+            <option value="">Pilih status aduan</option>
             <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
             <option value="Selesai">Selesai</option>
           </select>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export default function Input({
   label,
@@ -23,19 +23,27 @@ export default function Input({
     return stringVal.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
+  const autoId = useId();
+  const inputId = props.id || autoId;
+
   const handleChange = (e) => {
     if (currency) {
 
       const rawValue = e.target.value.replace(/\./g, '').replace(/\D/g, '');
 
-
+      // Objek biasa (bukan salinan SyntheticEvent) agar preventDefault/stopPropagation
+      // dan properti target tetap tersedia bagi pemanggil.
       const event = {
-        ...e,
         target: {
-          ...e.target,
-          name: props.name,
+          name: props.name ?? e.target.name,
+          id: e.target.id,
+          type: e.target.type,
           value: rawValue
-        }
+        },
+        currentTarget: e.currentTarget,
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+        persist: () => {},
       };
 
       onChange && onChange(event);
@@ -49,7 +57,7 @@ export default function Input({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">
+        <label htmlFor={inputId} className="block text-sm font-semibold text-[#808191] mb-2 pl-1">
           {label}
           {props.required && <span className="text-[#FF754C] ml-1">*</span>}
         </label>
@@ -63,6 +71,7 @@ export default function Input({
         )}
 
         <input
+          id={inputId}
           className={`
             w-full ${sizes[size]} bg-[#F8F9FB] border border-gray-200 font-medium 
             outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all

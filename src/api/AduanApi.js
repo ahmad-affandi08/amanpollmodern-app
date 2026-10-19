@@ -29,7 +29,7 @@ const AduanApi = {
   update: async (id, data) => {
     const headers = data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
     if (data instanceof FormData) {
-      data.append('_method', 'PUT');
+      data.set('_method', 'PUT');
       const response = await axiosClient.post(`/aduan/${id}`, data, { headers });
       return response.data;
     }

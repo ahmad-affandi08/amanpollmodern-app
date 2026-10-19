@@ -1,21 +1,23 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
+// Didefinisikan di luar komponen supaya tidak dibuat ulang di setiap render.
+function ChartTooltip({ active, payload }) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white px-3 py-2 rounded-lg shadow-lg border border-gray-200">
+        <p className="text-xs font-semibold text-gray-800">{payload[0].name}</p>
+        <p className="text-sm font-bold text-brand-primary">{payload[0].value}</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+const tooltipElement = <ChartTooltip />;
+
 export default function DonutChart({ title, data, colors }) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white px-3 py-2 rounded-lg shadow-lg border border-gray-200">
-          <p className="text-xs font-semibold text-gray-800">{payload[0].name}</p>
-          <p className="text-sm font-bold text-brand-primary">{payload[0].value}</p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const total = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
 
   return (
     <div className="bg-gradient-to-br from-white via-white to-gray-50/30 rounded-[20px] p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50">
@@ -35,7 +37,7 @@ export default function DonutChart({ title, data, colors }) {
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} stroke="none" />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={tooltipElement} />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
@@ -43,12 +45,12 @@ export default function DonutChart({ title, data, colors }) {
           <span className="text-[8px] uppercase tracking-wider text-gray-400">Total</span>
         </div>
       </div>
-      {/* Legend */}
+      {/* Legenda: semua irisan ditampilkan */}
       <div className="flex flex-wrap gap-x-2 gap-y-1 justify-center mt-2">
-        {data.slice(0, 3).map((item, i) => (
-          <div key={i} className="flex items-center gap-1">
+        {data.map((item, i) => (
+          <div key={item.name ?? i} className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }}></span>
-            <span className="text-[9px] text-gray-500 truncate max-w-[60px]">{item.name}</span>
+            <span className="text-[9px] text-gray-500 truncate max-w-[70px]">{item.name}</span>
           </div>
         ))}
       </div>

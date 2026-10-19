@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Camera } from 'lucide-react';
 import CameraCapture from '../../../../components/CameraCapture';
+import { useToast } from '../../../../hooks';
+import { IMAGE_ACCEPT, IMAGE_HINT, validateImageFile } from '../../validateImage';
 
-export default function ImageUploadPreview({ value, onChange, error }) {
+export default function ImageUploadPreview({ onChange, error }) {
+  const { showToast } = useToast();
   const [preview, setPreview] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef(null);
@@ -20,19 +23,12 @@ export default function ImageUploadPreview({ value, onChange, error }) {
 
   const processFile = (file) => {
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      alert('Format file harus JPG, JPEG, atau PNG');
+    const imageError = validateImageFile(file);
+    if (imageError) {
+      showToast(imageError, 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-
-
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('Ukuran file maksimal 10MB');
-      return;
-    }
-
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -87,7 +83,7 @@ export default function ImageUploadPreview({ value, onChange, error }) {
             <div className="p-3 bg-white rounded-full shadow-sm">
               <ImageIcon size={24} className="text-gray-400" />
             </div>
-            <span className="text-xs font-bold text-gray-600">Upload</span>
+            <span className="text-xs font-bold text-gray-600">Unggah</span>
           </button>
 
           <button
@@ -110,7 +106,7 @@ export default function ImageUploadPreview({ value, onChange, error }) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png"
+        accept={IMAGE_ACCEPT}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -121,6 +117,8 @@ export default function ImageUploadPreview({ value, onChange, error }) {
         onClose={() => setShowCamera(false)}
         onCapture={handleCapture}
       />
+
+      <p className="text-xs text-gray-400">{IMAGE_HINT}</p>
 
       {/* Error Message */}
       {error && (

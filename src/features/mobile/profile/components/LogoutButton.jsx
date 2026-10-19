@@ -29,7 +29,7 @@ export default function LogoutButton() {
         message="Apakah Anda yakin ingin keluar dari aplikasi?"
         onConfirm={handleLogout}
         onCancel={() => setShowConfirm(false)}
-        variant="danger"
+        type="danger"
         confirmText="Ya, Keluar"
         cancelText="Batal"
       />

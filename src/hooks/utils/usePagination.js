@@ -27,12 +27,22 @@ export const usePagination = (initialPerPage = 15) => {
     }
   }, [currentPage]);
 
+  // Bila halaman yang diminta sudah tidak ada (mis. baris terakhir di halaman terakhir
+  // dihapus), pindah ke halaman terakhir yang masih ada.
   const setMetadata = useCallback((meta) => {
     if (meta) {
-      setCurrentPage(meta.current_page || 1);
-      setTotalPages(meta.last_page || 1);
+      const lastPage = meta.last_page || 1;
+      const current = meta.current_page || 1;
+      setCurrentPage(current > lastPage ? lastPage : current);
+      setTotalPages(lastPage);
       setTotalItems(meta.total || 0);
     }
+  }, []);
+
+  // Mengubah jumlah baris per halaman selalu kembali ke halaman 1.
+  const changePerPage = useCallback((value) => {
+    setPerPage(value);
+    setCurrentPage(1);
   }, []);
 
   const reset = useCallback(() => {
@@ -44,7 +54,7 @@ export const usePagination = (initialPerPage = 15) => {
     totalPages,
     totalItems,
     perPage,
-    setPerPage,
+    setPerPage: changePerPage,
     goToPage,
     nextPage,
     prevPage,

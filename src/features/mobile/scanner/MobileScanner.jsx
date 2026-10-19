@@ -1,203 +1,206 @@
-import React, { useEffect, useRef, useState, useContext } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QrScanner from 'qr-scanner';
-import { Camera, Flashlight, RefreshCw, AlertCircle, Eye, CheckCircle } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { ToastContext } from '../../../components/Alert/ToastProvider';
-import { useAuthContext } from '../../../context/AuthContext';
+import { Flashlight, RefreshCw, AlertCircle, Eye, CheckCircle, CameraOff } from 'lucide-react';
+import { useAuth, useToast, usePageTitle } from '../../../hooks';
+import { ROLES, isRole } from '../../auth/constants';
 import InventarisApi from '../../../api/InventarisApi';
+
+// Kategori alat yang terlihat dari ruangan mana pun
+// (sama dengan InventarisRepository::getAllPaginated di backend).
+const KATEGORI_ALAT_UMUM = 23;
+
+/**
+ * Aturan lihat alat untuk User Ruangan, disamakan dengan filter daftar inventaris backend:
+ * alat di ruangan pengguna, atau kategori umum (23). Alat yang sedang dipindah ke ruangan
+ * pengguna (ruang_sekarang) juga diizinkan. Pengguna tanpa ruangan tidak dibatasi.
+ */
+const canUserRuanganViewItem = (user, item) => {
+  if (!user?.ruangan_id) return true;
+  if (Number(item.nama_alat?.kategori_alat_id) === KATEGORI_ALAT_UMUM) return true;
+
+  const userRuangan = String(user.ruangan_id);
+  return [item.ruangan_id, item.ruang_sekarang_id].some(
+    (ruanganId) => ruanganId != null && String(ruanganId) === userRuangan
+  );
+};
+
+const getCameraErrorMessage = (err) => {
+  const text = `${err?.name || ''} ${err?.message || err || ''}`;
+  if (/NotAllowed|Permission|denied/i.test(text)) {
+    return 'Izin kamera ditolak. Aktifkan izin kamera untuk situs ini di pengaturan browser, lalu coba lagi.';
+  }
+  if (/not found|NotFound|Camera not found/i.test(text)) {
+    return 'Kamera tidak ditemukan pada perangkat ini.';
+  }
+  return 'Kamera tidak dapat dibuka. Pastikan tidak sedang dipakai aplikasi lain, lalu coba lagi.';
+};
 
 export default function MobileScanner() {
   usePageTitle('Scan QR');
   const navigate = useNavigate();
-  const { showToast } = useContext(ToastContext);
-  const { user } = useAuthContext();
+  const { showToast } = useToast();
+  const { user } = useAuth();
+  const isUserRuangan = isRole(user, ROLES.USER_RUANGAN);
+
   const videoRef = useRef(null);
-  const [scanner, setScanner] = useState(null);
+  const scannerRef = useRef(null);
+  const handleScanRef = useRef(() => { });
+  const processingRef = useRef(false);
+
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
-  const [cameraFacingMode, setCameraFacingMode] = useState('environment');
+  // Kamera dibuat ulang setiap `camera` berubah (ganti kamera / coba lagi).
+  const [camera, setCamera] = useState({ mode: 'environment', attempt: 0 });
+  const [cameraError, setCameraError] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [scannedId, setScannedId] = useState(null);
+  const [scanned, setScanned] = useState(null);
 
-
+  // Satu instance per `camera`; cleanup selalu menghancurkan instance yang dibuat efek ini
+  // (termasuk setelah ganti kamera), sehingga kamera tidak bocor.
   useEffect(() => {
-    if (videoRef.current) {
-      const qrScanner = new QrScanner(
-        videoRef.current,
-        (result) => handleScan(result),
-        {
-          onDecodeError: (error) => {
-          },
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          maxScansPerSecond: 2,
-          preferredCamera: 'environment',
-        }
-      );
+    if (!videoRef.current) return undefined;
 
-      setScanner(qrScanner);
+    const instance = new QrScanner(
+      videoRef.current,
+      (result) => handleScanRef.current(result),
+      {
+        onDecodeError: () => { },
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
+        maxScansPerSecond: 2,
+        preferredCamera: camera.mode,
+      }
+    );
+    scannerRef.current = instance;
 
-      qrScanner.start().then(() => {
-        qrScanner.hasFlash().then((hasFlash) => {
-          setHasFlash(hasFlash);
-        });
-      }).catch((err) => {
-        console.error('Camera access denied:', err);
-        showToast('Gagal mengakses kamera. Pastikan izin diberikan.', 'error');
-
+    instance
+      .start()
+      .then(() => instance.hasFlash())
+      .then((flash) => {
+        if (scannerRef.current !== instance) return;
+        setCameraError(null);
+        setHasFlash(flash);
+        setIsFlashOn(false);
+      })
+      .catch((err) => {
+        // Instance sudah diganti/dihancurkan (mis. pindah halaman): abaikan.
+        if (scannerRef.current !== instance) return;
+        console.error('Kamera tidak dapat dibuka:', err);
+        setHasFlash(false);
+        setCameraError(getCameraErrorMessage(err));
       });
 
-      return () => {
-        qrScanner.destroy();
-      };
-    }
-  }, []);
+    return () => {
+      if (scannerRef.current === instance) scannerRef.current = null;
+      instance.destroy();
+    };
+  }, [camera]);
+
+  // Lanjutkan pemindaian setelah hasil diproses / modal ditutup.
+  const resumeScanning = () => {
+    processingRef.current = false;
+    const active = scannerRef.current;
+    if (!active) return;
+    active.start().catch((err) => {
+      if (scannerRef.current !== active) return;
+      setCameraError(getCameraErrorMessage(err));
+    });
+  };
 
   const handleScan = async (result) => {
-    if (result && result.data) {
+    // Hanya proses hasil pertama; hasil berikutnya diabaikan sampai pemindaian dilanjutkan.
+    if (processingRef.current || !result?.data) return;
+    processingRef.current = true;
+    scannerRef.current?.stop();
 
-      if (scanner) {
-
-
-        scanner.stop();
-      }
-      if (navigator.vibrate) {
-        try {
-          navigator.vibrate(200);
-        } catch (e) {
-
-        }
-      }
-
-      const id = result.data;
-
+    if (navigator.vibrate) {
       try {
-
-        const itemRes = await InventarisApi.getById(id);
-
-        const item = itemRes.data || itemRes;
-
-
-
-        if (user?.kategori_user_id == 2) {
-
-          const itemRuanganId = item.ruangan_id || item.ruangan?.id_ruangan;
-          const userRuanganId = user.ruangan_id || user.ruangan?.id_ruangan;
-
-
-          if (itemRuanganId && String(itemRuanganId) !== String(userRuanganId)) {
-
-            const itemRoomName = item.ruangan?.nama_ruangan || `ID ${itemRuanganId}`;
-
-            const userRoomName = user.ruangan_nama || user.ruangan?.nama_ruangan || `ID ${userRuanganId}`;
-
-            showToast(`❌ Akses Ditolak: Alat di Ruang "${itemRoomName}", Anda di Ruang "${userRoomName}"`, 'error');
-
-            setTimeout(() => {
-              if (scanner) scanner.start();
-            }, 1500);
-            return;
-          }
-        }
-
-        setScannedId(id);
-        const itemName = item.nama_alat?.nama_nama_alat || item.nama_alat_id || id;
-        showToast(`✅ QR Scan Berhasil: ${itemName}`, 'success');
-
-
-        setTimeout(() => {
-          setShowActionModal(true);
-        }, 500);
-
-      } catch (error) {
-        console.error("Scan validation error:", error);
-
-        let errorMsg = 'Gagal memvalidasi alat.';
-
-        if (error.response) {
-
-          if (error.response.status === 404) {
-            errorMsg = `Alat dengan Kode '${id}' tidak ditemukan.`;
-          } else {
-            errorMsg += ` Server Error: ${error.response.status}`;
-          }
-        } else if (error.message) {
-          errorMsg += ` ${error.message}`;
-        }
-
-        showToast(`❌ ${errorMsg}`, 'error');
-
-
-        setTimeout(() => {
-          if (scanner) scanner.start();
-        }, 1500);
+        navigator.vibrate(200);
+      } catch {
+        // Getar tidak didukung perangkat: abaikan.
       }
+    }
+
+    const code = String(result.data).trim();
+
+    try {
+      const itemRes = await InventarisApi.getById(code);
+      const item = itemRes.data || itemRes;
+
+      if (isUserRuangan && !canUserRuanganViewItem(user, item)) {
+        const itemRoomName = item.ruangan?.nama_ruangan || 'ruangan lain';
+        const userRoomName = user.ruangan_nama || `ID ${user.ruangan_id}`;
+        showToast(
+          `Akses ditolak: alat berada di ruangan "${itemRoomName}", Anda di ruangan "${userRoomName}"`,
+          'error'
+        );
+        setTimeout(resumeScanning, 1500);
+        return;
+      }
+
+      const itemName = item.nama_alat?.nama_nama_alat || item.no_inventaris || code;
+      setScanned({ id: item.id ?? code, noInventaris: item.no_inventaris || code });
+      showToast(`Scan berhasil: ${itemName}`, 'success');
+      setShowActionModal(true);
+    } catch (error) {
+      console.error('Scan validation error:', error);
+
+      let errorMsg = 'Gagal memvalidasi alat.';
+      if (error.response) {
+        errorMsg = error.response.status === 404
+          ? `Alat dengan kode '${code}' tidak ditemukan.`
+          : `${errorMsg} Kesalahan server: ${error.response.status}`;
+      } else if (error.message) {
+        errorMsg += ` ${error.message}`;
+      }
+
+      showToast(errorMsg, 'error');
+      setTimeout(resumeScanning, 1500);
     }
   };
 
+  useEffect(() => {
+    handleScanRef.current = handleScan;
+  });
+
   const handleViewDetail = () => {
-    navigate(`/mobile/inventaris/${scannedId}`);
+    navigate(`/mobile/inventaris/${scanned.id}`);
   };
 
   const handleCreateAduan = () => {
     navigate('/mobile/aduan', {
-      state: { scannedInventarisId: scannedId }
+      state: { scannedInventarisId: scanned.id }
     });
   };
 
   const handleCloseModal = () => {
     setShowActionModal(false);
+    resumeScanning();
+  };
 
-    if (scanner) {
-      scanner.start();
+  const handleRetryCamera = () => {
+    processingRef.current = false;
+    setCamera((prev) => ({ ...prev, attempt: prev.attempt + 1 }));
+  };
+
+  const toggleFlash = async () => {
+    const active = scannerRef.current;
+    if (!active) return;
+    try {
+      await active.toggleFlash();
+      setIsFlashOn(active.isFlashOn());
+    } catch {
+      showToast('Lampu kilat tidak dapat dinyalakan', 'error');
     }
   };
 
-  const toggleFlash = () => {
-    if (scanner) {
-      scanner.toggleFlash().then(() => setIsFlashOn(!isFlashOn));
-    }
-  };
-
-  const switchCamera = async () => {
-    if (scanner) {
-      try {
-
-        await scanner.stop();
-        scanner.destroy();
-
-
-        const newMode = cameraFacingMode === 'environment' ? 'user' : 'environment';
-        setCameraFacingMode(newMode);
-
-
-        const qrScanner = new QrScanner(
-          videoRef.current,
-          (result) => handleScan(result),
-          {
-            onDecodeError: (error) => { },
-            highlightScanRegion: true,
-            highlightCodeOutline: true,
-            maxScansPerSecond: 2,
-            preferredCamera: newMode,
-          }
-        );
-
-        setScanner(qrScanner);
-
-
-        await qrScanner.start();
-
-
-        const hasFlash = await qrScanner.hasFlash();
-        setHasFlash(hasFlash);
-        setIsFlashOn(false);
-      } catch (err) {
-        console.error('Failed to switch camera:', err);
-        showToast('Gagal mengganti kamera', 'error');
-      }
-    }
+  const switchCamera = () => {
+    processingRef.current = false;
+    setCamera((prev) => ({
+      mode: prev.mode === 'environment' ? 'user' : 'environment',
+      attempt: prev.attempt + 1,
+    }));
   };
 
   return (
@@ -219,6 +222,23 @@ export default function MobileScanner() {
             className="w-full h-full object-cover absolute inset-0"
             playsInline
           />
+
+          {/* Pesan izin kamera / kamera tidak tersedia */}
+          {cameraError && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-gray-900 px-6 text-center">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
+                <CameraOff size={28} className="text-white/80" />
+              </div>
+              <p className="text-white/90 text-sm leading-relaxed">{cameraError}</p>
+              <button
+                type="button"
+                onClick={handleRetryCamera}
+                className="px-5 py-2.5 rounded-xl bg-brand-primary text-white text-sm font-bold active:scale-95 transition-transform"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          )}
 
           {/* Floating Controls */}
           {/* Flash - Top Right */}
@@ -275,7 +295,7 @@ export default function MobileScanner() {
                   <CheckCircle size={32} className="text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-1">Scan Berhasil!</h3>
-                <p className="text-white/90 text-sm font-medium">No. Inventaris: {scannedId}</p>
+                <p className="text-white/90 text-sm font-medium">No. Inventaris: {scanned?.noInventaris}</p>
               </div>
             </div>
 
@@ -296,16 +316,18 @@ export default function MobileScanner() {
                 <span>Lihat Detail Alat</span>
               </button>
 
-              {/* Create Aduan Button */}
-              <button
-                onClick={handleCreateAduan}
-                className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white p-4 rounded-2xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 group"
-              >
-                <div className="p-2 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
-                  <AlertCircle size={20} />
-                </div>
-                <span>Laporkan Kerusakan</span>
-              </button>
+              {/* Laporkan kerusakan: hanya User Ruangan (Teknisi tidak membuat aduan di mobile) */}
+              {isUserRuangan && (
+                <button
+                  onClick={handleCreateAduan}
+                  className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white p-4 rounded-2xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                >
+                  <div className="p-2 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
+                    <AlertCircle size={20} />
+                  </div>
+                  <span>Laporkan Kerusakan</span>
+                </button>
+              )}
 
               {/* Cancel Button */}
               <button

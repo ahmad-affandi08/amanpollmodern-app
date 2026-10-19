@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { refreshAllData } from '../../../lib/queryClient';
 import { Save, AlertCircle, RefreshCw, MessageSquare, Wrench, Package, ListChecks, BellRing } from 'lucide-react';
 import KonfigurasiApi from '../../../api/KonfigurasiApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
+import { usePageTitle } from '../../../hooks';
+import { queryKeys } from '../../../lib/queryKeys';
 import Modal from '../../../components/Modal';
 import amanpollLogo from '../../../assets/img/icon-logo-3d-amanpoll.png';
 
+/** variabel_tersedia berupa string JSON dari server; terima juga array, dan jangan crash bila rusak. */
+const parseVariables = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function NotificationTemplatePage() {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Template Notifikasi');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
@@ -17,27 +31,22 @@ export default function NotificationTemplatePage() {
   const [activeTab, setActiveTab] = useState('Aduan');
   const { showToast } = useToast();
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = async () => {
-    setLoading(true);
-    try {
+  const { data: templates = [], isLoading: loading, isFetching, isError, refetch } = useQuery({
+    queryKey: [...queryKeys.konfigurasi.all, 'notification-templates'],
+    queryFn: async () => {
       const response = await KonfigurasiApi.getNotificationTemplates();
-      setTemplates(response.data?.data || []);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal memuat template notifikasi', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response.data?.data || [];
+    },
+  });
+
+  useEffect(() => {
+    if (isError) showToast('Gagal memuat template notifikasi', 'error');
+  }, [isError, showToast]);
 
   const handleEdit = (template) => {
     setSelectedTemplate(template);
     setEditContent(template.konten_pesan);
-    setEditIsActive(template.is_active !== undefined ? template.is_active : true);
+    setEditIsActive(Boolean(template.is_active));
   };
 
   const handleSave = async () => {
@@ -52,12 +61,10 @@ export default function NotificationTemplatePage() {
         konten_pesan: editContent,
         is_active: editIsActive
       });
-      refreshAllData();
+      await refreshAllData();
       showToast('Template berhasil diperbarui', 'success');
       setSelectedTemplate(null);
-      fetchTemplates();
-    } catch (error) {
-      console.error(error);
+    } catch {
       showToast('Gagal memperbarui template', 'error');
     } finally {
       setSaving(false);
@@ -131,14 +138,11 @@ export default function NotificationTemplatePage() {
       '[password_baru]': 'Aman1234'
     };
 
-    if (availableVars) {
-      const vars = JSON.parse(availableVars);
-      vars.forEach(v => {
-        const replacement = sampleData[v] || '...';
-        // Global replace
-        preview = preview.split(v).join(`*${replacement}*`);
-      });
-    }
+    parseVariables(availableVars).forEach(v => {
+      const replacement = sampleData[v] || '...';
+      // Global replace
+      preview = preview.split(v).join(`*${replacement}*`);
+    });
     return preview;
   };
 
@@ -162,8 +166,8 @@ export default function NotificationTemplatePage() {
             Pilih kategori, lalu klik tombol Edit untuk mengubah isi pesan otomatis.
           </p>
         </div>
-        <Button variant="outline" onClick={fetchTemplates} className="flex items-center gap-2 bg-white w-full sm:w-auto justify-center">
-          <RefreshCw size={16} /> Segarkan Data
+        <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="flex items-center gap-2 bg-white w-full sm:w-auto justify-center">
+          <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} /> Segarkan Data
         </Button>
       </div>
 
@@ -177,6 +181,7 @@ export default function NotificationTemplatePage() {
             return (
               <button
                 key={group.name}
+                type="button"
                 onClick={() => setActiveTab(group.name)}
                 className={`flex md:w-full items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200 text-left shrink-0 md:shrink whitespace-nowrap md:whitespace-normal border ${
                   isActive
@@ -209,12 +214,13 @@ export default function NotificationTemplatePage() {
                       {template.is_active ? (
                         <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-md border border-green-200">Aktif</span>
                       ) : (
-                        <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-200">Nonaktif</span>
+                        <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-200">Tidak Aktif</span>
                       )}
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleEdit(template)} 
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(template)}
                     className="shrink-0 text-brand-primary bg-indigo-50 hover:bg-brand-primary hover:text-white border border-indigo-100 transition-colors text-xs font-bold px-3 py-1.5 rounded-lg"
                   >
                     Edit Pesan
@@ -229,7 +235,12 @@ export default function NotificationTemplatePage() {
 
             {getFilteredTemplates().length === 0 && (
               <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                Belum ada template di kategori ini.
+                {isError ? (
+                  <>
+                    <p className="mb-2 text-red-500">Gagal memuat template notifikasi.</p>
+                    <button type="button" onClick={() => refetch()} className="text-brand-primary font-semibold hover:underline">Coba lagi</button>
+                  </>
+                ) : 'Belum ada template di kategori ini.'}
               </div>
             )}
           </div>
@@ -255,7 +266,7 @@ export default function NotificationTemplatePage() {
               </div>
 
               <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                {selectedTemplate.variabel_tersedia && JSON.parse(selectedTemplate.variabel_tersedia).map(v => (
+                {parseVariables(selectedTemplate.variabel_tersedia).map(v => (
                   <button
                     key={v}
                     onClick={() => insertVariable(v)}
@@ -315,7 +326,7 @@ export default function NotificationTemplatePage() {
                     <div className="text-[13px] text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
                       {generatePreviewText(editContent, selectedTemplate.variabel_tersedia)}
                     </div>
-                    <div className="text-[10px] text-gray-400 text-right mt-1">10:45 AM</div>
+                    <div className="text-[10px] text-gray-400 text-right mt-1">10.45</div>
                   </div>
                 </div>
               </div>

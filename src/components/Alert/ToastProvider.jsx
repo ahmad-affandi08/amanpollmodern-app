@@ -1,7 +1,6 @@
-import React, { createContext, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { ToastDialog } from './Alert'
-
-export const ToastContext = createContext()
+import { ToastContext } from './toastContext'
 
 export default function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)
@@ -21,6 +20,7 @@ export default function ToastProvider({ children }) {
       {/* Show ToastDialog as centered modal */}
       {toast && (
         <ToastDialog
+          key={toast.id}
           isOpen={true}
           type={toast.type}
           title={toast.title}

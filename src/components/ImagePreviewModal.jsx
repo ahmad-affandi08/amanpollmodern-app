@@ -1,39 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { X, Download } from 'lucide-react';
+import { useBodyScrollLock, useEscapeKey } from '../hooks/utils/useOverlay';
 
 /**
  * Image Preview Modal Component
  * Clean and simple full-screen image preview
  */
-export default function ImagePreviewModal({ isOpen, onClose, imageUrl, altText = 'Preview' }) {
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+export default function ImagePreviewModal({ isOpen, onClose, imageUrl, altText: altTextProp, alt, title }) {
+  // `alt` dan `title` diterima sebagai nama alternatif dari `altText`.
+  const altText = altTextProp || alt || title || 'Preview';
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 
   const handleDownload = () => {
+    // Nama file diambil dari URL (lengkap dengan ekstensi), bukan dari teks alt.
+    const urlName = String(imageUrl || '').split('?')[0].split('/').pop();
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = altText || 'image';
+    link.download = urlName || 'image';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

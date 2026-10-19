@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
+import { useToast } from './Alert/useToast';
+
+const getSpeechRecognition = () =>
+  typeof window === 'undefined' ? null : window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const MIC_DENIED_MESSAGE =
+  'Izin mikrofon ditolak. Aktifkan lewat ikon gembok di address bar → Permissions → Microphone → Allow, lalu muat ulang halaman.';
 
 export default function VoiceInput({
   value = '',
@@ -10,7 +17,8 @@ export default function VoiceInput({
   disabled = false,
 }) {
   const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
+  const { showToast } = useToast();
+  const [isSupported] = useState(() => !!getSpeechRecognition() && window.isSecureContext);
   const [interimTranscript, setInterimTranscript] = useState('');
   const recognitionRef = useRef(null);
   const textareaRef = useRef(null);
@@ -26,18 +34,10 @@ export default function VoiceInput({
 
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognition();
 
-    if (!SpeechRecognition) {
-      console.error('❌ SpeechRecognition not supported in this browser');
-      setIsSupported(false);
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      console.error('❌ Not a secure context (HTTPS required)');
-      setIsSupported(false);
-      return;
+    if (!isSupported || !SpeechRecognition) {
+      return undefined;
     }
 
 
@@ -76,19 +76,14 @@ export default function VoiceInput({
       setIsListening(false);
       shouldListenRef.current = false;
 
+      // 'no-speech' dan 'aborted' adalah kejadian normal, bukan kesalahan untuk pengguna.
       if (event.error === 'not-allowed') {
-        alert('❌ Izin mikrofon ditolak!\n\nCara mengaktifkan:\n1. Tap icon gembok di address bar\n2. Permissions → Microphone\n3. Set ke "Allow"');
-      } else if (event.error === 'no-speech') {
-
+        showToast(MIC_DENIED_MESSAGE, 'error');
       } else if (event.error === 'network') {
-        alert('❌ Koneksi internet diperlukan untuk voice input.');
-      } else if (event.error === 'aborted') {
-      } else {
-        alert(`❌ Speech recognition error: ${event.error}`);
+        showToast('Koneksi internet diperlukan untuk input suara.', 'error');
+      } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        showToast(`Input suara gagal: ${event.error}`, 'error');
       }
-    };
-
-    recognition.onstart = () => {
     };
 
     recognition.onend = () => {
@@ -107,12 +102,21 @@ export default function VoiceInput({
     recognitionRef.current = recognition;
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      // Hentikan sepenuhnya: tanpa ini onend akan menyalakan mikrofon lagi setelah unmount.
+      shouldListenRef.current = false;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      try {
+        recognition.abort();
+      } catch (e) {
+        console.error('Gagal menghentikan input suara:', e);
       }
+      recognitionRef.current = null;
     };
 
-  }, [language]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, isSupported]);
 
   const toggleListening = () => {
     if (!isSupported || disabled) {
@@ -142,15 +146,15 @@ export default function VoiceInput({
                 recognitionRef.current.start();
                 setIsListening(true);
               } catch (e) {
-                console.error('❌ Failed to start recognition:', e);
+                console.error('Failed to start recognition:', e);
                 shouldListenRef.current = false;
-                alert(`Failed to start voice input: ${e.message}`);
+                showToast(`Gagal memulai input suara: ${e.message}`, 'error');
               }
             }
           })
           .catch((err) => {
-            console.error('❌ Microphone permission denied:', err);
-            alert('❌ Izin mikrofon ditolak!\n\nCara mengaktifkan:\n1. Tap icon gembok di address bar\n2. Permissions → Microphone\n3. Set ke "Allow"\n4. Refresh halaman');
+            console.error('Microphone permission denied:', err);
+            showToast(MIC_DENIED_MESSAGE, 'error');
           });
       } else {
 
@@ -160,12 +164,12 @@ export default function VoiceInput({
             recognitionRef.current.start();
             setIsListening(true);
           } catch (e) {
-            console.error('❌ Failed to start recognition:', e);
+            console.error('Failed to start recognition:', e);
             shouldListenRef.current = false;
-            alert(`Failed to start voice input: ${e.message}`);
+            showToast(`Gagal memulai input suara: ${e.message}`, 'error');
           }
         } else {
-          console.error('❌ Recognition ref is null');
+          console.error('Recognition ref is null');
         }
       }
     }

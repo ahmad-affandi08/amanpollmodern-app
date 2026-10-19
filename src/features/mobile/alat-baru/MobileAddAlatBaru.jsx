@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, X } from 'lucide-react';
-import { useCreateAlatBaru } from '../../../hooks/queries/useAlatBaruQueries';
-import { useMasterNamaAlat } from '../../../hooks/queries/useMasterDataQueries';
-import { useToast } from '../../../hooks';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { useCreateAlatBaru, useMasterNamaAlat, useToast, usePageTitle } from '../../../hooks';
+import { IMAGE_ACCEPT, IMAGE_HINT, validateImageFile } from '../validateImage';
 import Input from '../../../components/Input';
 import Button from '../../../components/Button';
 
@@ -45,15 +43,10 @@ export default function MobileAddAlatBaru() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, img_alat_baru: 'Ukuran gambar maksimal 10MB' }));
-        return;
-      }
-
-
-      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
-        setErrors((prev) => ({ ...prev, img_alat_baru: 'Format harus jpg, jpeg, atau png' }));
+      const imageError = validateImageFile(file);
+      if (imageError) {
+        setErrors((prev) => ({ ...prev, img_alat_baru: imageError }));
+        e.target.value = '';
         return;
       }
 
@@ -81,7 +74,7 @@ export default function MobileAddAlatBaru() {
     if (!formData.merk) newErrors.merk = 'Merk harus diisi';
     if (!formData.model) newErrors.model = 'Model/Tipe harus diisi';
     if (!formData.seri) newErrors.seri = 'No. Seri harus diisi';
-    if (!formData.img_alat_baru) newErrors.img_alat_baru = 'Foto alat harus diupload';
+    if (!formData.img_alat_baru) newErrors.img_alat_baru = 'Foto alat harus diunggah';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -103,12 +96,13 @@ export default function MobileAddAlatBaru() {
     if (formData.daya) submitData.append('daya', formData.daya);
     if (formData.img_alat_baru) submitData.append('img_alat_baru', formData.img_alat_baru);
 
+    if (createMutation.isPending) return;
+
     try {
       await createMutation.mutateAsync(submitData);
       showToast('Alat baru berhasil ditambahkan', 'success');
       navigate('/mobile/alat-baru');
     } catch (error) {
-      console.error('Error submit:', error);
       const errorMsg = error.response?.data?.errors
         ? Object.values(error.response.data.errors).flat().join(', ')
         : (error.response?.data?.message || 'Gagal menambahkan alat baru');
@@ -219,7 +213,7 @@ export default function MobileAddAlatBaru() {
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-text-dark mb-2">
-              Upload Gambar Alat <span className="text-danger-500">*</span>
+              Unggah Gambar Alat <span className="text-danger-500">*</span>
             </label>
 
             {imagePreview ? (
@@ -240,11 +234,11 @@ export default function MobileAddAlatBaru() {
             ) : (
               <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-brand-primary hover:bg-brand-primary/5 transition-all">
                 <Upload className="text-gray-400 mb-2" size={40} />
-                <span className="text-sm text-text-gray">Klik untuk upload gambar</span>
-                <span className="text-xs text-text-gray mt-1">Max 2MB • JPG, JPEG, PNG</span>
+                <span className="text-sm text-text-gray">Klik untuk unggah gambar</span>
+                <span className="text-xs text-text-gray mt-1">{IMAGE_HINT}</span>
                 <input
                   type="file"
-                  accept="image/jpeg,image/jpg,image/png"
+                  accept={IMAGE_ACCEPT}
                   onChange={handleImageChange}
                   className="hidden"
                 />

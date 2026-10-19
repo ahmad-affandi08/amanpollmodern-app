@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import { Search, ChevronDown, X } from 'lucide-react';
 
 import ReactDOM from 'react-dom';
@@ -40,6 +40,8 @@ export default function SearchableSelect({
     md: 16,
     lg: 20,
   };
+  const selectId = useId();
+  const hasValue = value !== '' && value !== null && value !== undefined;
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dropdownPosition, setDropdownPosition] = useState({});
@@ -75,8 +77,12 @@ export default function SearchableSelect({
     const updatePosition = () => {
       if (dropdownRef.current) {
          const rect = dropdownRef.current.getBoundingClientRect();
+         // Buka ke atas bila ruang di bawah sempit dan ruang di atas lebih lega.
+         const spaceBelow = window.innerHeight - rect.bottom;
+         const openUp = spaceBelow < 360 && rect.top > spaceBelow;
          setDropdownPosition({
-           top: rect.bottom, // Use viewport relative top (fixed positioning)
+           top: openUp ? null : rect.bottom, // Use viewport relative top (fixed positioning)
+           bottom: openUp ? window.innerHeight - rect.top : null,
            left: rect.left,
            width: rect.width
          });
@@ -130,8 +136,10 @@ export default function SearchableSelect({
         ? 'border-2 border-indigo-100 rounded-[16px]'
         : 'border-2 border-gray-200 rounded-xl'
       }`}
+      role="listbox"
       style={{
-        top: dropdownPosition.top ? `${dropdownPosition.top}px` : 0,
+        top: dropdownPosition.bottom != null ? 'auto' : (dropdownPosition.top ? `${dropdownPosition.top}px` : 0),
+        bottom: dropdownPosition.bottom != null ? `${dropdownPosition.bottom}px` : 'auto',
         left: dropdownPosition.left ? `${dropdownPosition.left}px` : 0,
         width: dropdownPosition.width ? `${dropdownPosition.width}px` : 'auto',
       }}
@@ -164,7 +172,7 @@ export default function SearchableSelect({
             const isSelected = String(option[valueKey]) === String(value);
             return (
               <button
-                key={option[valueKey] || index}
+                key={option[valueKey] ?? index}
                 type="button"
                 onClick={() => handleSelect(option)}
                 className={`w-full text-left transition-colors ${variant === 'thick' ? 'px-6 py-4' : (optionSizeClasses[size] || optionSizeClasses.md)
@@ -205,7 +213,7 @@ export default function SearchableSelect({
     <div className={`relative ${variant === 'thick' ? 'mb-5' : 'mb-4'} ${className}`} ref={dropdownRef}>
       {/* Label */}
       {label && (
-        <label className={`block mb-2 pl-1 ${variant === 'thick'
+        <label htmlFor={selectId} className={`block mb-2 pl-1 ${variant === 'thick'
           ? 'text-brand-primary font-bold text-sm ml-1 mb-1'
           : 'text-sm font-semibold text-[#808191]'
         }`}>
@@ -217,22 +225,42 @@ export default function SearchableSelect({
       <div className="relative">
         {/* Trigger Button */}
         <button
+          id={selectId}
           type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          onClick={() => {
+            if (disabled) return;
+            if (isOpen) setSearchTerm('');
+            setIsOpen(!isOpen);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && isOpen) {
+              setIsOpen(false);
+              setSearchTerm('');
+            }
+          }}
           disabled={disabled}
           className={`w-full bg-white text-left flex items-center justify-between transition-all ${variant === 'thick'
             ? 'border-2 border-indigo-100 text-brand-primary text-base font-medium px-4 py-3 rounded-[16px] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10'
             : `border border-gray-200 text-gray-700 font-medium ${sizeClasses[size] || sizeClasses.md} focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20`
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${!value ? 'text-gray-400' : ''}`}
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${!hasValue ? 'text-gray-400' : ''}`}
         >
           <span className="truncate">{selectedText}</span>
           <div className="flex items-center gap-2 ml-2">
-            {value && !disabled && (
-              <X
-                size={variant === 'thick' ? 20 : (iconSizes[size] || 16)}
-                className="text-gray-400 hover:text-red-500 transition-colors"
+            {hasValue && !disabled && (
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label="Hapus pilihan"
                 onClick={handleClear}
-              />
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleClear(e);
+                }}
+                className="text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <X size={variant === 'thick' ? 20 : (iconSizes[size] || 16)} />
+              </span>
             )}
             <ChevronDown
               size={variant === 'thick' ? 20 : (iconSizes[size] || 16)}
@@ -240,6 +268,20 @@ export default function SearchableSelect({
             />
           </div>
         </button>
+
+        {/* Validasi native untuk field wajib: tanpa ini `required` hanya berupa tanda bintang. */}
+        {required && (
+          <input
+            tabIndex={-1}
+            aria-hidden="true"
+            required
+            disabled={disabled}
+            value={hasValue ? String(value) : ''}
+            onChange={() => {}}
+            onFocus={() => setIsOpen(true)}
+            className="absolute inset-x-0 bottom-0 h-px w-full opacity-0 pointer-events-none"
+          />
+        )}
 
         {/* Render Portal Dropdown Menu */}
         {dropdownMenu}

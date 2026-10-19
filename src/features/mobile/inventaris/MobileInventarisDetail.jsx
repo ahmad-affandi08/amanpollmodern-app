@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Calendar, Activity, Tag, Info, AlertCircle, Phone, FileText,
   ChevronLeft, MoreVertical, Share2, ImageIcon, Zap, DollarSign
 } from 'lucide-react';
-import { useInventarisDetail } from '../../../hooks/queries/useInventarisQueries';
-import { rupiah } from '../../../utils/format';
+import { useInventarisDetail, useAuth, usePageTitle } from '../../../hooks';
+import { rupiah, formatDate } from '../../../utils/format';
 import UpdateLocationModal from './components/UpdateLocationModal';
 import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
-import { useAuth } from '../../../hooks';
+import StatusBadge from '../../../components/StatusBadge';
+import KondisiBadge from '../../../components/KondisiBadge';
 import { canManageKalibrasi } from '../../../utils/kalibrasi';
 
 
@@ -36,6 +37,7 @@ const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
 );
 
 export default function MobileInventarisDetail() {
+  usePageTitle('Detail Inventaris');
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: inventaris, isLoading, isError } = useInventarisDetail(id);
@@ -89,26 +91,6 @@ export default function MobileInventarisDetail() {
       </div>
     );
   }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric', month: 'short', year: 'numeric'
-    });
-  };
-
-  const getStatusColor = (status) => {
-    const map = {
-      'Selesai': 'bg-green-100 text-green-700',
-      'Sedang Dikerjakan': 'bg-blue-100 text-blue-700',
-      'Pending': 'bg-yellow-100 text-yellow-700',
-      'Baru': 'bg-red-100 text-red-700',
-      'Baik': 'bg-green-100 text-green-700',
-      'Rusak Ringan': 'bg-yellow-100 text-yellow-700',
-      'Rusak Berat': 'bg-red-100 text-red-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-700';
-  };
 
   return (
     <div className="min-h-screen flex justify-center font-sans">
@@ -211,13 +193,13 @@ export default function MobileInventarisDetail() {
 
                 <div className="space-y-0.5">
                   <InfoRow icon={Tag} label="Merk" value={inventaris.merk} />
-                  <InfoRow icon={Info} label="Model/Type" value={inventaris.model} />
+                  <InfoRow icon={Info} label="Model/Tipe" value={inventaris.model} />
                   <InfoRow icon={Info} label="No Seri" value={inventaris.seri} />
                   <InfoRow icon={Zap} label="Daya" value={inventaris.daya ? `${inventaris.daya} Watt` : '-'} />
                   <InfoRow icon={DollarSign} label="Harga" value={rupiah(inventaris.harga)} />
                   <InfoRow icon={Calendar} label="Tahun Pengadaan" value={inventaris.tahun_pengadaan} />
-                  <InfoRow icon={Calendar} label="Awal Kalibrasi" value={inventaris.awal_kalibrasi} />
-                  <InfoRow icon={Calendar} label="Kadaluwarsa" value={inventaris.kadaluwarsa} />
+                  <InfoRow icon={Calendar} label="Awal Kalibrasi" value={formatDate(inventaris.awal_kalibrasi)} />
+                  <InfoRow icon={Calendar} label="Kadaluwarsa" value={formatDate(inventaris.kadaluwarsa)} />
                 </div>
               </div>
 
@@ -253,9 +235,7 @@ export default function MobileInventarisDetail() {
                         <p className="text-xs text-gray-400 font-medium mb-1">No. Aduan</p>
                         <p className="text-sm font-bold text-brand-primary">{aduan.no_aduan}</p>
                       </div>
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ${getStatusColor(aduan.status_aduan)}`}>
-                        {aduan.status_aduan}
-                      </span>
+                      <StatusBadge status={aduan.status_aduan} size="sm" />
                     </div>
 
                     {/* Keluhan */}
@@ -288,9 +268,7 @@ export default function MobileInventarisDetail() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-400 font-medium mb-1">Kondisi Alat</p>
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${getStatusColor(aduan.kondisi_alat)}`}>
-                              {aduan.kondisi_alat}
-                            </span>
+                            <KondisiBadge kondisi={aduan.kondisi_alat} size="sm" />
                           </div>
                         </div>
 
@@ -308,7 +286,7 @@ export default function MobileInventarisDetail() {
                           </div>
                         )}
 
-                        {aduan.biaya && (
+                        {parseFloat(aduan.biaya) > 0 && (
                           <div>
                             <p className="text-xs text-gray-400 font-medium mb-1">Biaya</p>
                             <p className="text-sm font-bold text-green-600">{rupiah(aduan.biaya)}</p>
@@ -339,9 +317,7 @@ export default function MobileInventarisDetail() {
                         <p className="text-xs text-gray-400 font-medium mb-1">Jadwal Pemeliharaan</p>
                         <p className="text-sm font-bold text-brand-primary">{formatDate(mt.jadwal_pemeliharaan)}</p>
                       </div>
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ${getStatusColor(mt.status)}`}>
-                        {mt.status}
-                      </span>
+                      <StatusBadge status={mt.status} size="sm" />
                     </div>
 
                     {/* Info Grid */}
@@ -352,16 +328,14 @@ export default function MobileInventarisDetail() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 font-medium mb-1">Tgl Pemeriksaan</p>
-                        <p className="text-sm font-semibold text-text-dark">{formatDate(mt.tanggal_pemeriksaan) || '-'}</p>
+                        <p className="text-sm font-semibold text-text-dark">{formatDate(mt.tanggal_pemeriksaan)}</p>
                       </div>
                     </div>
 
                     {/* Kondisi Alat */}
                     <div className="mb-3">
                       <p className="text-xs text-gray-400 font-medium mb-1.5">Kondisi Alat</p>
-                      <span className={`inline-block text-xs font-bold px-3 py-1.5 rounded-lg ${getStatusColor(mt.kondisi_alat)}`}>
-                        {mt.kondisi_alat}
-                      </span>
+                      <KondisiBadge kondisi={mt.kondisi_alat} />
                     </div>
 
                     {/* Keterangan */}
@@ -385,7 +359,7 @@ export default function MobileInventarisDetail() {
                     )}
 
                     {/* Biaya */}
-                    {mt.biaya > 0 && (
+                    {parseFloat(mt.biaya) > 0 && (
                       <div className="border-t border-gray-100 pt-3 mt-3">
                         <p className="text-xs text-gray-400 font-medium mb-1">Biaya Pemeliharaan</p>
                         <p className="text-lg font-bold text-green-600">{rupiah(mt.biaya)}</p>
@@ -398,7 +372,7 @@ export default function MobileInventarisDetail() {
                         TTD Teknisi: {mt.status_ttd_teknisi}
                       </div>
                       <div className={`flex-1 text-center py-2 rounded-lg text-xs font-medium ${mt.status_ttd_karu === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                        TTD Ka.Ru: {mt.status_ttd_karu}
+                        TTD Kepala Ruangan: {mt.status_ttd_karu}
                       </div>
                     </div>
                   </div>

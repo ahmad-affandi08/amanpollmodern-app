@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAlatBaru, useApproveAlatBaru, useDeleteAlatBaru } from '../../../hooks/queries/useAlatBaruQueries';
 import { useToast, useFilters, useDebounce, usePagination } from '../../../hooks';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
-import Button from '../../../components/Button';
-import Input from '../../../components/Input';
 import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
-import { CheckCircle, Trash2, Eye, Construction, Search, Plus } from 'lucide-react';
+import { CheckCircle, Trash2, Eye, Construction, Search, AlertCircle } from 'lucide-react';
 import AlatBaruDetailModal from './components/AlatBaruDetailModal';
 import noImage from '../../../assets/img/no_image.png';
+import { formatDateShort } from '../../../utils/format';
 
 export default function AlatBaruList() {
   usePageTitle('Pengajuan Alat Baru');
@@ -18,23 +17,28 @@ export default function AlatBaruList() {
 
 
   const pagination = usePagination(10);
-  const { filters, updateFilter, resetFilters } = useFilters({
+  const { filters, updateFilter } = useFilters({
     search: '',
   });
   const debouncedSearch = useDebounce(filters.search, 500);
 
 
-  const { data, isLoading, isError } = useAlatBaru({
+  // `useAlatBaru` mengembalikan satu halaman: { data: baris[], meta }.
+  const { data, isLoading, isError, isPlaceholderData } = useAlatBaru({
     search: debouncedSearch,
     page: pagination.currentPage,
     per_page: pagination.perPage
   });
 
+  const items = data?.data ?? [];
+  const meta = data?.meta;
+
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (data?.meta) {
-      pagination.setMetadata(data.meta);
+    if (meta) {
+      setMetadata(meta);
     }
-  }, [data?.meta]);
+  }, [meta, setMetadata]);
 
   const approveMutation = useApproveAlatBaru();
   const deleteMutation = useDeleteAlatBaru();
@@ -47,9 +51,6 @@ export default function AlatBaruList() {
   const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '', altText: '' });
 
 
-  const items = data?.pages || [];
-
-
   const handleDetail = (item) => {
     setSelectedItem(item);
     setDetailModalOpen(true);
@@ -57,16 +58,17 @@ export default function AlatBaruList() {
 
   const handleApproveClick = (item) => {
     setDetailModalOpen(false);
-    setConfirmApprove({ isOpen: true, id: item.id || item.id_alat_baru });
+    setConfirmApprove({ isOpen: true, id: item.id });
   };
 
   const handleApproveConfirm = async () => {
     try {
       await approveMutation.mutateAsync(confirmApprove.id);
       showToast('Alat berhasil disetujui dan masuk ke inventaris', 'success');
-      setConfirmApprove({ isOpen: false, id: null });
     } catch (error) {
-      showToast('Gagal menyetujui alat', 'error');
+      showToast(error.response?.data?.message || 'Gagal menyetujui alat', 'error');
+    } finally {
+      setConfirmApprove({ isOpen: false, id: null });
     }
   };
 
@@ -78,14 +80,16 @@ export default function AlatBaruList() {
     try {
       await deleteMutation.mutateAsync(confirmDelete.id);
       showToast('Pengajuan alat berhasil dihapus', 'success');
-      setConfirmDelete({ isOpen: false, id: null });
     } catch (error) {
-      showToast('Gagal menghapus pengajuan', 'error');
+      showToast(error.response?.data?.message || 'Gagal menghapus pengajuan', 'error');
+    } finally {
+      setConfirmDelete({ isOpen: false, id: null });
     }
   };
 
   const handleFilterChange = (key, value) => {
     updateFilter(key, value);
+    pagination.reset();
   };
 
   return (
@@ -117,7 +121,7 @@ export default function AlatBaruList() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
+        <div className={`overflow-x-auto rounded-xl border border-gray-100 transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
           <table className="w-full text-left border-collapse">
             <thead className="bg-bg-light border-b border-gray-100">
               <tr>
@@ -131,6 +135,14 @@ export default function AlatBaruList() {
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <TableSkeleton columns={5} rows={5} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan="5" className="py-12 text-center">
+                    <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
+                    <p className="font-bold text-gray-600">Gagal memuat data pengajuan</p>
+                    <p className="text-sm text-gray-400 mt-1">Periksa koneksi Anda lalu muat ulang halaman</p>
+                  </td>
+                </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="py-12 text-center">
@@ -141,20 +153,20 @@ export default function AlatBaruList() {
                 </tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id || item.id_alat_baru} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-center">
                         {item.img_alat_baru_url ? (
                           <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}>
                             <img
                               src={item.img_alat_baru_url}
-                              alt="alat"
+                              alt={item.nama_alat?.nama_nama_alat || 'Foto alat'}
                               className="w-full h-full object-cover"
                               onError={(e) => { e.target.src = noImage; }}
                               onClick={() => setImagePreview({
                                 isOpen: true,
                                 imageUrl: item.img_alat_baru_url,
-                                altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat}`
+                                altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || ''}`
                               })}
                             />
                           </div>
@@ -162,7 +174,7 @@ export default function AlatBaruList() {
                           <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
                             <img
                               src={noImage}
-                              alt="No Image"
+                              alt="Tidak ada foto"
                               className="w-full h-full object-cover opacity-50"
                             />
                           </div>
@@ -179,9 +191,7 @@ export default function AlatBaruList() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-xs text-text-gray">
-                      {item.create_date
-                        ? new Date(item.create_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : '-'}
+                      {formatDateShort(item.create_date)}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -194,14 +204,16 @@ export default function AlatBaruList() {
                         </button>
                         <button
                           onClick={() => handleApproveClick(item)}
-                          className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+                          disabled={approveMutation.isPending || deleteMutation.isPending}
+                          className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                           title="Setujui"
                         >
                           <CheckCircle size={16} />
                         </button>
                         <button
-                          onClick={() => handleDeleteClick(item.id || item.id_alat_baru)}
-                          className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+                          onClick={() => handleDeleteClick(item.id)}
+                          disabled={approveMutation.isPending || deleteMutation.isPending}
+                          className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                           title="Hapus"
                         >
                           <Trash2 size={16} />
@@ -247,7 +259,7 @@ export default function AlatBaruList() {
         title="Hapus Pengajuan?"
         message="Data pengajuan ini akan dihapus permanen."
         confirmText="Ya, Hapus"
-        type="error"
+        type="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
       />

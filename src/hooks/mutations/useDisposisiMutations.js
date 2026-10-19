@@ -1,18 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { disposisiApi } from '../../api/DisposisiApi';
-import { useContext } from 'react';
-import { ToastContext } from '../../components/Alert/ToastProvider';
+import DisposisiApi from '../../api/DisposisiApi';
+import { useToast } from '../../components/Alert/useToast';
 
 /**
  * Create disposisi for Aduan
  */
 export const useCreateDisposisiAduan = () => {
   const queryClient = useQueryClient();
-  const { showToast } = useContext(ToastContext);
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: ({ aduanId, data }) =>
-      disposisiApi.createDisposisiAduan(aduanId, data),
+      DisposisiApi.createDisposisiAduan(aduanId, data),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
       queryClient.invalidateQueries({ queryKey: ['aduan'] });
@@ -30,11 +29,11 @@ export const useCreateDisposisiAduan = () => {
  */
 export const useCreateDisposisiPemeliharaan = () => {
   const queryClient = useQueryClient();
-  const { showToast } = useContext(ToastContext);
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: ({ pemeliharaanId, data }) =>
-      disposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data),
+      DisposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
 

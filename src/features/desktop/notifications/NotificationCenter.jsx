@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Bell, Trash2, Check, CheckCheck, Search } from 'lucide-react';
-import { usePagination, useDebounce } from '../../../hooks';
+import { useState, useEffect } from 'react';
+import { Bell, Trash2, Check, CheckCheck, Search, Info } from 'lucide-react';
 import {
+  usePagination,
+  useDebounce,
+  useToast,
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
@@ -9,16 +11,36 @@ import {
   useDeleteAllNotifications,
   usePageTitle,
 } from '../../../hooks';
+import Pagination from '../../../components/Pagination';
+import ConfirmDialog from '../../../components/Alert/Alert';
+import { parseDate } from '../../../utils/format';
 import { formatDistanceToNow } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'Semua' },
+  { value: 'unread', label: 'Belum Dibaca' },
+  { value: 'read', label: 'Sudah Dibaca' }
+];
+
+/** Waktu relatif ("5 menit yang lalu"); '-' bila tanggal kosong atau tidak valid. */
+const formatRelativeTime = (value) => {
+  const date = parseDate(value);
+  if (!date) return '-';
+  return formatDistanceToNow(date, { addSuffix: true, locale: idLocale });
+};
+
+const getErrorMessage = (error, fallback) => error?.response?.data?.message || fallback;
+
 const NotificationCenter = () => {
   usePageTitle('Pusat Notifikasi');
+  const { showToast } = useToast();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
   const pagination = usePagination(20);
-
+  // { kind: 'single', id } atau { kind: 'all' }; null = dialog tertutup.
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const { data, isLoading } = useNotifications(pagination.currentPage, pagination.perPage);
   const notifications = data?.data || [];
@@ -29,44 +51,66 @@ const NotificationCenter = () => {
   const deleteNotificationMutation = useDeleteNotification();
   const deleteAllMutation = useDeleteAllNotifications();
 
+  const { setMetadata } = pagination;
+  useEffect(() => {
+    if (meta) {
+      setMetadata(meta);
+    }
+  }, [meta, setMetadata]);
 
-  if (meta && meta.current_page !== pagination.currentPage) {
-    pagination.setMetadata(meta);
-  }
-
-
-  const handleMarkAsRead = (id) => {
-    markAsReadMutation.mutate(id);
+  const handleMarkAsRead = async (id) => {
+    try {
+      await markAsReadMutation.mutateAsync(id);
+      showToast('Notifikasi ditandai sudah dibaca', 'success');
+    } catch (error) {
+      showToast(getErrorMessage(error, 'Gagal menandai notifikasi'), 'error');
+    }
   };
 
-
-  const handleDelete = (id) => {
-    if (!confirm('Hapus notifikasi ini?')) return;
-    deleteNotificationMutation.mutate(id);
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsReadMutation.mutateAsync();
+      showToast('Semua notifikasi ditandai sudah dibaca', 'success');
+    } catch (error) {
+      showToast(getErrorMessage(error, 'Gagal menandai semua notifikasi'), 'error');
+    }
   };
 
-
-  const handleMarkAllAsRead = () => {
-    markAllAsReadMutation.mutate();
+  const handleConfirmDelete = async () => {
+    const action = confirmAction;
+    try {
+      if (action?.kind === 'all') {
+        await deleteAllMutation.mutateAsync();
+        showToast('Semua notifikasi berhasil dihapus', 'success');
+      } else if (action?.kind === 'single') {
+        await deleteNotificationMutation.mutateAsync(action.id);
+        showToast('Notifikasi berhasil dihapus', 'success');
+      }
+    } catch (error) {
+      showToast(
+        getErrorMessage(error, action?.kind === 'all' ? 'Gagal menghapus semua notifikasi' : 'Gagal menghapus notifikasi'),
+        'error'
+      );
+    } finally {
+      setConfirmAction(null);
+    }
   };
 
-
-  const handleDeleteAll = () => {
-    if (!confirm('Hapus semua notifikasi?')) return;
-    deleteAllMutation.mutate();
-  };
-
-
+  // API notifikasi hanya mendukung page dan per_page, jadi filter dan pencarian
+  // dijalankan di sisi klien pada halaman yang sedang ditampilkan.
+  const normalizedSearch = debouncedSearch.trim().toLowerCase();
   const filteredNotifications = notifications.filter(notif => {
     const matchesFilter = filter === 'all' ||
       (filter === 'unread' && !notif.is_read) ||
       (filter === 'read' && notif.is_read);
 
-    const matchesSearch = !debouncedSearch ||
-      notif.isi?.toLowerCase().includes(debouncedSearch.toLowerCase());
+    const matchesSearch = !normalizedSearch ||
+      notif.isi?.toLowerCase().includes(normalizedSearch);
 
     return matchesFilter && matchesSearch;
   });
+
+  const isClientFiltering = filter !== 'all' || normalizedSearch !== '';
 
   return (
     <div className="space-y-6">
@@ -88,7 +132,7 @@ const NotificationCenter = () => {
             Tandai Semua Dibaca
           </button>
           <button
-            onClick={handleDeleteAll}
+            onClick={() => setConfirmAction({ kind: 'all' })}
             disabled={deleteAllMutation.isPending}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white shadow-lg bg-danger-500 rounded-lg hover:-translate-y-1 transition-all disabled:opacity-50"
           >
@@ -115,11 +159,7 @@ const NotificationCenter = () => {
 
           {/* Filter Tabs */}
           <div className="flex gap-2">
-            {[
-              { value: 'all', label: 'Semua' },
-              { value: 'unread', label: 'Belum Dibaca' },
-              { value: 'read', label: 'Sudah Dibaca' }
-            ].map(({ value, label }) => (
+            {FILTER_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setFilter(value)}
@@ -133,6 +173,13 @@ const NotificationCenter = () => {
             ))}
           </div>
         </div>
+
+        {isClientFiltering && (
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
+            <Info className="w-3.5 h-3.5 flex-shrink-0" />
+            Filter dan pencarian hanya berlaku pada notifikasi di halaman ini. Pindah halaman untuk melihat notifikasi lainnya.
+          </p>
+        )}
       </div>
 
       {/* Notifications List */}
@@ -145,7 +192,11 @@ const NotificationCenter = () => {
         ) : filteredNotifications.length === 0 ? (
           <div className="p-8 text-center">
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">Tidak ada notifikasi</p>
+            <p className="text-gray-600">
+              {isClientFiltering && notifications.length > 0
+                ? 'Tidak ada notifikasi yang cocok di halaman ini'
+                : 'Tidak ada notifikasi'}
+            </p>
           </div>
         ) : (
           filteredNotifications.map((notif) => (
@@ -167,10 +218,7 @@ const NotificationCenter = () => {
                     {notif.isi}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatDistanceToNow(new Date(notif.created_date || notif.created_at), {
-                      addSuffix: true,
-                      locale: idLocale
-                    })}
+                    {formatRelativeTime(notif.created_date || notif.created_at)}
                   </p>
                 </div>
 
@@ -179,7 +227,7 @@ const NotificationCenter = () => {
                   {!notif.is_read && (
                     <button
                       onClick={() => handleMarkAsRead(notif.id_notifikasi)}
-                      disabled={markAsReadMutation.isPending}
+                      disabled={markAsReadMutation.isPending && markAsReadMutation.variables === notif.id_notifikasi}
                       className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
                       title="Tandai sudah dibaca"
                     >
@@ -187,8 +235,8 @@ const NotificationCenter = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => handleDelete(notif.id_notifikasi)}
-                    disabled={deleteNotificationMutation.isPending}
+                    onClick={() => setConfirmAction({ kind: 'single', id: notif.id_notifikasi })}
+                    disabled={deleteNotificationMutation.isPending && deleteNotificationMutation.variables === notif.id_notifikasi}
                     className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
                     title="Hapus"
                   >
@@ -202,32 +250,25 @@ const NotificationCenter = () => {
       </div>
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-4">
-          <p className="text-sm text-gray-700">
-            Menampilkan <span className="font-medium">{((pagination.currentPage - 1) * pagination.perPage) + 1}</span> -
-            <span className="font-medium">{Math.min(pagination.currentPage * pagination.perPage, pagination.totalItems)}</span> dari
-            <span className="font-medium"> {pagination.totalItems}</span> notifikasi
-          </p>
+      <Pagination
+        size="sm"
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={pagination.goToPage}
+        totalData={pagination.totalItems}
+      />
 
-          <div className="flex gap-2">
-            <button
-              onClick={pagination.prevPage}
-              disabled={!pagination.hasPrevPage}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Sebelumnya
-            </button>
-            <button
-              onClick={pagination.nextPage}
-              disabled={!pagination.hasNextPage}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Selanjutnya
-            </button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        title={confirmAction?.kind === 'all' ? 'Hapus Semua Notifikasi' : 'Hapus Notifikasi'}
+        message={confirmAction?.kind === 'all'
+          ? 'Semua notifikasi Anda akan dihapus permanen. Lanjutkan?'
+          : 'Hapus notifikasi ini?'}
+        type="danger"
+        confirmText="Ya, Hapus"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 };

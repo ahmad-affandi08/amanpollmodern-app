@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Shield, Settings, Server, AlertTriangle, CheckCircle, Power, Lock, Zap, ArrowRight, Activity } from 'lucide-react';
 import { useSystemStatus, useToggleMaintenance } from '../../../hooks/useSystem';
 import { useToast } from '../../../components/Alert/useToast';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
+import ConfirmDialog from '../../../components/Alert/Alert';
 
 const KonfigurasiSistem = () => {
   usePageTitle('Konfigurasi Sistem');
@@ -12,14 +13,34 @@ const KonfigurasiSistem = () => {
   const toggleMutation = useToggleMaintenance();
 
   const [secret, setSecret] = useState('');
+  const [confirmEnable, setConfirmEnable] = useState(false);
   const isMaintenanceMode = statusData?.maintenance_mode;
 
   const handleToggle = async (enable) => {
     try {
-      const result = await toggleMutation.mutateAsync({ enable, secret });
-      showToast(result.message, 'success');
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Gagal mengubah status maintenance', 'error');
+      await toggleMutation.mutateAsync({ enable, secret });
+      showToast(enable ? 'Mode maintenance diaktifkan' : 'Mode maintenance dimatikan, sistem kembali online', 'success');
+    } catch {
+      // Pesan dari server berbahasa Inggris, jadi memakai teks tetap.
+      showToast('Gagal mengubah status maintenance', 'error');
+    }
+  };
+
+  // Mengaktifkan maintenance mengunci semua pengguna, jadi perlu konfirmasi.
+  // Mematikannya langsung dijalankan.
+  const handleToggleClick = () => {
+    if (isMaintenanceMode) {
+      handleToggle(false);
+    } else {
+      setConfirmEnable(true);
+    }
+  };
+
+  const handleConfirmEnable = async () => {
+    try {
+      await handleToggle(true);
+    } finally {
+      setConfirmEnable(false);
     }
   };
 
@@ -31,13 +52,13 @@ const KonfigurasiSistem = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 tracking-tight">System Configuration</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 tracking-tight">Konfigurasi Sistem</h1>
             <p className="text-white/60 text-sm">Kontrol penuh atas status dan aksesibilitas sistem aplikasi.</p>
           </div>
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
             <Activity className={isMaintenanceMode ? "text-red-400 animate-pulse" : "text-green-400"} size={16} />
             <span className="font-semibold tracking-wide text-xs">
-              SYSTEM STATUS: <span className={isMaintenanceMode ? "text-red-400" : "text-green-400"}>{isLoading ? 'CHECKING...' : (isMaintenanceMode ? 'MAINTENANCE' : 'ONLINE')}</span>
+              STATUS SISTEM: <span className={isMaintenanceMode ? "text-red-400" : "text-green-400"}>{isLoading ? 'MEMERIKSA...' : (isMaintenanceMode ? 'MAINTENANCE' : 'ONLINE')}</span>
             </span>
           </div>
         </div>
@@ -53,12 +74,12 @@ const KonfigurasiSistem = () => {
                     <Power size={22} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-text-dark">Maintenance Mode</h2>
-                    <p className="text-gray-500 text-xs mt-0.5">Control Access Control</p>
+                    <h2 className="text-base font-bold text-text-dark">Mode Maintenance</h2>
+                    <p className="text-gray-500 text-xs mt-0.5">Kontrol akses pengguna ke aplikasi</p>
                   </div>
                 </div>
                 <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isMaintenanceMode ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                  {isMaintenanceMode ? 'Active' : 'Inactive'}
+                  {isMaintenanceMode ? 'Aktif' : 'Tidak Aktif'}
                 </div>
               </div>
 
@@ -77,7 +98,7 @@ const KonfigurasiSistem = () => {
 
               <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm mb-6 relative group focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                  Bypass Secret Token
+                  Token Rahasia Bypass
                 </label>
                 <div className="flex items-center gap-2">
                   <Lock className="text-gray-300 group-focus-within:text-brand-primary transition-colors" size={16} />
@@ -85,17 +106,18 @@ const KonfigurasiSistem = () => {
                     type="text"
                     value={secret}
                     onChange={(e) => setSecret(e.target.value)}
-                    placeholder="e.g., supersecret123"
+                    placeholder="Contoh: rahasia123"
                     className="flex-1 bg-transparent border-none outline-none text-text-dark font-medium placeholder:text-gray-300 font-mono text-sm"
                   />
                 </div>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Optional</span>
+                  <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Opsional</span>
                 </div>
               </div>
 
               <button
-                onClick={() => handleToggle(!isMaintenanceMode)}
+                type="button"
+                onClick={handleToggleClick}
                 disabled={toggleMutation.isPending}
                 className={`w-full py-3 rounded-lg font-bold text-sm text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2
                   ${isMaintenanceMode
@@ -108,7 +130,7 @@ const KonfigurasiSistem = () => {
                 ) : (
                   isMaintenanceMode ? <ArrowRight size={18} /> : <Power size={18} />
                 )}
-                {isMaintenanceMode ? 'Matikan Maintenance (Go Live)' : 'Aktifkan Mode Maintenance'}
+                {isMaintenanceMode ? 'Matikan Maintenance (Aktifkan Kembali Sistem)' : 'Aktifkan Mode Maintenance'}
               </button>
             </div>
           </div>
@@ -120,7 +142,7 @@ const KonfigurasiSistem = () => {
               <span className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                 <Shield size={16} />
               </span>
-              Security Guidelines
+              Panduan Keamanan
             </h3>
 
             <div className="space-y-6 relative">
@@ -136,10 +158,10 @@ const KonfigurasiSistem = () => {
                 <div className="absolute left-0 top-0.5 w-7 h-7 rounded-full border-4 border-white bg-brand-primary shadow-md z-10"></div>
                 <h4 className="font-bold text-text-dark mb-0.5 text-sm">Aktivasi</h4>
                 <p className="text-gray-500 text-xs leading-relaxed">
-                  Isi <strong>Secret Token</strong> jika Anda butuh akses saat down. Klik tombol aktivasi.
+                  Isi <strong>Token Rahasia</strong> jika Anda butuh akses saat down. Klik tombol aktivasi.
                 </p>
                 <div className="mt-2 bg-gray-50 rounded-lg p-2 text-[10px] font-mono text-gray-600 border border-gray-200">
-                  {window.location.origin}/bypass/[secret-token]
+                  {window.location.origin}/bypass/[token-rahasia]
                 </div>
               </div>
 
@@ -152,6 +174,16 @@ const KonfigurasiSistem = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmEnable}
+        type="warning"
+        title="Aktifkan Mode Maintenance?"
+        message="Semua pengguna akan terkunci dan tidak dapat mengakses aplikasi sampai mode maintenance dimatikan. Hanya pengguna yang membuka tautan bypass dengan token rahasia yang tetap bisa masuk. Lanjutkan?"
+        confirmText="Ya, Aktifkan"
+        onConfirm={handleConfirmEnable}
+        onCancel={() => setConfirmEnable(false)}
+      />
     </div>
   );
 };

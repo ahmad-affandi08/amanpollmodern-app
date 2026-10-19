@@ -15,10 +15,9 @@ export default function ProfileHeader({ user }) {
           {user.nama_lengkap}
         </h2>
         <p className="text-gray-500 text-sm font-medium truncate">
-          {/* Display logic based on role */}
-          {user.role}
-          {user.ruangan_nama !== '-' ? ` • ${user.ruangan_nama}` : ''}
-          {user.divisi_nama !== '-' ? ` • ${user.divisi_nama}` : ''}
+          {[user.role, user.ruangan_nama, user.divisi_nama]
+            .filter((part) => part && part !== '-')
+            .join(' • ')}
         </p>
       </div>
     </div>

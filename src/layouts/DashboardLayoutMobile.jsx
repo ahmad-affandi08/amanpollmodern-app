@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Package, AlertCircle, User } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
+import { ROLES, getRoleId } from '../features/auth/constants';
 import { useUnreadCount } from '../hooks';
 import Logo from '../assets/img/logo2-amanpoll.png';
 import NotifIcon from '../assets/img/icon-notifikasi.png';
@@ -13,27 +14,29 @@ export default function DashboardLayoutMobile() {
   const { user } = useAuth();
   const { data: unreadCount } = useUnreadCount();
 
-  const isActive = (path) => location.pathname === path;
+  // Menu tetap menyala di halaman turunannya (mis. /mobile/aduan/12 menyalakan "Aduan").
+  const isActive = (path) =>
+    location.pathname === path || (path !== '/mobile/dashboard' && location.pathname.startsWith(`${path}/`));
 
 
   const getNavItems = () => {
-    const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
+    const roleId = getRoleId(user);
 
-    if (roleId === 2) {
+    if (roleId === ROLES.USER_RUANGAN) {
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
         { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Inventaris', path: '/mobile/inventaris' },
-        { icon: User, label: 'Profile', path: '/mobile/profile' },
+        { icon: User, label: 'Profil', path: '/mobile/profile' },
       ];
-    } else if (roleId === 3) {
+    } else if (roleId === ROLES.TEKNISI) {
       return [
         { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
         { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
         { type: 'qr', path: '/mobile/scan' },
         { icon: Package, label: 'Pemeliharaan', path: '/mobile/pemeliharaan' },
-        { icon: User, label: 'Profile', path: '/mobile/profile' },
+        { icon: User, label: 'Profil', path: '/mobile/profile' },
       ];
     }
 
@@ -41,7 +44,7 @@ export default function DashboardLayoutMobile() {
       { icon: Home, label: 'Beranda', path: '/mobile/dashboard' },
       { icon: AlertCircle, label: 'Aduan', path: '/mobile/aduan' },
       { type: 'qr', path: '/mobile/scan' },
-      { icon: User, label: 'Profile', path: '/mobile/profile' },
+      { icon: User, label: 'Profil', path: '/mobile/profile' },
     ];
   };
 

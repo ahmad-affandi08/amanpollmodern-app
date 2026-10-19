@@ -1,47 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Bell, Loader2 } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
+import { ArrowLeft, Bell } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import NotificationApi from '../../../api/NotificationApi';
+import { queryKeys } from '../../../lib/queryKeys';
+import { usePageTitle, useMarkAsRead } from '../../../hooks';
 
 export default function MobileNotifikasiDetail() {
   usePageTitle('Detail Notifikasi');
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const markAsRead = useMarkAsRead();
+  const markedRef = useRef(null);
 
-  const [notifikasi, setNotifikasi] = React.useState(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  // Memakai endpoint detail GET /mobile/notifikasi/{id} (bukan mengambil 100 notifikasi lalu mencari).
+  const { data: notifikasi, isLoading, error } = useQuery({
+    queryKey: [...queryKeys.notifications.all, 'detail', id],
+    queryFn: async () => {
+      const res = await NotificationApi.getById(id);
+      return res.data?.data ?? res.data;
+    },
+    enabled: !!id,
+    retry: (failureCount, err) => err?.response?.status !== 404 && failureCount < 2,
+  });
 
+  // Tandai sudah dibaca satu kali per notifikasi yang dibuka.
+  const { mutate: markRead } = markAsRead;
   useEffect(() => {
-    const fetchNotification = async () => {
-      try {
-        const response = await NotificationApi.getAll({ page: 1, per_page: 100 });
-
-        const notifications = response.data?.data || [];
-        const notification = notifications.find(n => n.id == id);
-        setNotifikasi(notification);
-
-
-        if (notification && !notification.is_read) {
-          NotificationApi.markAsRead(id)
-            .then(() => {
-              queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            })
-            .catch(err => console.error('Failed to mark as read:', err));
-        }
-      } catch (error) {
-        console.error('Failed to fetch notification:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchNotification();
+    if (notifikasi && !notifikasi.is_read && markedRef.current !== id) {
+      markedRef.current = id;
+      markRead(id);
     }
-  }, [id, queryClient]);
+  }, [notifikasi, id, markRead]);
 
   if (isLoading) {
     return (
@@ -69,9 +59,19 @@ export default function MobileNotifikasiDetail() {
   }
 
   if (!notifikasi) {
+    const notFound = error?.response?.status === 404 || !error;
     return (
-      <div className="p-4 text-center text-red-500">
-        Notifikasi tidak ditemukan
+      <div className="max-w-md mx-auto px-4 py-8 text-center">
+        <p className="text-red-500 mb-4">
+          {notFound ? 'Notifikasi tidak ditemukan' : 'Gagal memuat notifikasi'}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/mobile/notifikasi')}
+          className="text-brand-primary font-bold"
+        >
+          Kembali ke daftar notifikasi
+        </button>
       </div>
     );
   }

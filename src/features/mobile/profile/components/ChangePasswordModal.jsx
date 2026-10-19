@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import { useChangePassword } from '../../../../hooks/queries/useProfileQueries';
+import { useToast } from '../../../../hooks';
 
 import Button from '../../../../components/Button';
 
@@ -13,35 +14,33 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
     old: false,
     new: false
   });
-  const [toast, setToast] = useState(null);
+  const { showToast } = useToast();
 
   const changePasswordMutation = useChangePassword();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (changePasswordMutation.isPending) return;
 
     if (!formData.old_password || !formData.new_password) {
-      setToast({ type: 'error', message: 'Mohon lengkapi semua field' });
+      showToast('Mohon lengkapi semua field', 'error');
       return;
     }
 
     if (formData.new_password.length < 6) {
-      setToast({ type: 'error', message: 'Password baru minimal 6 karakter' });
+      showToast('Password baru minimal 6 karakter', 'error');
       return;
     }
 
     try {
       await changePasswordMutation.mutateAsync(formData);
-      setToast({ type: 'success', message: 'Password berhasil diubah' });
-
-
-      setTimeout(() => {
-        setFormData({ old_password: '', new_password: '' });
-        onClose();
-      }, 1500);
+      showToast('Password berhasil diubah', 'success');
+      setFormData({ old_password: '', new_password: '' });
+      setShowPassword({ old: false, new: false });
+      onClose();
     } catch (error) {
       const msg = error.response?.data?.message || 'Gagal mengubah password';
-      setToast({ type: 'error', message: msg });
+      showToast(msg, 'error');
     }
   };
 
@@ -136,14 +135,6 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           </div>
         </form>
       </div>
-
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 }

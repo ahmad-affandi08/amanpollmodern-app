@@ -1,32 +1,30 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Save, Building2, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useInstitutionConfig, useUpdateInstitutionConfig, useUploadLogo } from '../../../hooks/queries/useSystemConfigQueries';
-import { ToastContext } from '../../../components/Alert/ToastProvider';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle, useToast } from '../../../hooks';
 import Input from '../../../components/Input';
 import Button from '../../../components/Button';
 
 export default function KonfigurasiData() {
   usePageTitle('Konfigurasi Institusi');
-  const { showToast } = useContext(ToastContext);
+  const { showToast } = useToast();
   const { data, isLoading } = useInstitutionConfig();
   const updateMutation = useUpdateInstitutionConfig();
   const uploadLogoMutation = useUploadLogo();
   const fileInputRef = useRef(null);
 
-  const [institutionName, setInstitutionName] = useState('');
-  const [city, setCity] = useState('');
-  const [logoPreview, setLogoPreview] = useState(null);
+  const serverConfig = data?.data;
+
+  // null = belum diubah pengguna, tampilkan nilai dari server.
+  const [nameInput, setNameInput] = useState(null);
+  const [cityInput, setCityInput] = useState(null);
+  const [previewInput, setPreviewInput] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  React.useEffect(() => {
-    if (data?.data) {
-      setInstitutionName(data.data.institution_name || '');
-      setCity(data.data.city || '');
-      setLogoPreview(data.data.logo_url);
-    }
-  }, [data]);
+  const institutionName = nameInput ?? serverConfig?.institution_name ?? '';
+  const city = cityInput ?? serverConfig?.city ?? '';
+  const logoPreview = previewInput ?? serverConfig?.logo_url ?? null;
 
   const handleFileSelect = (file) => {
     if (!file) return;
@@ -45,7 +43,7 @@ export default function KonfigurasiData() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setLogoPreview(reader.result);
+      setPreviewInput(reader.result);
     };
     reader.readAsDataURL(file);
   };
@@ -69,7 +67,7 @@ export default function KonfigurasiData() {
 
   const handleRemoveLogo = () => {
     setSelectedFile(null);
-    setLogoPreview(data?.data?.logo_url || null);
+    setPreviewInput(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -81,7 +79,7 @@ export default function KonfigurasiData() {
     try {
       if (selectedFile) {
         await uploadLogoMutation.mutateAsync(selectedFile);
-        showToast('Logo berhasil diupload', 'success');
+        showToast('Logo berhasil diunggah', 'success');
       }
 
       await updateMutation.mutateAsync({
@@ -139,7 +137,7 @@ export default function KonfigurasiData() {
                 <Input
                   type="text"
                   value={institutionName}
-                  onChange={(e) => setInstitutionName(e.target.value)}
+                  onChange={(e) => setNameInput(e.target.value)}
                   placeholder="Contoh: RSUD dr. SOERATNO GEMOLONG"
                 />
               </div>
@@ -151,7 +149,7 @@ export default function KonfigurasiData() {
                 <Input
                   type="text"
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) => setCityInput(e.target.value)}
                   placeholder="Contoh: SRAGEN"
                 />
               </div>

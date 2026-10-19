@@ -1,9 +1,6 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateAduan } from '../../../../hooks/queries/useAduanQueries';
-import { useInventarisDetail } from '../../../../hooks/queries/useInventarisQueries';
-import { useAuthContext } from '../../../../context/AuthContext';
-import { ToastContext } from '../../../../components/Alert/ToastProvider';
+import { useAuth, useToast, useCreateAduan, useInventarisDetail } from '../../../../hooks';
 import ImageUploadPreview from './ImageUploadPreview';
 import InventarisSelect from './InventarisSelect';
 import VoiceInput from '../../../../components/VoiceInput';
@@ -11,22 +8,20 @@ import VoiceInput from '../../../../components/VoiceInput';
 
 export default function AduanForm({ scannedInventarisId }) {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
-  const { showToast } = useContext(ToastContext);
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const createAduan = useCreateAduan();
 
 
-  const { data: scannedInventaris, isLoading: isLoadingScanned } = useInventarisDetail(scannedInventarisId);
+  const { data: scannedInventaris } = useInventarisDetail(scannedInventarisId);
 
   const [formData, setFormData] = useState({
-    ruangan_id: user?.ruangan_id || '',
     divisi_id: '',
     inventaris_id: '',
     nama_alat_id: '',
     no_inventaris: '',
     keluhan: '',
     nama_pengadu: user?.nama_lengkap || '',
-    pengadu_id: user?.id_user || '',
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
@@ -35,6 +30,7 @@ export default function AduanForm({ scannedInventarisId }) {
   const [namaDivisi, setNamaDivisi] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appliedScannedId, setAppliedScannedId] = useState(null);
 
 
   const handleInventarisChange = React.useCallback((selected) => {
@@ -44,7 +40,8 @@ export default function AduanForm({ scannedInventarisId }) {
         inventaris_id: selected.id_inventaris,
         nama_alat_id: selected.id_nama_alat,
         no_inventaris: selected.no_inventaris,
-        divisi_id: selected.divisi_id || prev.divisi_id,
+        // Divisi selalu mengikuti alat terpilih (jangan mewarisi divisi alat sebelumnya).
+        divisi_id: selected.divisi_id ?? '',
       }));
       setNamaAlat(selected.nama_alat);
       setMerk(selected.merk);
@@ -55,7 +52,7 @@ export default function AduanForm({ scannedInventarisId }) {
         inventaris_id: '',
         nama_alat_id: '',
         no_inventaris: '',
-
+        divisi_id: '',
       }));
       setNamaAlat('');
       setMerk('');
@@ -64,42 +61,28 @@ export default function AduanForm({ scannedInventarisId }) {
   }, []);
 
 
-  useEffect(() => {
-    const inventarisData = scannedInventaris;
-
-    if (inventarisData && inventarisData.id) {
-
-      const formattedData = {
-        id_inventaris: inventarisData.id,
-        id_nama_alat: inventarisData.nama_alat?.id || inventarisData.nama_alat?.id_nama_alat || inventarisData.id_nama_alat,
-        no_inventaris: inventarisData.no_inventaris,
-        divisi_id: inventarisData.divisi?.id_divisi || inventarisData.nama_alat?.divisi?.id_divisi || inventarisData.divisi_id,
-        nama_alat: inventarisData.nama_alat?.nama_nama_alat || '',
-        merk: inventarisData.merk || '',
-        nama_divisi: inventarisData.divisi?.nama_divisi || inventarisData.nama_alat?.divisi?.nama_divisi || '',
-      };
-
-
-      handleInventarisChange(formattedData);
-    }
-  }, [scannedInventaris, handleInventarisChange]);
-
-  useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        nama_pengadu: prev.nama_pengadu || user.nama_lengkap || '',
-        pengadu_id: prev.pengadu_id || user.id_user || '',
-        ruangan_id: prev.ruangan_id || user.ruangan_id || ''
-      }));
-    }
-  }, [user]);
+  // Alat hasil scan diterapkan satu kali ketika datanya selesai dimuat.
+  if (scannedInventaris?.id && appliedScannedId !== scannedInventaris.id) {
+    setAppliedScannedId(scannedInventaris.id);
+    handleInventarisChange({
+      id_inventaris: scannedInventaris.id,
+      id_nama_alat: scannedInventaris.nama_alat?.id || scannedInventaris.nama_alat?.id_nama_alat || scannedInventaris.id_nama_alat,
+      no_inventaris: scannedInventaris.no_inventaris,
+      divisi_id: scannedInventaris.divisi?.id_divisi ?? scannedInventaris.nama_alat?.divisi?.id_divisi ?? scannedInventaris.nama_alat?.divisi_id ?? scannedInventaris.divisi_id,
+      nama_alat: scannedInventaris.nama_alat?.nama_nama_alat || '',
+      merk: scannedInventaris.merk || '',
+      nama_divisi: scannedInventaris.divisi?.nama_divisi || scannedInventaris.nama_alat?.divisi?.nama_divisi || '',
+    });
+  }
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.divisi_id) {
-      newErrors.divisi_id = 'Divisi wajib dipilih';
+    if (!formData.inventaris_id) {
+      newErrors.inventaris_id = 'Pilih alat terlebih dahulu';
+    } else if (!formData.divisi_id) {
+      // Backend mewajibkan divisi; divisi diambil dari alat yang dipilih.
+      newErrors.inventaris_id = 'Alat ini belum memiliki divisi. Hubungi admin untuk melengkapi data alat';
     }
 
     if (!formData.keluhan || formData.keluhan.trim().length < 10) {
@@ -117,6 +100,8 @@ export default function AduanForm({ scannedInventarisId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (!validateForm()) {
       showToast('Mohon lengkapi form dengan benar', 'error');
       return;
@@ -129,13 +114,12 @@ export default function AduanForm({ scannedInventarisId }) {
       const submitData = new FormData();
 
 
-      submitData.append('ruangan_id', formData.ruangan_id);
+      submitData.append('ruangan_id', user?.ruangan_id ?? '');
       submitData.append('divisi_id', formData.divisi_id);
       submitData.append('keluhan', formData.keluhan);
-      submitData.append('pengadu_id', formData.pengadu_id);
+      submitData.append('pengadu_id', user?.id_user ?? '');
+      submitData.append('inventaris_id', formData.inventaris_id);
 
-
-      if (formData.inventaris_id) submitData.append('inventaris_id', formData.inventaris_id);
       if (formData.nama_alat_id) submitData.append('nama_alat_id', formData.nama_alat_id);
       if (formData.no_inventaris) submitData.append('no_inventaris', formData.no_inventaris);
       if (formData.nama_pengadu) submitData.append('nama_pengadu', formData.nama_pengadu);
@@ -143,11 +127,11 @@ export default function AduanForm({ scannedInventarisId }) {
 
       await createAduan.mutateAsync(submitData);
 
+      // Tombol tetap nonaktif sampai halaman berpindah.
       showToast('Aduan berhasil ditambahkan!', 'success');
       navigate('/mobile/dashboard');
     } catch (error) {
       showToast(error.response?.data?.message || 'Gagal menambahkan aduan', 'error');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -179,7 +163,10 @@ export default function AduanForm({ scannedInventarisId }) {
       <InventarisSelect
         ruanganId={user?.ruangan_id}
         value={formData.inventaris_id}
-        onChange={(e) => setFormData(prev => ({ ...prev, inventaris_id: e.target.value }))}
+        onChange={(e) => {
+          setFormData(prev => ({ ...prev, inventaris_id: e.target.value }));
+          if (errors.inventaris_id) setErrors(prev => ({ ...prev, inventaris_id: '' }));
+        }}
         onInventarisChange={handleInventarisChange}
         error={errors.inventaris_id}
       />
@@ -238,15 +225,12 @@ export default function AduanForm({ scannedInventarisId }) {
           className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
           placeholder="Pilih alat terlebih dahulu"
         />
-        {errors.divisi_id && (
-          <p className="text-xs text-red-500">{errors.divisi_id}</p>
-        )}
       </div>
 
       {/* Keluhan - With Voice Input */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
-          Keluhan Kerusakan <span className="text-red-500">*</span>
+          Keluhan <span className="text-red-500">*</span>
         </label>
         <VoiceInput
           value={formData.keluhan}
@@ -266,19 +250,18 @@ export default function AduanForm({ scannedInventarisId }) {
       {/* Image Upload */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
-          Upload Gambar <span className="text-gray-400 font-normal">(Opsional)</span>
+          Unggah Gambar <span className="text-gray-400 font-normal">(Opsional)</span>
         </label>
         <ImageUploadPreview
-          value={selectedImage}
           onChange={setSelectedImage}
           error={errors.img_keluhan}
         />
       </div>
 
-      {/* Nama Pengadu */}
+      {/* Nama Pelapor */}
       <div className="space-y-1">
         <label className="block text-sm font-semibold text-text-dark">
-          Nama Pengadu <span className="text-gray-400 font-normal">(Opsional)</span>
+          Nama Pelapor <span className="text-gray-400 font-normal">(Opsional)</span>
         </label>
         <input
           value={formData.nama_pengadu}
@@ -288,7 +271,7 @@ export default function AduanForm({ scannedInventarisId }) {
             ? 'border-red-300 focus:ring-red-200'
             : 'border-gray-200 focus:ring-purple-200 focus:border-purple-400'
             }`}
-          placeholder="Masukkan nama pengadu"
+          placeholder="Masukkan nama pelapor"
         />
         {errors.nama_pengadu && (
           <p className="text-xs text-red-500">{errors.nama_pengadu}</p>

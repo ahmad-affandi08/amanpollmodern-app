@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, ClipboardList, MapPin, Package, User, Wrench, DollarSign, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { usePemeliharaanDetail } from '../../../hooks/queries/usePemeliharaanQueries';
-import { formatDate } from '../../../utils/format';
+import { usePageTitle, usePemeliharaanDetail } from '../../../hooks';
+import { apiUrl } from '../../../config';
+import { formatDate, rupiah } from '../../../utils/format';
+import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
@@ -15,36 +16,6 @@ export default function MobilePemeliharaanDetail() {
   const [imagePreview, setImagePreview] = useState(false);
 
   const { data: pemeliharaan, isLoading } = usePemeliharaanDetail(id);
-
-
-  const formatRupiah = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount || 0);
-  };
-
-
-  const StatusBadge = ({ status }) => {
-    const statusConfig = {
-      'Selesai': { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle },
-      'Tindakan Lanjutan': { bg: 'bg-purple-100', text: 'text-purple-700', icon: AlertCircle },
-      'Belum Selesai': { bg: 'bg-orange-100', text: 'text-orange-700', icon: Clock }
-    };
-    const config = statusConfig[status] || statusConfig['Belum Selesai'];
-    const Icon = config.icon;
-
-    return (
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${config.bg} ${config.text} text-xs font-bold`}>
-        <Icon size={14} />
-        {status}
-      </div>
-    );
-  };
-
-
-
 
   if (isLoading) {
     return (
@@ -109,7 +80,7 @@ export default function MobilePemeliharaanDetail() {
             onError={(e) => { e.target.src = noImage; }}
           />
           <div className="absolute top-3 right-3">
-            <StatusBadge status={pemeliharaan.status} />
+            <StatusBadge status={pemeliharaan.status} size="lg" />
           </div>
         </div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">{pemeliharaan.nama_alat_nama}</h2>
@@ -132,7 +103,7 @@ export default function MobilePemeliharaanDetail() {
         <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
           <DollarSign size={16} className="mx-auto text-yellow-500 mb-1" />
           <p className="text-[10px] text-gray-500 mb-0.5">Biaya</p>
-          <p className="text-xs font-bold text-gray-800">{formatRupiah(pemeliharaan.biaya)}</p>
+          <p className="text-xs font-bold text-gray-800">{rupiah(pemeliharaan.biaya)}</p>
         </div>
       </div>
 
@@ -147,7 +118,7 @@ export default function MobilePemeliharaanDetail() {
           <InfoRow icon={<MapPin size={14} />} label="Ruangan" value={pemeliharaan.ruangan_nama} />
           <InfoRow icon={<MapPin size={14} />} label="Gedung" value={pemeliharaan.gedung} />
           <InfoRow icon={<Wrench size={14} />} label="Merk" value={pemeliharaan.merk} />
-          <InfoRow icon={<Wrench size={14} />} label="Model/Type" value={pemeliharaan.model} />
+          <InfoRow icon={<Wrench size={14} />} label="Model/Tipe" value={pemeliharaan.model} />
           <InfoRow icon={<Wrench size={14} />} label="Seri" value={pemeliharaan.seri} />
         </div>
       </div>
@@ -207,7 +178,7 @@ export default function MobilePemeliharaanDetail() {
           </div>
           <div className="space-y-3">
             {/* Historical Actions */}
-            {pemeliharaan.history.map((historyItem, index) => (
+            {pemeliharaan.history.map((historyItem) => (
               <div
                 key={historyItem.id}
                 className="rounded-2xl p-4 border-2 bg-purple-50 border-purple-200"
@@ -224,7 +195,7 @@ export default function MobilePemeliharaanDetail() {
                 <div className="space-y-2">
                   {historyItem.keterangan_pemeliharaan && (
                     <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Tindakan Petugas</p>
+                      <p className="text-xs font-medium text-gray-600 mb-1">Tindakan Teknisi</p>
                       <p className="text-sm text-gray-800">{historyItem.keterangan_pemeliharaan}</p>
                     </div>
                   )}
@@ -265,11 +236,11 @@ export default function MobilePemeliharaanDetail() {
                       )}
                     </div>
                     <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruang</p>
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruangan</p>
                       {historyItem.ttd_kepala_ruang ? (
                         <img
                           src={historyItem.ttd_kepala_ruang}
-                          alt="TTD Kepala Ruang"
+                          alt="TTD Kepala Ruangan"
                           className="w-full h-12 object-contain"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
@@ -298,7 +269,7 @@ export default function MobilePemeliharaanDetail() {
                   {pemeliharaan.keterangan_pemeliharaan && (
                     <div className="bg-white rounded-xl p-3 border border-gray-200">
                       <p className="text-xs font-medium text-gray-600 mb-1">
-                        {pemeliharaan.status === 'Selesai' ? 'Tindakan Perbaikan' : 'Keterangan'}
+                        {pemeliharaan.status === 'Selesai' ? 'Tindakan Teknisi' : 'Keterangan'}
                       </p>
                       <p className="text-sm text-gray-800">{pemeliharaan.keterangan_pemeliharaan}</p>
                     </div>
@@ -340,11 +311,11 @@ export default function MobilePemeliharaanDetail() {
                       )}
                     </div>
                     <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruang</p>
+                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruangan</p>
                       {pemeliharaan.ttd_kepala_ruang ? (
                         <img
                           src={pemeliharaan.ttd_kepala_ruang}
-                          alt="TTD Kepala Ruang"
+                          alt="TTD Kepala Ruangan"
                           className="w-full h-12 object-contain"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
@@ -376,13 +347,13 @@ export default function MobilePemeliharaanDetail() {
         {/* Hasil Pemeliharaan Button - Only for completed tasks */}
         {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
           <a
-            href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/pemeliharaan/${id}/export-hasil`}
+            href={apiUrl(`/pemeliharaan/${id}/export-hasil`)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3.5 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg"
           >
             <FileText size={20} />
-            Download Hasil Pemeliharaan
+            Export PDF
           </a>
         )}
       </div>
@@ -407,34 +378,3 @@ const InfoRow = ({ icon, label, value }) => (
     </div>
   </div>
 );
-
-const SignatureCard = ({ label, status, image }) => {
-  const isComplete = status === 'Sudah TTD';
-
-  return (
-    <div className={`rounded-xl p-3 border-2 ${isComplete ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-      <p className="text-xs font-medium text-gray-600 mb-2">{label}</p>
-      {isComplete ? (
-        <>
-          <div className="flex items-center gap-1 text-green-600 mb-2">
-            <CheckCircle size={16} />
-            <span className="text-xs font-bold">Sudah TTD</span>
-          </div>
-          {image && (
-            <img
-              src={image}
-              alt={`TTD ${label}`}
-              className="w-full h-16 object-contain bg-white rounded border border-green-200"
-              onError={(e) => { e.target.src = noImage; }}
-            />
-          )}
-        </>
-      ) : (
-        <div className="flex items-center gap-1 text-gray-500">
-          <Clock size={16} />
-          <span className="text-xs font-medium">Belum TTD</span>
-        </div>
-      )}
-    </div>
-  );
-};

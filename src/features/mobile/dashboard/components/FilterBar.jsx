@@ -5,7 +5,7 @@ import axiosClient from '../../../../api/axiosClient';
 
 export default function FilterBar({ filters, onFilterChange }) {
 
-  const { data: kategoriData, isLoading: isLoadingKategori } = useQuery({
+  const { data: kategoriData } = useQuery({
     queryKey: ['kategori-alat-mobile'],
     queryFn: async () => {
       const response = await axiosClient.get('/mobile/kategori-alat');
@@ -17,7 +17,8 @@ export default function FilterBar({ filters, onFilterChange }) {
   const kategoriList = Array.isArray(kategoriData) ? kategoriData : [];
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 30 }, (_, i) => currentYear - i + 5);
+  // Tahun berjalan sampai 30 tahun ke belakang (tidak ada tahun mendatang).
+  const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
   const months = [
     { value: '01', label: 'Januari' },
     { value: '02', label: 'Februari' },
@@ -58,7 +59,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           onChange={(e) => handleChange('tahun_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg text-brand-primary focus:outline-none focus:ring-2 focus:ring-purple-300"
         >
-          <option value="">-- Tahun --</option>
+          <option value="">Tahun</option>
           {years.map(year => (
             <option key={year} value={year}>{year}</option>
           ))}
@@ -70,7 +71,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           onChange={(e) => handleChange('bulan_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-lg text-info-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
-          <option value="">-- Bulan --</option>
+          <option value="">Bulan</option>
           {months.map(month => (
             <option key={month.value} value={month.value}>{month.label}</option>
           ))}
@@ -82,7 +83,7 @@ export default function FilterBar({ filters, onFilterChange }) {
           onChange={(e) => handleChange('kategori_filter', e.target.value)}
           className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-lg text-accent-green focus:outline-none focus:ring-2 focus:ring-emerald-300"
         >
-          <option value="">-- Kategori --</option>
+          <option value="">Kategori</option>
           {kategoriList.map((kat, index) => (
             <option key={kat.id_kategori_alat || `kategori-${index}`} value={kat.id_kategori_alat}>
               {kat.nama_kategori}

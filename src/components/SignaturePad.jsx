@@ -1,6 +1,6 @@
 import React, { useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { Trash, } from 'lucide-react';
+import { Trash } from 'lucide-react';
 
 const SignaturePad = forwardRef(({ label, onClear }, ref) => {
   const sigCanvas = useRef(null);
@@ -22,7 +22,7 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return undefined;
 
     const preventScroll = (e) => {
       e.preventDefault();
@@ -76,7 +76,7 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
         className="flex items-center gap-2 px-4 py-2 bg-danger-500 text-white rounded-full text-sm font-bold hover:bg-danger-600 transition-colors"
       >
         <Trash size={16} />
-        Clear
+        Hapus
       </button>
     </div>
   );

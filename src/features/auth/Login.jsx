@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import useAuth from '../../hooks/utils/useAuth';
 import Button from '../../components/Button';
 import Logo from '../../assets/img/icon-logo-amanpoll.png';
@@ -28,6 +28,7 @@ const ThickInput = ({ label, type = "text", suffix, ...props }) => (
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ identifier: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -52,8 +53,15 @@ export default function Login() {
 
       if (response.user) {
         const roleId = parseInt(response.user.kategori_user_id);
-        const redirectPath = isMobileRole(roleId) ? '/mobile/dashboard' : '/dashboard';
-        navigate(redirectPath);
+        const defaultPath = isMobileRole(roleId) ? '/mobile/dashboard' : '/dashboard';
+
+        // Kembali ke halaman yang tadi dituju sebelum diarahkan ke login (jika ada).
+        // Bila peran tidak berhak membukanya, ProtectedRoute mengalihkan ke beranda.
+        const from = location.state?.from;
+        const target = from?.pathname && from.pathname !== '/login'
+          ? `${from.pathname}${from.search || ''}`
+          : defaultPath;
+        navigate(target, { replace: true });
       } else {
 
         navigate(response.page ? `/${response.page}` : '/dashboard');

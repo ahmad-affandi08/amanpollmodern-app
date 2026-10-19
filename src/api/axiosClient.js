@@ -1,8 +1,15 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
+
+/** Dikirim saat server menolak token (401) agar AuthContext mengakhiri sesi. */
+export const UNAUTHORIZED_EVENT = 'auth:unauthorized';
+
+// Endpoint yang wajar mengembalikan 401 tanpa berarti sesi berakhir.
+const AUTH_ENDPOINTS = ['/login', '/register', '/forgot-password', '/logout'];
 
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
@@ -20,7 +27,7 @@ axiosClient.interceptors.request.use(
 
 
 
-    if (!(config.data instanceof FormData)) {
+    if (config.data !== undefined && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
 
@@ -36,13 +43,27 @@ axiosClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
+    // Unduhan (responseType: 'blob') yang gagal menerima pesan JSON server dalam bentuk Blob;
+    // ubah kembali agar error.response.data.message bisa dibaca pemanggil.
+    const data = error.response?.data;
+    if (data instanceof Blob && data.type?.includes('json')) {
+      try {
+        error.response.data = JSON.parse(await data.text());
+      } catch {
+        // biarkan sebagai Blob bila bukan JSON valid
+      }
+    }
 
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      const url = error.config?.url || '';
+      const isAuthEndpoint = AUTH_ENDPOINTS.some((endpoint) => url.startsWith(endpoint));
 
-
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      }
     }
 
 

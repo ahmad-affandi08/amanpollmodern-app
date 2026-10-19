@@ -1,11 +1,11 @@
 import React from 'react';
-import { ShieldCheck, AlertTriangle, XCircle, HelpCircle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, XCircle, HelpCircle, Wrench } from 'lucide-react';
 
 /**
  * KondisiBadge — Unified condition badge for device/equipment status.
  * Used across InventarisList, PemeliharaanList, Report pages, and Mobile views.
  *
- * @param {'Baik' | 'Rusak Ringan' | 'Rusak Berat'} kondisi
+ * @param {'Baik' | 'Rusak Ringan' | 'Rusak Berat' | 'Dalam Perbaikan'} kondisi
  * @param {'sm' | 'md' | 'lg'} size
  */
 const KONDISI_CONFIG = {
@@ -26,6 +26,12 @@ const KONDISI_CONFIG = {
     text: 'text-red-700',
     border: 'border-red-200',
     icon: XCircle,
+  },
+  'Dalam Perbaikan': {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+    icon: Wrench,
   },
 };
 

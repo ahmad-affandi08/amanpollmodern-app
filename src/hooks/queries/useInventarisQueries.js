@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import InventarisApi from '../../api/InventarisApi';
 import { queryKeys } from '../../lib/queryKeys';
 
@@ -13,6 +13,7 @@ export const useInventaris = (filters = {}) => {
         meta: res.meta,
       };
     },
+    placeholderData: keepPreviousData,
   });
 };
 

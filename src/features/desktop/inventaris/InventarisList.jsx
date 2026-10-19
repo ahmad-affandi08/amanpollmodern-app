@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Printer, Download, Calendar, MapPin, Layers, Edit2, Trash2, Eye, FileText, QrCode } from 'lucide-react';
+import { Plus, Search, Download, Calendar, Layers, Edit2, Trash2, Eye } from 'lucide-react';
 import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
 import KondisiBadge from '../../../components/KondisiBadge';
 import {
@@ -19,7 +19,6 @@ import {
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
-import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Pagination from '../../../components/Pagination';
 import ConfirmDialog from '../../../components/Alert/Alert';
@@ -32,6 +31,8 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 import qrCodeIcon from '../../../assets/img/icon-qr-code.png';
 import InventarisApi from '../../../api/InventarisApi';
+import { ROLES, isRole, canManageInventaris } from '../../auth/constants';
+import { rupiah, formatDateShort } from '../../../utils/format';
 
 const COLUMN_DEFS = [
   { key: 'no_inventaris', label: 'No. Inventaris', defaultVisible: true },
@@ -48,7 +49,7 @@ const COLUMN_DEFS = [
   { key: 'ruang_sekarang', label: 'Letak Saat Ini/Ruang', defaultVisible: true },
   { key: 'gedung', label: 'Gedung', defaultVisible: true },
   { key: 'kategori_alat', label: 'Kategori Alat', defaultVisible: true },
-  { key: 'interval_maintenance', label: 'Interval Maintenance', defaultVisible: true },
+  { key: 'interval_maintenance', label: 'Interval Maintenance (kali/tahun)', defaultVisible: true },
   { key: 'img_alat', label: 'Foto', defaultVisible: true },
   { key: 'file_sertifikat', label: 'Sertifikat', defaultVisible: true },
   { key: 'kadaluwarsa', label: 'Berlaku Hingga', defaultVisible: true },
@@ -64,10 +65,9 @@ export default function InventarisList() {
   const { user } = useAuth();
 
 
-  const ROLE_ADMIN_DIVISI = 4;
-  const ROLE_PIMPINAN = 5;
-  const isAdminDivisi = Number(user?.kategori_user_id) === ROLE_ADMIN_DIVISI;
-  const isPimpinan = Number(user?.kategori_user_id) === ROLE_PIMPINAN;
+  const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
+  // Hanya peran yang boleh mengelola inventaris (Super Admin, Teknisi, Admin Divisi) yang melihat tombol tambah/ubah/hapus.
+  const canManage = canManageInventaris(user);
 
 
   const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
@@ -91,13 +91,13 @@ export default function InventarisList() {
 
 
   const { showToast } = useToast();
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
+  const [deleteId, setDeleteId] = useState(null);
 
 
-  const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '' });
+  const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '', altText: '' });
 
 
-  const { data: inventarisData, isLoading, refetch } = useInventaris({
+  const { data: inventarisData, isLoading } = useInventaris({
     ...filters,
     search: debouncedSearch,
     page: pagination.currentPage,
@@ -117,11 +117,12 @@ export default function InventarisList() {
   const meta = inventarisData?.meta;
 
 
+  const { setMetadata } = pagination;
   useEffect(() => {
     if (meta) {
-      pagination.setMetadata(meta);
+      setMetadata(meta);
     }
-  }, [meta]);
+  }, [meta, setMetadata]);
 
 
   const categories = kategoriData?.data || [];
@@ -130,22 +131,15 @@ export default function InventarisList() {
 
 
 
-  const handleDelete = (id) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Konfirmasi Hapus',
-      message: 'Apakah Anda yakin ingin menghapus inventaris ini?',
-      onConfirm: async () => {
-        try {
-          await deleteMutation.mutateAsync(id);
-          showToast('Inventaris berhasil dihapus', 'success');
-          setConfirmDialog({ isOpen: false });
-        } catch (error) {
-          showToast('Gagal menghapus inventaris', 'error');
-        }
-      },
-      onCancel: () => setConfirmDialog({ isOpen: false })
-    });
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteId);
+      showToast('Inventaris berhasil dihapus', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Gagal menghapus inventaris', 'error');
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   const handleFilterChange = (key, value) => {
@@ -165,7 +159,7 @@ export default function InventarisList() {
       const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `inventaris_${new Date().getTime()}.xls`);
+      link.setAttribute('download', `inventaris_${Date.now()}.xls`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -174,7 +168,6 @@ export default function InventarisList() {
       showToast('Export berhasil', 'success');
     } catch (error) {
       console.error('Export error:', error);
-      console.error('Error response:', error.response);
       showToast('Gagal export data', 'error');
     }
   };
@@ -229,14 +222,16 @@ export default function InventarisList() {
             Export Excel
           </Button>
 
-          <Button
-            onClick={() => navigate('/inventaris/baru')}
-            size="md"
-            className="gap-2 shadow-lg shadow-brand-primary/20 w-full md:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Tambah Inventaris
-          </Button>
+          {canManage && (
+            <Button
+              onClick={() => navigate('/inventaris/baru')}
+              size="md"
+              className="gap-2 shadow-lg shadow-brand-primary/20 w-full md:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Tambah Inventaris
+            </Button>
+          )}
         </div>
       </div>
 
@@ -330,7 +325,8 @@ export default function InventarisList() {
                 { label: 'Semua Kondisi', value: '' },
                 { label: 'Baik', value: 'Baik' },
                 { label: 'Rusak Ringan', value: 'Rusak Ringan' },
-                { label: 'Rusak Berat', value: 'Rusak Berat' }
+                { label: 'Rusak Berat', value: 'Rusak Berat' },
+                { label: 'Dalam Perbaikan', value: 'Dalam Perbaikan' }
               ]}
               placeholder="Semua Kondisi"
               searchPlaceholder="Cari kondisi..."
@@ -400,7 +396,7 @@ export default function InventarisList() {
                 {isVisible('ruang_sekarang') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Letak Saat Ini/Ruang</th>}
                 {isVisible('gedung') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Gedung</th>}
                 {isVisible('kategori_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Kategori Alat</th>}
-                {isVisible('interval_maintenance') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Interval Maintenance</th>}
+                {isVisible('interval_maintenance') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Interval (kali/tahun)</th>}
                 {isVisible('img_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Foto</th>}
                 {isVisible('file_sertifikat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Sertifikat</th>}
                 {isVisible('kadaluwarsa') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Berlaku Hingga</th>}
@@ -489,14 +485,14 @@ export default function InventarisList() {
                     {/* Harga */}
                     {isVisible('harga') && (
                       <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.harga ? `Rp ${parseInt(item.harga).toLocaleString('id-ID')}` : '-'}
+                        {parseFloat(item.harga) > 0 ? rupiah(item.harga) : '-'}
                       </td>
                     )}
 
                     {/* Harga Ganti (AIC) */}
                     {isVisible('harga_ganti') && (
                       <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.harga_pengganti ? `Rp ${parseInt(item.harga_pengganti).toLocaleString('id-ID')}` : '-'}
+                        {parseFloat(item.harga_pengganti) > 0 ? rupiah(item.harga_pengganti) : '-'}
                       </td>
                     )}
 
@@ -546,7 +542,7 @@ export default function InventarisList() {
                     {/* Interval Maintenance */}
                     {isVisible('interval_maintenance') && (
                       <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.interval_maintenance || '-'}
+                        {item.interval_maintenance > 0 ? `${item.interval_maintenance}x` : '-'}
                       </td>
                     )}
 
@@ -564,14 +560,14 @@ export default function InventarisList() {
                                 style={{ width: '64px', height: '64px', display: 'block' }}
                                 placeholderSrc={noImage}
                                 onError={(e) => { e.target.src = noImage; }}
-                                onClick={() => setImagePreview({ isOpen: true, imageUrl: item.img_alat_url, altText: `Foto Alat - ${item.nama_alat}` })}
+                                onClick={() => setImagePreview({ isOpen: true, imageUrl: item.img_alat_url, altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || item.no_inventaris || ''}` })}
                               />
                             </div>
                           ) : (
                             <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
                               <img
                                 src={noImage}
-                                alt="No Image"
+                                alt="Tidak ada foto"
                                 className="w-full h-full object-cover opacity-50"
                               />
                             </div>
@@ -593,7 +589,7 @@ export default function InventarisList() {
                             Tampilkan
                           </a>
                         ) : (
-                          <span className="text-gray-400">No file</span>
+                          <span className="text-gray-400">Tidak ada berkas</span>
                         )}
                       </td>
                     )}
@@ -601,7 +597,7 @@ export default function InventarisList() {
                     {/* Kadaluwarsa */}
                     {isVisible('kadaluwarsa') && (
                       <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.kadaluwarsa ? new Date(item.kadaluwarsa).toLocaleDateString('id-ID') : '-'}
+                        {formatDateShort(item.kadaluwarsa)}
                       </td>
                     )}
 
@@ -618,7 +614,7 @@ export default function InventarisList() {
                             Tampilkan
                           </a>
                         ) : (
-                          <span className="text-gray-400">No file</span>
+                          <span className="text-gray-400">Tidak ada berkas</span>
                         )}
                       </td>
                     )}
@@ -633,11 +629,12 @@ export default function InventarisList() {
                             className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform"
                             onClick={() => setImagePreview({
                               isOpen: true,
-                              imageUrl: item.qrcode_url
+                              imageUrl: item.qrcode_url,
+                              altText: `QR Code - ${item.no_inventaris || ''}`
                             })}
                           />
                         ) : (
-                          <span className="text-gray-400">No QR</span>
+                          <span className="text-gray-400">Tidak ada QR</span>
                         )}
                       </td>
                     )}
@@ -653,35 +650,25 @@ export default function InventarisList() {
                     {isVisible('actions') && (
                       <td className="py-1.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {isPimpinan ? (
-                            /* Pimpinan View: Only Detail */
-                            <button
-                              onClick={() => navigate(`/inventaris/detail/${item.id}`)}
-                              className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
-                              title="Detail"
-                            >
-                              <Eye size={14} />
-                            </button>
-                          ) : (
-                            /* Admin View: All Actions */
+                          {/* Cetak label */}
+                          <PrintLabelDropdown
+                            variant="icon"
+                            onSelect={(type) => handlePrintLabelWithType(type, item.id)}
+                            isPrinting={isPrinting}
+                          />
+
+                          {/* Detail */}
+                          <button
+                            onClick={() => navigate(`/inventaris/detail/${item.id}`)}
+                            className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
+                            title="Detail"
+                          >
+                            <Eye size={14} />
+                          </button>
+
+                          {/* Ubah dan hapus hanya untuk peran pengelola inventaris */}
+                          {canManage && (
                             <>
-                              {/* Print Label Dropdown */}
-                              <PrintLabelDropdown
-                                variant="icon"
-                                onSelect={(type) => handlePrintLabelWithType(type, item.id)}
-                                isPrinting={isPrinting}
-                              />
-
-                              {/* View Details */}
-                              <button
-                                onClick={() => navigate(`/inventaris/detail/${item.id}`)}
-                                className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
-                                title="Detail"
-                              >
-                                <Eye size={14} />
-                              </button>
-
-                              {/* Edit */}
                               <button
                                 onClick={() => navigate(`/inventaris/edit/${item.id}`)}
                                 className="p-1.5 bg-brand-primary text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
@@ -690,9 +677,8 @@ export default function InventarisList() {
                                 <Edit2 size={14} />
                               </button>
 
-                              {/* Delete */}
                               <button
-                                onClick={() => handleDelete(item.id)}
+                                onClick={() => setDeleteId(item.id)}
                                 disabled={deleteMutation.isPending}
                                 className="p-1.5 bg-danger-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all disabled:opacity-50"
                                 title="Hapus"
@@ -723,25 +709,23 @@ export default function InventarisList() {
         </div>
       </div>
 
-      {
-        confirmDialog.isOpen && (
-          <ConfirmDialog
-            isOpen={confirmDialog.isOpen}
-            title={confirmDialog.title}
-            message={confirmDialog.message}
-            onConfirm={confirmDialog.onConfirm}
-            onCancel={() => setConfirmDialog({ isOpen: false })}
-            type="danger"
-          />
-        )
-      }
+      <ConfirmDialog
+        isOpen={deleteId !== null}
+        title="Konfirmasi Hapus"
+        message="Apakah Anda yakin ingin menghapus inventaris ini?"
+        confirmText="Ya, Hapus"
+        type="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
 
       {/* Image Preview Modal */}
       <ImagePreviewModal
         isOpen={imagePreview.isOpen}
         imageUrl={imagePreview.imageUrl}
-        onClose={() => setImagePreview({ isOpen: false, imageUrl: '' })}
+        altText={imagePreview.altText}
+        onClose={() => setImagePreview({ isOpen: false, imageUrl: '', altText: '' })}
       />
-    </div >
+    </div>
   );
 }

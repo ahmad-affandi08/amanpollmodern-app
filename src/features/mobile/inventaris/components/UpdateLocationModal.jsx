@@ -1,20 +1,19 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { MapPin, X } from 'lucide-react';
-import { useUpdateLocation } from '../../../../hooks/queries/useInventarisQueries';
-import { useMasterData } from '../../../../hooks/queries/useMasterDataQueries';
-import { ToastContext } from '../../../../components/Alert/ToastProvider';
+import { useUpdateLocation, useMasterRuangan, useToast } from '../../../../hooks';
 import Button from '../../../../components/Button';
 
 export default function UpdateLocationModal({ isOpen, onClose, inventarisId, currentRuanganId }) {
   const [selectedRuangan, setSelectedRuangan] = useState(currentRuanganId || '');
-  const { showToast } = useContext(ToastContext);
+  const { showToast } = useToast();
 
-  const { data: ruanganData } = useMasterData.ruangan();
+  const { data: ruanganData } = useMasterRuangan();
   const ruanganList = ruanganData?.data || [];
   const updateLocationMutation = useUpdateLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (updateLocationMutation.isPending) return;
 
     if (!selectedRuangan) {
       showToast('Pilih ruangan terlebih dahulu', 'error');
@@ -28,10 +27,7 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
       });
 
       showToast('Lokasi berhasil diperbarui', 'success');
-
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      onClose();
     } catch (error) {
       showToast(error.response?.data?.message || 'Gagal memperbarui lokasi', 'error');
     }
@@ -53,7 +49,7 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
         <div className="bg-gradient-to-r from-brand-primary to-brand-primary-light p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <MapPin size={20} />
-            <h3 className="font-bold text-lg">Update Lokasi</h3>
+            <h3 className="font-bold text-lg">Pindah Lokasi</h3>
           </div>
           <button
             onClick={onClose}
@@ -72,7 +68,7 @@ export default function UpdateLocationModal({ isOpen, onClose, inventarisId, cur
               onChange={(e) => setSelectedRuangan(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none text-sm bg-white"
             >
-              <option value="">-- Pilih Ruangan --</option>
+              <option value="">Pilih ruangan</option>
               {ruanganList.map((ruangan) => (
                 <option key={ruangan.id_ruangan} value={ruangan.id_ruangan}>
                   {ruangan.nama_ruangan}

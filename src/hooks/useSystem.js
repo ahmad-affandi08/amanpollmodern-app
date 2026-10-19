@@ -24,7 +24,7 @@ export const useToggleMaintenance = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['system-status']);
+      queryClient.invalidateQueries({ queryKey: ['system-status'] });
     },
   });
 };

@@ -1,43 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { User, CheckCircle, Wrench, RefreshCw, Briefcase } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { User, CheckCircle, Wrench, Briefcase } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import AnalisisApi from '../../../api/AnalisisApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { usePageTitle } from '../../../hooks';
+import { useAnalisisKinerja } from '../../../hooks/queries/useAnalisisQueries';
+import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
 
 export default function KinerjaTeknisiPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Analisis Kinerja Teknisi');
   const { showToast } = useToast();
+  const { data, isLoading, isError, isFetching, refetch } = useAnalisisKinerja();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal mengambil data kinerja', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await AnalisisApi.getKinerjaTeknisi();
-      setData(response.data.data);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal mengambil data kinerja', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <AnalisisLoading text="Menganalisis kinerja teknisi, mohon tunggu..." />;
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center justify-center min-h-[70vh]">
-        <RefreshCw className="animate-spin text-brand-primary mb-4" size={32} />
-        <p className="text-gray-500 font-medium">Menganalisis kinerja teknisi, mohon tunggu...</p>
-      </div>
-    );
-  }
+  // Gagal dimuat (atau kosong): tampilkan pesan + tombol coba lagi, bukan halaman kosong.
+  if (!data) return <AnalisisError message="Gagal mengambil data kinerja." onRetry={() => refetch()} retrying={isFetching} />;
 
-  if (!data) return null;
+  const leaderboard = data.leaderboard || [];
 
   return (
     <div className="space-y-6 pb-12">
@@ -52,9 +37,7 @@ export default function KinerjaTeknisiPage() {
             Mengevaluasi kecepatan respon (SLA), jumlah beban kerja, dan tingkat penyelesaian perbaikan.
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold">
-          <RefreshCw size={16} /> Segarkan Data
-        </button>
+        <RefreshButton onClick={() => refetch()} isFetching={isFetching} />
       </div>
 
       {/* KPI Cards */}
@@ -100,7 +83,7 @@ export default function KinerjaTeknisiPage() {
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.leaderboard.slice(0, 5)} // Take top 5
+                data={leaderboard.slice(0, 5)} // 5 teknisi teratas
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
               >
@@ -138,8 +121,8 @@ export default function KinerjaTeknisiPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {data.leaderboard.map((teknisi) => {
-                  const totalAktif = teknisi.aduan_aktif + teknisi.pemeliharaan_aktif;
+                {leaderboard.map((teknisi) => {
+                  const totalAktif = Number(teknisi.aduan_aktif || 0) + Number(teknisi.pemeliharaan_aktif || 0);
                   return (
                     <tr key={teknisi.id_user} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3 px-4 font-semibold text-gray-800">{teknisi.nama_teknisi}</td>

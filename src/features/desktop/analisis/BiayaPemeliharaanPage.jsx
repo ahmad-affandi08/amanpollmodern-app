@@ -1,46 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, PieChart as PieChartIcon, TrendingUp, RefreshCw } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { DollarSign, PieChart as PieChartIcon, TrendingUp } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import AnalisisApi from '../../../api/AnalisisApi';
 import { useToast } from '../../../components/Alert/useToast';
+import { rupiah, formatNumber } from '../../../utils/format';
+import { usePageTitle } from '../../../hooks';
+import { useAnalisisBiaya } from '../../../hooks/queries/useAnalisisQueries';
+import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
 
 export default function BiayaPemeliharaanPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  usePageTitle('Analisis Biaya Pemeliharaan');
   const { showToast } = useToast();
+  const { data, isLoading, isError, isFetching, refetch } = useAnalisisBiaya();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isError) showToast('Gagal mengambil data biaya', 'error');
+  }, [isError, showToast]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await AnalisisApi.getBiaya();
-      setData(response.data.data);
-    } catch (error) {
-      console.error(error);
-      showToast('Gagal mengambil data biaya', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return <AnalisisLoading text="Menganalisis pengeluaran biaya, mohon tunggu..." />;
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center justify-center min-h-[70vh]">
-        <RefreshCw className="animate-spin text-brand-primary mb-4" size={32} />
-        <p className="text-gray-500 font-medium">Menganalisis pengeluaran biaya, mohon tunggu...</p>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  // Format IDR
-  const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+  // Gagal dimuat (atau kosong): tampilkan pesan + tombol coba lagi, bukan halaman kosong.
+  if (!data) return <AnalisisError message="Gagal mengambil data biaya." onRetry={() => refetch()} retrying={isFetching} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -55,9 +36,7 @@ export default function BiayaPemeliharaanPage() {
             Mengevaluasi Total Cost of Ownership (TCO) dan melacak pengeluaran perbaikan alat.
           </p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold">
-          <RefreshCw size={16} /> Segarkan Data
-        </button>
+        <RefreshButton onClick={() => refetch()} isFetching={isFetching} />
       </div>
 
       {/* KPI Cards */}
@@ -68,7 +47,7 @@ export default function BiayaPemeliharaanPage() {
           </div>
           <div>
             <div className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total Nilai Aset</div>
-            <div className="text-2xl font-black text-gray-800">{formatIDR(data.total_aset)}</div>
+            <div className="text-2xl font-black text-gray-800">{rupiah(data.total_aset)}</div>
             <div className="text-xs text-gray-500 mt-1">Estimasi nilai seluruh inventaris</div>
           </div>
         </div>
@@ -79,7 +58,7 @@ export default function BiayaPemeliharaanPage() {
           </div>
           <div>
             <div className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total Biaya Perbaikan</div>
-            <div className="text-2xl font-black text-gray-800">{formatIDR(data.total_biaya)}</div>
+            <div className="text-2xl font-black text-gray-800">{rupiah(data.total_biaya)}</div>
             <div className="text-xs text-gray-500 mt-1">Terserap untuk perawatan</div>
           </div>
         </div>
@@ -103,7 +82,7 @@ export default function BiayaPemeliharaanPage() {
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={data.trend_biaya}
+                data={data.trend_biaya || []}
                 margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
               >
                 <defs>
@@ -123,11 +102,11 @@ export default function BiayaPemeliharaanPage() {
                   tick={{fontSize: 12, fill: '#6b7280'}}
                   axisLine={false} 
                   tickLine={false} 
-                  tickFormatter={(value) => `Rp ${value / 1000000}M`}
+                  tickFormatter={(value) => `Rp ${formatNumber(value / 1000000)} jt`}
                 />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                 <Tooltip 
-                  formatter={(value) => [formatIDR(value), "Biaya"]}
+                  formatter={(value) => [rupiah(value), "Biaya"]}
                   contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
                 />
                 <Area type="monotone" dataKey="biaya" stroke="#ea580c" fillOpacity={1} fill="url(#colorBiaya)" />
@@ -150,13 +129,13 @@ export default function BiayaPemeliharaanPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {data.top_biaya.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                {(data.top_biaya || []).map((item) => (
+                  <tr key={item.no_aduan} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3 px-4 text-gray-500">{item.tanggal}</td>
                     <td className="py-3 px-4 font-mono text-gray-600">{item.no_aduan}</td>
                     <td className="py-3 px-4 font-semibold text-gray-800 max-w-[200px] truncate">{item.nama_alat}</td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-red-600 font-bold">{formatIDR(item.biaya)}</span>
+                      <span className="text-red-600 font-bold">{rupiah(item.biaya)}</span>
                     </td>
                   </tr>
                 ))}

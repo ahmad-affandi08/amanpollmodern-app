@@ -1,50 +1,19 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
-import usePageTitle from '../../../hooks/utils/usePageTitle';
-import { useAuthContext } from '../../../context/AuthContext';
+import { useAuth, usePageTitle } from '../../../hooks';
+import { ROLES, isRole } from '../../auth/constants';
 import AduanForm from './components/AduanForm';
 import MobileAduanListTeknisi from './MobileAduanListTeknisi';
 
 export default function MobileAduan() {
   usePageTitle('Aduan');
-  const { user } = useAuthContext();
+  const { user } = useAuth();
   const location = useLocation();
   const scannedInventarisId = location.state?.scannedInventarisId;
 
 
-  const isLoading = false;
-
-  if (isLoading) {
-    return (
-      <div className="max-w-md mx-auto px-4 space-y-4 animate-pulse pt-3">
-        {/* Header Skeleton */}
-        <div className="bg-white rounded-[20px] p-4 border border-gray-100 h-[72px] flex items-center gap-3">
-          <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
-          <div className="flex-1">
-            <div className="h-5 bg-gray-200 rounded-lg w-1/2 mb-2"></div>
-            <div className="h-3 bg-gray-100 rounded w-1/3"></div>
-          </div>
-        </div>
-
-        {/* Form Skeleton */}
-        <div className="bg-white rounded-[20px] p-6 border border-gray-100 space-y-6">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="space-y-2">
-              <div className="h-4 bg-gray-100 rounded w-1/4"></div>
-              <div className="h-12 bg-gray-50 rounded-xl border border-gray-50"></div>
-            </div>
-          ))}
-          <div className="h-12 bg-gray-200 rounded-xl w-full mt-4"></div>
-        </div>
-      </div>
-    );
-  }
-
-
-  const roleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
-
-  if (roleId === 3) {
+  if (isRole(user, ROLES.TEKNISI)) {
     return <MobileAduanListTeknisi />;
   }
 
@@ -81,8 +50,8 @@ export default function MobileAduan() {
             <h3 className="text-sm font-bold text-info-900 mb-1">Informasi</h3>
             <ul className="text-xs text-info-700 space-y-1">
               <li>• Pastikan keluhan diisi dengan jelas</li>
-              <li>• Upload gambar untuk mempercepat proses</li>
-              <li>• Divisi wajib dipilih untuk penugasan teknisi</li>
+              <li>• Unggah gambar untuk mempercepat proses</li>
+              <li>• Pilih alat; divisi terisi otomatis untuk penugasan teknisi</li>
             </ul>
           </div>
         </div>

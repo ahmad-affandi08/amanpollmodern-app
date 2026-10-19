@@ -8,7 +8,7 @@ import ChangePasswordModal from './components/ChangePasswordModal';
 import { useProfile } from '../../../hooks/queries/useProfileQueries';
 
 export default function MobileProfile() {
-  usePageTitle('Profile');
+  usePageTitle('Profil');
   const { user: authUser } = useAuth();
 
 

@@ -17,6 +17,7 @@ import Input from '../../../../components/Input';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
 import ConfirmDialog from '../../../../components/Alert/Alert';
+import useConfirmAction from '../useConfirmAction';
 
 export default function MasterRuangan() {
   usePageTitle('Master Ruangan');
@@ -31,12 +32,7 @@ export default function MasterRuangan() {
     kode_ruangan: ''
   });
 
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: null
-  });
+  const { askConfirm, dialogProps } = useConfirmAction();
 
   const { data: ruanganData, isLoading } = useMasterRuangan({
     page: pagination.currentPage,
@@ -51,9 +47,10 @@ export default function MasterRuangan() {
   const data = ruanganData?.data || [];
   const meta = ruanganData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (meta) pagination.setMetadata(meta);
-  }, [meta]);
+    if (meta) setMetadata(meta);
+  }, [meta, setMetadata]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,8 +67,8 @@ export default function MasterRuangan() {
         showToast('Ruangan berhasil ditambahkan', 'success');
       }
       modal.close();
-    } catch (error) {
-      showToast('Gagal menyimpan data', 'error');
+    } catch {
+      showToast('Gagal menyimpan data. Periksa kembali isian Anda.', 'error');
     }
   };
 
@@ -89,20 +86,19 @@ export default function MasterRuangan() {
   };
 
   const handleDelete = (item) => {
-    setConfirmDialog({
-      isOpen: true,
+    askConfirm({
       title: 'Hapus Ruangan',
       message: `Apakah Anda yakin ingin menghapus ruangan "${item.nama_ruangan}"? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
       onConfirm: async () => {
-        setConfirmDialog({ isOpen: false });
         try {
           await deleteMutation.mutateAsync(item.id_ruangan);
           showToast('Ruangan berhasil dihapus', 'success');
-        } catch (error) {
-          showToast('Gagal menghapus ruangan', 'error');
+        } catch {
+          showToast('Gagal menghapus ruangan. Kemungkinan masih dipakai oleh data lain.', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false })
     });
   };
 
@@ -232,14 +228,7 @@ export default function MasterRuangan() {
         </form>
       </Modal>
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={confirmDialog.onCancel}
-        type="danger"
-      />
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }
