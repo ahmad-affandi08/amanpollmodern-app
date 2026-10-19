@@ -6,7 +6,7 @@ import { DISPOSISI_CONFIG } from './disposisiConfig';
  * Kerangka halaman disposisi publik (tanpa login) untuk aduan dan pemeliharaan.
  * Data diambil oleh halaman pemanggil sesuai jenisnya.
  */
-export default function DisposisiPage({ jenis, data, isLoading, isError }) {
+export default function DisposisiPage({ jenis, data, isLoading, error, token }) {
   const config = DISPOSISI_CONFIG[jenis];
 
   if (isLoading) {
@@ -20,7 +20,8 @@ export default function DisposisiPage({ jenis, data, isLoading, isError }) {
     );
   }
 
-  if (isError || !data) {
+  if (error || !data) {
+    const forbidden = error?.response?.status === 403;
     return (
       <div className="min-h-screen bg-brand-primary-soft flex items-center justify-center p-4">
         <div className="max-w-md w-full">
@@ -28,9 +29,13 @@ export default function DisposisiPage({ jenis, data, isLoading, isError }) {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="text-red-500" size={32} />
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">{config.title} Tidak Ditemukan</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              {forbidden ? 'Tautan Tidak Valid' : `${config.title} Tidak Ditemukan`}
+            </h3>
             <p className="text-sm text-gray-600 mb-6">
-              Data {config.title.toLowerCase()} tidak dapat dimuat. Silakan coba lagi atau hubungi administrator.
+              {forbidden
+                ? 'Tautan disposisi ini tidak valid atau tidak lengkap. Gunakan tautan terbaru dari notifikasi WhatsApp, atau login sebagai pimpinan.'
+                : `Data ${config.title.toLowerCase()} tidak dapat dimuat. Silakan coba lagi atau hubungi administrator.`}
             </p>
             <button
               onClick={() => window.history.back()}
@@ -47,7 +52,7 @@ export default function DisposisiPage({ jenis, data, isLoading, isError }) {
   return (
     <div className="min-h-screen bg-brand-primary-soft">
       <div className="max-w-md mx-auto px-4 py-6">
-        <DisposisiView jenis={jenis} data={data} />
+        <DisposisiView jenis={jenis} data={data} token={token} />
       </div>
     </div>
   );

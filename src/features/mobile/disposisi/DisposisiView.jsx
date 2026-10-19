@@ -8,12 +8,12 @@ import { DISPOSISI_CONFIG } from './disposisiConfig';
  * Tampilan disposisi: detail (bila sudah ada disposisi) atau form (bila belum).
  * `jenis`: 'aduan' | 'pemeliharaan'.
  */
-export default function DisposisiView({ jenis, data }) {
+export default function DisposisiView({ jenis, data, token }) {
   const navigate = useNavigate();
   const config = DISPOSISI_CONFIG[jenis];
 
   if (!data?.disposisi_tgl) {
-    return <DisposisiForm jenis={jenis} data={data} />;
+    return <DisposisiForm jenis={jenis} data={data} token={token} />;
   }
 
   return (

@@ -10,8 +10,8 @@ export const useCreateDisposisiAduan = () => {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: ({ aduanId, data }) =>
-      DisposisiApi.createDisposisiAduan(aduanId, data),
+    mutationFn: ({ aduanId, data, token }) =>
+      DisposisiApi.createDisposisiAduan(aduanId, data, token),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
       queryClient.invalidateQueries({ queryKey: ['aduan'] });
@@ -32,8 +32,8 @@ export const useCreateDisposisiPemeliharaan = () => {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: ({ pemeliharaanId, data }) =>
-      DisposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data),
+    mutationFn: ({ pemeliharaanId, data, token }) =>
+      DisposisiApi.createDisposisiPemeliharaan(pemeliharaanId, data, token),
     onSuccess: (response) => {
       showToast(response.data.message || 'Disposisi berhasil disimpan', 'success');
 
