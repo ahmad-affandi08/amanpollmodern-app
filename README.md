@@ -743,3 +743,6 @@ timeline
 [⬆ Kembali ke Atas](#amanpoll)
 
 </div>
+
+## PWA
+Lihat [PWA.md](PWA.md) untuk cara kerja, deploy, dan tombol darurat.

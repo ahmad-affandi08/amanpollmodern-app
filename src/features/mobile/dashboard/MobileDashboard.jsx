@@ -5,6 +5,7 @@ import { ROLES, isRole } from '../../auth/constants';
 import DonutChart from './components/DonutChart';
 import FilterBar from './components/FilterBar';
 import MenuGrid from './components/MenuGrid';
+import InstallBanner from '../../../pwa/InstallBanner';
 
 export default function MobileDashboard() {
   usePageTitle('Dashboard');
@@ -73,6 +74,8 @@ export default function MobileDashboard() {
         <p className="text-sm text-text-gray">{user.ruangan_nama}</p>
         <p className="text-xs text-text-gray mt-1">Siap melakukan hal besar hari ini?</p>
       </div>
+
+      <InstallBanner />
 
       {/* Filter Bar */}
       <FilterBar

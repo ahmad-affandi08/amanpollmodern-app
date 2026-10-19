@@ -5,6 +5,7 @@ import ProfileHeader from './components/ProfileHeader';
 import AccountInfo from './components/AccountInfo';
 import LogoutButton from './components/LogoutButton';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import InstallAppCard from '../../../pwa/InstallAppCard';
 import { useProfile } from '../../../hooks/queries/useProfileQueries';
 
 export default function MobileProfile() {
@@ -57,6 +58,8 @@ export default function MobileProfile() {
         user={user}
         onChangePassword={() => setPasswordModalOpen(true)}
       />
+
+      <InstallAppCard />
 
       {/* Logout */}
       <LogoutButton />

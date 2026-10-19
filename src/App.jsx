@@ -12,6 +12,8 @@ import Dashboard from './features/desktop/dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute, { PublicOnlyRoute } from './routes/ProtectedRoute';
 import { ACCESS } from './features/auth/constants';
+import PwaUpdatePrompt from './pwa/PwaUpdatePrompt';
+import OfflineBanner from './pwa/OfflineBanner';
 import NotFound from './features/system/NotFound';
 import RouteError from './features/system/RouteError';
 import MasterKategori from './features/desktop/inventaris/MasterKategori';
@@ -194,6 +196,8 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <RouterProvider router={router} />
+          <PwaUpdatePrompt />
+          <OfflineBanner />
         </ToastProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

@@ -31,6 +31,9 @@ export const queryClient = new QueryClient({
       },
     },
     mutations: {
+      // Tanpa sinyal, gagal seketika (pesan error tampil) alih-alih menggantung lalu terkirim
+      // otomatis saat sinyal kembali, yang bisa membuat data ganda bila pengguna menekan ulang.
+      networkMode: 'always',
       // Jangan pernah mengulang tambah/ubah/hapus otomatis: request yang timeout
       // bisa saja sudah diproses server dan akan menghasilkan data ganda.
       retry: false,
