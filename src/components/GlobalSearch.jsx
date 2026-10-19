@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, FileText } from 'lucide-react';
 import ReactDOM from 'react-dom';
+import { useBodyScrollLock, useEscapeKey } from '../hooks/utils/useOverlay';
 
 export default function GlobalSearch({ menuItems = [] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,28 +48,24 @@ export default function GlobalSearch({ menuItems = [] }) {
         e.preventDefault();
         setIsOpen(prev => !prev);
       }
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, []);
+
+  useBodyScrollLock(isOpen);
+  useEscapeKey(isOpen, () => setIsOpen(false));
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-      setSearchQuery('');
-      setSelectedIndex(0);
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    if (!isOpen) return undefined;
+
+    const focusTimer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+    setSearchQuery('');
+    setSelectedIndex(0);
+
+    return () => clearTimeout(focusTimer);
   }, [isOpen]);
 
   // Handle arrow keys navigation inside the modal

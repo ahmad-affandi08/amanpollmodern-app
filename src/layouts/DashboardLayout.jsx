@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
@@ -7,12 +7,26 @@ import {
   Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
+import { ACCESS, getRoleId } from '../features/auth/constants';
 import Logo from '../assets/img/logo2-amanpoll.png';
 import Logo3 from '../assets/img/logo3-amanpoll.png';
 import IconLogo from '../assets/img/icon-logo-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
 import ConfirmDialog from '../components/Alert/Alert';
 import GlobalSearch from '../components/GlobalSearch';
+
+// Label breadcrumb untuk halaman yang tidak punya entri menu sendiri.
+const DETAIL_CRUMBS = [
+  { pattern: /^\/inventaris\/baru$/, crumbs: [['Inventaris', null], ['Data Alat', '/inventaris/data'], ['Tambah Alat', null]] },
+  { pattern: /^\/inventaris\/edit\//, crumbs: [['Inventaris', null], ['Data Alat', '/inventaris/data'], ['Ubah Alat', null]] },
+  { pattern: /^\/inventaris\/detail\//, crumbs: [['Inventaris', null], ['Data Alat', '/inventaris/data'], ['Detail Alat', null]] },
+  { pattern: /^\/report\/aduan\//, crumbs: [['Report', null], ['Report Aduan', '/report/aduan'], ['Detail', null]] },
+  { pattern: /^\/report\/pemeliharaan\//, crumbs: [['Report', null], ['Report Pemeliharaan', '/report/pemeliharaan'], ['Detail', null]] },
+  { pattern: /^\/anggaran\/pemeliharaan\//, crumbs: [['Anggaran & Biaya', null], ['Anggaran Pemeliharaan', '/anggaran/pemeliharaan'], ['Detail', null]] },
+  { pattern: /^\/profile$/, crumbs: [['Profil', null]] },
+  { pattern: /^\/notifications$/, crumbs: [['Notifikasi', null]] },
+  { pattern: /^\/activities$/, crumbs: [['Aktivitas Terbaru', null]] },
+];
 
 export default function DashboardLayout({ children }) {
 
@@ -63,13 +77,7 @@ export default function DashboardLayout({ children }) {
     }
   }
 
-  const ROLE_SUPER_ADMIN = 1;
-  const ROLE_USER_RUANGAN = 2;
-  const ROLE_TEKNISI = 3;
-  const ROLE_ADMIN_DIVISI = 4;
-  const ROLE_PIMPINAN = 5;
-
-  const currentRoleId = user?.kategori_user_id ? parseInt(user.kategori_user_id) : null;
+  const currentRoleId = getRoleId(user);
 
   const hasAccess = (allowedRoles) => {
     if (!allowedRoles) return true;
@@ -85,30 +93,30 @@ export default function DashboardLayout({ children }) {
     {
       icon: Package,
       label: 'Inventaris',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN],
+      roles: ACCESS.inventarisView,
       children: [
-        { icon: Layers, label: 'Master Kategori', path: '/inventaris/kategori', roles: [ROLE_SUPER_ADMIN] },
-        { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] },
-        { icon: Server, label: 'Data Alat', path: '/inventaris/data' },
-        { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI] },
+        { icon: Layers, label: 'Master Kategori', path: '/inventaris/kategori', roles: ACCESS.masterKategori },
+        { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: ACCESS.masterNamaAlat },
+        { icon: Server, label: 'Data Alat', path: '/inventaris/data', roles: ACCESS.inventarisView },
+        { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: ACCESS.alatBaru },
       ].filter(child => hasAccess(child.roles))
     },
     {
       icon: AlertCircle,
       label: 'Aduan',
       path: '/aduan',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_TEKNISI, ROLE_USER_RUANGAN]
+      roles: ACCESS.aduan
     },
     {
       icon: Wrench,
       label: 'Pemeliharaan',
       path: '/pemeliharaan',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_TEKNISI]
+      roles: ACCESS.pemeliharaan
     },
     {
       icon: FileText,
       label: 'Report',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN],
+      roles: ACCESS.report,
       children: [
         { icon: FileText, label: 'Report Aduan', path: '/report/aduan' },
         { icon: FileText, label: 'Report Pemeliharaan', path: '/report/pemeliharaan' },
@@ -117,17 +125,17 @@ export default function DashboardLayout({ children }) {
     {
       icon: Wallet,
       label: 'Anggaran & Biaya',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_PIMPINAN],
+      roles: ACCESS.anggaran,
       children: [
-        { icon: Settings, label: 'Pengaturan Anggaran', path: '/anggaran/pengaturan', roles: [ROLE_SUPER_ADMIN] },
-        { icon: Wallet, label: 'Anggaran Pemeliharaan', path: '/anggaran/pemeliharaan' },
-        { icon: Hammer, label: 'Biaya Perbaikan', path: '/anggaran/biaya-perbaikan' },
+        { icon: Settings, label: 'Pengaturan Anggaran', path: '/anggaran/pengaturan', roles: ACCESS.anggaranPengaturan },
+        { icon: Wallet, label: 'Anggaran Pemeliharaan', path: '/anggaran/pemeliharaan', roles: ACCESS.anggaran },
+        { icon: Hammer, label: 'Biaya Perbaikan', path: '/anggaran/biaya-perbaikan', roles: ACCESS.anggaran },
       ].filter(child => hasAccess(child.roles))
     },
     {
       icon: Users,
       label: 'Pengguna',
-      roles: [ROLE_SUPER_ADMIN],
+      roles: ACCESS.users,
       children: [
         { icon: Users, label: 'Master User', path: '/users' },
         { icon: Building2, label: 'Master Divisi', path: '/users/divisi' },
@@ -137,7 +145,7 @@ export default function DashboardLayout({ children }) {
     {
       icon: Settings,
       label: 'Konfigurasi',
-      roles: [ROLE_SUPER_ADMIN],
+      roles: ACCESS.konfigurasi,
       children: [
         { icon: Building2, label: 'Data Institusi', path: '/konfigurasi/data' },
         { icon: Phone, label: 'Integrasi Fonnte', path: '/konfigurasi/integrasi' },
@@ -148,7 +156,7 @@ export default function DashboardLayout({ children }) {
     {
       icon: BarChart2,
       label: 'Analisis',
-      roles: [ROLE_SUPER_ADMIN, ROLE_PIMPINAN],
+      roles: ACCESS.analisis,
       children: [
         { icon: Activity, label: 'Keandalan Alat', path: '/analisis/keandalan' },
         { icon: UserIcon, label: 'Kinerja Teknisi', path: '/analisis/kinerja' },
@@ -161,20 +169,35 @@ export default function DashboardLayout({ children }) {
       icon: QrCode,
       label: 'Scanner',
       path: '/scanner',
-      roles: [ROLE_SUPER_ADMIN, ROLE_ADMIN_DIVISI, ROLE_TEKNISI, ROLE_PIMPINAN]
+      roles: ACCESS.scanner
     },
   ].filter(item => hasAccess(item.roles) && (!item.children || item.children.length > 0));
 
 
+  // Cocok bila path sama persis atau berada di bawahnya (/aduan tidak cocok dengan /aduan-lain).
+  const matchesPath = (path) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
+
   const isActive = (item) => {
     if (item.path) {
-      return location.pathname === item.path || location.pathname.startsWith(item.path);
+      return matchesPath(item.path);
     }
     if (item.children) {
-      return item.children.some(child => location.pathname === child.path || location.pathname.startsWith(child.path));
+      return item.children.some(child => matchesPath(child.path));
     }
     return false;
   };
+
+  // Buka otomatis grup menu yang berisi halaman yang sedang dibuka.
+  useEffect(() => {
+    const activeGroup = menuItems.find(
+      item => item.children && item.children.some(child => matchesPath(child.path))
+    );
+    if (activeGroup) {
+      setOpenMenus(prev => (prev[activeGroup.label] ? prev : { ...prev, [activeGroup.label]: true }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
 
   const isPathActive = (path) => location.pathname === path;
@@ -442,7 +465,12 @@ export default function DashboardLayout({ children }) {
                   }
 
                   if (crumbs.length === 0) {
-                    if (currentPath === '/' || currentPath === '/dashboard') {
+                    const known = DETAIL_CRUMBS.find(entry => entry.pattern.test(currentPath));
+                    if (known) {
+                      known.crumbs.forEach(([label, path], index) => {
+                        crumbs.push({ label, path, active: index === known.crumbs.length - 1 });
+                      });
+                    } else if (currentPath === '/' || currentPath === '/dashboard') {
                       crumbs.push({ label: 'Dashboard', path: '/dashboard', active: true });
                     } else {
                       const segments = currentPath.split('/').filter(Boolean);

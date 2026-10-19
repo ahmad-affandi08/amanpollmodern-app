@@ -6,6 +6,7 @@ export default function Button({
   size = 'md',
   className = '',
   loading = false,
+  disabled = false,
   ...props
 }) {
   const baseClasses = "flex items-center justify-center font-semibold transition-all duration-300 rounded-xl focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer";
@@ -27,8 +28,8 @@ export default function Button({
   return (
     <button
       className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={loading}
       {...props}
+      disabled={loading || disabled}
     >
       {loading ? (
         <span className="flex items-center gap-2">

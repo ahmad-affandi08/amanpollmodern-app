@@ -21,6 +21,7 @@ export default function ToastProvider({ children }) {
       {/* Show ToastDialog as centered modal */}
       {toast && (
         <ToastDialog
+          key={toast.id}
           isOpen={true}
           type={toast.type}
           title={toast.title}

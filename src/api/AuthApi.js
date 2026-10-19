@@ -2,6 +2,19 @@
 import axiosClient from './axiosClient';
 
 /**
+ * Bentuk error yang dilempar modul ini: isi body respons server (message, errors, dst)
+ * ditambah `status` HTTP, sehingga `error.message`, `error.errors`, dan `error.status`
+ * bisa dibaca langsung oleh pemanggil.
+ */
+const toError = (err) => {
+  const data = err.response?.data;
+  if (data && typeof data === 'object') {
+    return Object.assign(data, { status: err.response.status });
+  }
+  return err;
+};
+
+/**
  * Register new user
  * @param {Object} payload - { nama_lengkap, username, email, wa, password, password_confirmation, kategori_user_id, ruangan_id?, divisi_id? }
  */
@@ -10,7 +23,7 @@ export async function register(payload) {
     const res = await axiosClient.post('/register', payload);
     return res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -35,7 +48,7 @@ export async function login(credentials) {
 
     return data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -55,7 +68,7 @@ export async function logout() {
 
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -73,7 +86,7 @@ export async function getUser() {
 
     return res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -85,7 +98,7 @@ export async function getKategoriUser() {
     const res = await axiosClient.get('/kategori-user');
     return res.data.data || res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -97,7 +110,7 @@ export async function getRuangan() {
     const res = await axiosClient.get('/ruangan?all=true');
     return res.data.data || res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -109,7 +122,7 @@ export async function getDivisi() {
     const res = await axiosClient.get('/divisi?all=true');
     return res.data.data || res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 
@@ -118,7 +131,7 @@ export async function forgotPassword(payload) {
     const res = await axiosClient.post('/forgot-password', payload);
     return res.data;
   } catch (err) {
-    throw err.response?.data || err;
+    throw toError(err);
   }
 }
 

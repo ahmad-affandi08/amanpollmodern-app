@@ -3,6 +3,8 @@ import { Bell, X, Check, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import ConfirmDialog from './Alert/Alert';
+import { parseDate } from '../utils/format';
 import notificationIcon from '../assets/img/notification.png';
 import {
   useUnreadNotifications,
@@ -12,8 +14,15 @@ import {
   useDeleteNotification,
 } from '../hooks';
 
+/** Waktu relatif; tanggal tidak valid/kosong menghasilkan teks kosong, bukan error. */
+const timeAgo = (value) => {
+  const date = parseDate(value);
+  return date ? formatDistanceToNow(date, { addSuffix: true, locale: idLocale }) : '';
+};
+
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const dropdownRef = useRef(null);
 
 
@@ -52,9 +61,7 @@ const NotificationBell = () => {
       console.error('Invalid notification ID');
       return;
     }
-    if (confirm('Hapus notifikasi ini?')) {
-      deleteNotificationMutation.mutate(id);
-    }
+    setConfirmDeleteId(id);
   };
 
 
@@ -139,10 +146,7 @@ const NotificationBell = () => {
                         {notif.isi}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatDistanceToNow(new Date(notif.created_date || notif.created_at), {
-                          addSuffix: true,
-                          locale: idLocale
-                        })}
+                        {timeAgo(notif.created_date || notif.created_at)}
                       </p>
                     </div>
 
@@ -185,6 +189,19 @@ const NotificationBell = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDeleteId !== null}
+        type="danger"
+        title="Hapus Notifikasi"
+        message="Notifikasi ini akan dihapus. Lanjutkan?"
+        confirmText="Ya, Hapus"
+        onConfirm={() => {
+          deleteNotificationMutation.mutate(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 };

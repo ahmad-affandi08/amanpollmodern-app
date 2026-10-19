@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import AduanApi from '../../api/AduanApi';
 import { queryKeys } from '../../lib/queryKeys';
 
@@ -19,8 +19,11 @@ export const useAduan = (filters = {}) => {
 
 export const useAduanListInfinite = (filters = {}, limit = 10) => {
   return useInfiniteQuery({
-    queryKey: ['aduan', 'infinite', filters],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryKey: ['aduan', 'infinite', filters, limit],
+    initialPageParam: 1,
+    // Pertahankan daftar lama saat filter/pencarian berubah agar halaman tidak dibangun ulang.
+    placeholderData: keepPreviousData,
+    queryFn: async ({ pageParam }) => {
       const res = await AduanApi.getAll({
         ...filters,
         page: pageParam,
@@ -43,8 +46,10 @@ export const useAduanListInfinite = (filters = {}, limit = 10) => {
 
 export const useAduanAssignments = (limit = 10, statusFilter = undefined) => {
   return useInfiniteQuery({
-    queryKey: ['aduan', 'assignments', statusFilter],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryKey: ['aduan', 'assignments', statusFilter, limit],
+    initialPageParam: 1,
+    placeholderData: keepPreviousData,
+    queryFn: async ({ pageParam }) => {
       const params = {
         page: pageParam,
         per_page: limit
@@ -151,53 +156,5 @@ export const useUpdateInspection = () => {
 
       queryClient.invalidateQueries({ queryKey: ['aduan', 'assignments'] });
     },
-  });
-};
-
-
-export const useInventarisList = (ruanganId) => {
-  return useQuery({
-    queryKey: ['inventaris', ruanganId],
-    queryFn: async () => {
-      const response = await fetch(`/api/inventaris?ruangan_id=${ruanganId}`);
-      const data = await response.json();
-
-
-      if (Array.isArray(data?.data)) {
-        return data.data.map(item => ({
-          value: item.id_inventaris,
-          label: `${item.no_inventaris} - ${item.nama_alat?.nama_nama_alat || 'Alat'}`,
-          id_inventaris: item.id_inventaris,
-          id_nama_alat: item.nama_alat_id || item.nama_alat?.id_nama_alat,
-          no_inventaris: item.no_inventaris,
-          nama_alat: item.nama_alat?.nama_nama_alat || '',
-          merk: item.merk || item.type || '',
-        }));
-      }
-      return [];
-    },
-    enabled: !!ruanganId,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-
-export const useDivisiList = () => {
-  return useQuery({
-    queryKey: ['divisi'],
-    queryFn: async () => {
-      const response = await fetch('/api/divisi');
-      const data = await response.json();
-
-
-      if (Array.isArray(data?.data)) {
-        return data.data.map(item => ({
-          value: item.id_divisi,
-          label: item.nama_divisi,
-        }));
-      }
-      return [];
-    },
-    staleTime: 10 * 60 * 1000,
   });
 };

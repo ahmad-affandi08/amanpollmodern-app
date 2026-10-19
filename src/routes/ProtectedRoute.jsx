@@ -2,10 +2,16 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/utils/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { isMobileRole } from '../features/auth/constants';
+import { isMobileRole, getRoleId } from '../features/auth/constants';
+
+const homePathFor = (user) =>
+  isMobileRole(user?.kategori_user_id) ? '/mobile/dashboard' : '/dashboard';
 
 /**
- * Protected Route wrapper - requires authentication
+ * Protected Route wrapper - requires authentication.
+ * `allowedRoles` membatasi peran yang boleh membuka halaman; peran lain dialihkan
+ * ke beranda masing-masing. Peran mobile hanya boleh di /mobile/*, peran desktop
+ * tidak boleh masuk ke /mobile/*.
  */
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const { user, isAuthenticated, loading } = useAuth();
@@ -19,33 +25,36 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-
   if (user) {
-    const userRole = parseInt(user.kategori_user_id);
-    const isMobile = isMobileRole(userRole);
+    const isMobile = isMobileRole(user.kategori_user_id);
     const isOnMobilePath = location.pathname.startsWith('/mobile');
 
-
-    if (isMobile && !isOnMobilePath && location.pathname !== '/dashboard') {
-
-      return <Navigate to="/mobile/dashboard" replace />;
+    if (isMobile !== isOnMobilePath) {
+      return <Navigate to={homePathFor(user)} replace />;
     }
 
-
-    if (!isMobile && isOnMobilePath) {
-      return <Navigate to="/dashboard" replace />;
+    if (allowedRoles.length > 0 && !allowedRoles.includes(getRoleId(user))) {
+      console.warn(`Access denied for role ${getRoleId(user)} to ${location.pathname}`);
+      return <Navigate to={homePathFor(user)} replace />;
     }
   }
 
+  return children;
+}
 
-  if (allowedRoles.length > 0 && user) {
-    const userRole = parseInt(user.kategori_user_id);
-    if (!allowedRoles.includes(userRole)) {
-      console.warn(`Access denied for role ${userRole} to ${location.pathname}`);
+/**
+ * Halaman yang hanya untuk tamu (login, daftar, lupa password): pengguna yang
+ * sudah login dialihkan ke beranda.
+ */
+export function PublicOnlyRoute({ children }) {
+  const { user, isAuthenticated, loading } = useAuth();
 
-      const isMobile = isMobileRole(userRole);
-      return <Navigate to={isMobile ? "/mobile/dashboard" : "/dashboard"} replace />;
-    }
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (isAuthenticated && user) {
+    return <Navigate to={homePathFor(user)} replace />;
   }
 
   return children;

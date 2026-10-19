@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 /**
  * Neobrutalism Select Component
@@ -14,6 +14,9 @@ export default function Select({
   icon,
   ...props
 }) {
+  const autoId = useId();
+  const selectId = props.id || autoId;
+
   const sizes = {
     sm: "px-3 py-1.5 text-xs rounded-lg h-[36px]",
     md: "px-3 py-2 text-sm rounded-xl",
@@ -23,7 +26,7 @@ export default function Select({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-[#808191] mb-2 pl-1">
+        <label htmlFor={selectId} className="block text-sm font-semibold text-[#808191] mb-2 pl-1">
           {label}
           {props.required && <span className="text-[#FF754C] ml-1">*</span>}
         </label>
@@ -37,6 +40,7 @@ export default function Select({
         )}
 
         <select
+          id={selectId}
           className={`
             w-full bg-[#F8F9FB] border border-gray-200 font-medium 
             outline-none focus:border-brand-primary focus:bg-white focus:ring-4 focus:ring-brand-primary/10 transition-all appearance-none

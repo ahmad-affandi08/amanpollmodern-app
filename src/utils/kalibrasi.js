@@ -1,4 +1,5 @@
 import { ROLES } from '../features/auth/constants';
+import { parseDate } from './format';
 
 const WARNING_DAYS = 30;
 
@@ -13,16 +14,24 @@ export const canManageKalibrasi = (user) => {
 
 /**
  * Status masa berlaku sertifikat kalibrasi berdasarkan tanggal kadaluwarsa (YYYY-MM-DD).
+ * Sumber tunggal: dipakai oleh riwayat kalibrasi, daftar/detail inventaris desktop dan mobile.
+ *
+ * Opsi `hasCertificate: false` berarti alat belum pernah dikalibrasi (tanpa sertifikat
+ * dan tanpa tanggal): statusnya "Belum kalibrasi".
  */
-export const getKalibrasiStatus = (kadaluwarsa) => {
-  if (!kadaluwarsa) {
+export const getKalibrasiStatus = (kadaluwarsa, { hasCertificate = true } = {}) => {
+  const expiry = parseDate(kadaluwarsa);
+
+  if (!expiry) {
+    if (!hasCertificate) {
+      return { key: 'belum', label: 'Belum kalibrasi', className: 'bg-yellow-100 text-yellow-700' };
+    }
     return { key: 'none', label: 'Tanpa masa berlaku', className: 'bg-gray-100 text-gray-600' };
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const expiry = new Date(`${kadaluwarsa}T00:00:00`);
   const diffDays = Math.round((expiry - today) / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {

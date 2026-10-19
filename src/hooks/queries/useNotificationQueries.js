@@ -29,7 +29,7 @@ export const useUnreadCount = () => {
 
 export const useNotifications = (page = 1, perPage = 20) => {
   return useQuery({
-    queryKey: queryKeys.notifications.list(page),
+    queryKey: queryKeys.notifications.list(page, perPage),
     queryFn: async () => {
       const res = await NotificationApi.getAll({ page, per_page: perPage });
 

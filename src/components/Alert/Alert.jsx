@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { useBodyScrollLock, useEscapeKey } from '../../hooks/utils/useOverlay'
 import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react'
 
 
@@ -20,6 +21,23 @@ export default function ConfirmDialog({
   onCancel,
   type = 'warning',
 }) {
+  // Selama onConfirm (boleh async) berjalan, tombol dikunci agar klik ganda
+  // tidak mengirim permintaan hapus/simpan dua kali.
+  const [busy, setBusy] = React.useState(false)
+
+  useBodyScrollLock(isOpen)
+  useEscapeKey(isOpen && !busy, onCancel)
+
+  const handleConfirm = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await onConfirm?.()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (!isOpen) return null
 
   const typeConfig = {
@@ -34,7 +52,7 @@ export default function ConfirmDialog({
 
   const dialogContent = (
     <div className={DIALOG_OVERLAY}>
-      <div className={DIALOG_CARD}>
+      <div className={DIALOG_CARD} role="alertdialog" aria-modal="true" aria-label={title}>
         <div className="flex flex-col items-center text-center">
           <div className={`${ICON_CONTAINER} ${config.bg}`}>
             <Icon size={24} className={config.color} />
@@ -47,16 +65,20 @@ export default function ConfirmDialog({
 
           <div className="flex gap-3 w-full">
             <button
+              type="button"
               onClick={onCancel}
-              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+              disabled={busy}
+              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               {cancelText}
             </button>
             <button
-              onClick={onConfirm}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors ${config.btn}`}
+              type="button"
+              onClick={handleConfirm}
+              disabled={busy}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${config.btn}`}
             >
-              {confirmText}
+              {busy ? 'Memproses...' : confirmText}
             </button>
           </div>
         </div>

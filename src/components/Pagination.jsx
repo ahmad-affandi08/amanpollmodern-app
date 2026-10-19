@@ -138,7 +138,7 @@ export default function Pagination({
           {/* Next */}
           <button
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage >= totalPages}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
             title="Next"
           >
@@ -149,7 +149,7 @@ export default function Pagination({
           {showFirstLast && (
             <button
               onClick={() => onPageChange(totalPages)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage >= totalPages}
               className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               title="Last Page"
             >

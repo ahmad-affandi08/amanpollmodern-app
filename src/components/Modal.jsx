@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
+import { useBodyScrollLock, useEscapeKey } from '../hooks/utils/useOverlay';
 
 /**
  * Modern Modal Component
@@ -14,26 +15,8 @@ export default function Modal({
   size = 'md',
   className = '',
 }) {
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -58,13 +41,20 @@ export default function Modal({
       />
 
       {/* Modal */}
-      <div className={`relative w-full ${sizes[size]} z-10 animate-scale-in`}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={typeof title === 'string' ? title : undefined}
+        className={`relative w-full ${sizes[size]} z-10 animate-scale-in`}
+      >
         <div className={`bg-white rounded-[24px] shadow-2xl overflow-hidden ${className}`}>
           {/* Header */}
           <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100">
             <h2 className="text-xl font-bold text-[#11142D]">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Tutup"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <X size={20} />

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import DashboardApi from '../../api/DashboardApi';
 import axiosClient from '../../api/axiosClient';
 import { queryKeys } from '../../lib/queryKeys';
@@ -49,7 +49,7 @@ export const useActivities = (filters = {}) => {
       });
       return response.data.data;
     },
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 1 * 60 * 1000,
   });
 };

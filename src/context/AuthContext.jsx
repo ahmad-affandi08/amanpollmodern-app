@@ -1,5 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import * as AuthApi from '../api/AuthApi';
+import { UNAUTHORIZED_EVENT } from '../api/axiosClient';
+import { clearAllData } from '../lib/queryClient';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +10,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+
+  // Server menolak token (401) di request mana pun: akhiri sesi di aplikasi juga,
+  // sehingga ProtectedRoute mengarahkan pengguna ke halaman login.
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      clearAllData();
+      setUser(null);
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -55,7 +70,7 @@ export function AuthProvider({ children }) {
 
         console.warn('Session verification failed:', error);
 
-        if (error?.status === 401 || error?.message === 'Unauthenticated.') {
+        if (error?.status === 401) {
           await logout(false);
         }
 
@@ -74,6 +89,8 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     const response = await AuthApi.login(credentials);
+    // Pastikan tidak ada data pengguna sebelumnya yang tersisa di cache.
+    clearAllData();
     if (response.user) {
       setUser(response.user);
       setIsAuthenticated(true);
@@ -97,6 +114,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      clearAllData();
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem('auth_token');

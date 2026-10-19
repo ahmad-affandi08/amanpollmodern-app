@@ -10,8 +10,10 @@ import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
 import Dashboard from './features/desktop/dashboard/Dashboard';
 import DashboardLayout from './layouts/DashboardLayout';
-import ProtectedRoute from './routes/ProtectedRoute';
-import { ROLES } from './features/auth/constants';
+import ProtectedRoute, { PublicOnlyRoute } from './routes/ProtectedRoute';
+import { ACCESS } from './features/auth/constants';
+import NotFound from './features/system/NotFound';
+import RouteError from './features/system/RouteError';
 import MasterKategori from './features/desktop/inventaris/MasterKategori';
 import MasterNamaAlat from './features/desktop/inventaris/MasterNamaAlat';
 import InventarisList from './features/desktop/inventaris/InventarisList';
@@ -67,233 +69,116 @@ import KinerjaTeknisiPage from './features/desktop/analisis/KinerjaTeknisiPage';
 import SebaranRuanganPage from './features/desktop/analisis/SebaranRuanganPage';
 import BiayaPemeliharaanPage from './features/desktop/analisis/BiayaPemeliharaanPage';
 import KepatuhanKalibrasiPage from './features/desktop/analisis/KepatuhanKalibrasiPage';
+/** Halaman desktop: butuh login, dibatasi peran (jika ada), dan dibungkus layout dashboard. */
+const desktopPage = (element, roles = []) => (
+  <ProtectedRoute allowedRoles={roles}>
+    <DashboardLayout>{element}</DashboardLayout>
+  </ProtectedRoute>
+);
+
+/** Halaman di bawah /mobile: layout sudah membungkus, di sini hanya pembatas peran. */
+const mobilePage = (element, roles = ACCESS.mobile) => (
+  <ProtectedRoute allowedRoles={roles}>{element}</ProtectedRoute>
+);
+
+const guestOnly = (element) => <PublicOnlyRoute>{element}</PublicOnlyRoute>;
+
+const routes = [
+  { path: '/', element: <LandingPage /> },
+  { path: '/login', element: guestOnly(<Login />) },
+  { path: '/register', element: guestOnly(<Register />) },
+  { path: '/forgot-password', element: guestOnly(<ForgotPassword />) },
+  { path: '/maintenance', element: <MaintenancePage /> },
+  { path: '/bypass/:token', element: <MaintenanceBypass /> },
+
+  // Dibuka lewat tautan dari pimpinan (tanpa login), sengaja berada di luar ProtectedRoute.
+  { path: '/mobile/aduan/:id/disposisi', element: <MobileDisposisiAduan /> },
+  { path: '/mobile/pemeliharaan/:id/disposisi', element: <MobileDisposisiPemeliharaan /> },
+
+  { path: '/dashboard', element: desktopPage(<Dashboard />, ACCESS.dashboard) },
+  { path: '/profile', element: desktopPage(<Profile />) },
+  { path: '/notifications', element: desktopPage(<NotificationCenter />) },
+  { path: '/activities', element: desktopPage(<ActivitiesPage />) },
+
+  { path: '/inventaris', element: <Navigate to="/inventaris/data" replace /> },
+  { path: '/inventaris/kategori', element: desktopPage(<MasterKategori />, ACCESS.masterKategori) },
+  { path: '/inventaris/nama-alat', element: desktopPage(<MasterNamaAlat />, ACCESS.masterNamaAlat) },
+  { path: '/inventaris/data', element: desktopPage(<InventarisList />, ACCESS.inventarisView) },
+  { path: '/inventaris/baru', element: desktopPage(<InventarisForm />, ACCESS.inventarisManage) },
+  { path: '/inventaris/edit/:id', element: desktopPage(<InventarisForm />, ACCESS.inventarisManage) },
+  { path: '/inventaris/detail/:id', element: desktopPage(<InventarisDetail />, ACCESS.inventarisView) },
+  { path: '/alat-baru', element: desktopPage(<AlatBaruList />, ACCESS.alatBaru) },
+
+  { path: '/aduan', element: desktopPage(<AduanList />, ACCESS.aduan) },
+  { path: '/pemeliharaan', element: desktopPage(<PemeliharaanList />, ACCESS.pemeliharaan) },
+  { path: '/scanner', element: desktopPage(<QrScanner />, ACCESS.scanner) },
+
+  { path: '/report/aduan', element: desktopPage(<ReportAduan />, ACCESS.report) },
+  { path: '/report/aduan/:id', element: desktopPage(<DetailReportAduan />, ACCESS.report) },
+  { path: '/report/pemeliharaan', element: desktopPage(<ReportPemeliharaan />, ACCESS.report) },
+  { path: '/report/pemeliharaan/:id', element: desktopPage(<DetailReportPemeliharaan />, ACCESS.report) },
+
+  { path: '/anggaran/pengaturan', element: desktopPage(<PengaturanAnggaran />, ACCESS.anggaranPengaturan) },
+  { path: '/anggaran/pemeliharaan', element: desktopPage(<AnggaranPemeliharaan />, ACCESS.anggaran) },
+  { path: '/anggaran/pemeliharaan/:id', element: desktopPage(<DetailAnggaranPemeliharaan />, ACCESS.anggaran) },
+  { path: '/anggaran/biaya-perbaikan', element: desktopPage(<BiayaPerbaikan />, ACCESS.anggaran) },
+
+  { path: '/users', element: desktopPage(<MasterUser />, ACCESS.users) },
+  { path: '/users/divisi', element: desktopPage(<MasterDivisi />, ACCESS.users) },
+  { path: '/users/ruangan', element: desktopPage(<MasterRuangan />, ACCESS.users) },
+
+  { path: '/konfigurasi/data', element: desktopPage(<KonfigurasiData />, ACCESS.konfigurasi) },
+  { path: '/konfigurasi/integrasi', element: desktopPage(<KonfigurasiIntegrasi />, ACCESS.konfigurasi) },
+  { path: '/konfigurasi/sistem', element: desktopPage(<KonfigurasiSistem />, ACCESS.konfigurasi) },
+  { path: '/konfigurasi/template-notifikasi', element: desktopPage(<NotificationTemplatePage />, ACCESS.konfigurasi) },
+
+  { path: '/analisis/keandalan', element: desktopPage(<KeandalanAlatPage />, ACCESS.analisis) },
+  { path: '/analisis/kinerja', element: desktopPage(<KinerjaTeknisiPage />, ACCESS.analisis) },
+  { path: '/analisis/ruangan', element: desktopPage(<SebaranRuanganPage />, ACCESS.analisis) },
+  { path: '/analisis/biaya', element: desktopPage(<BiayaPemeliharaanPage />, ACCESS.analisis) },
+  { path: '/analisis/kalibrasi', element: desktopPage(<KepatuhanKalibrasiPage />, ACCESS.analisis) },
+
+  {
+    path: '/mobile',
+    element: (
+      <ProtectedRoute allowedRoles={ACCESS.mobile}>
+        <DashboardLayoutMobile />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/mobile/dashboard" replace /> },
+      { path: 'dashboard', element: mobilePage(<MobileDashboard />) },
+      { path: 'aduan', element: mobilePage(<MobileAduan />) },
+      { path: 'aduan/:id', element: mobilePage(<MobileAduanFormTeknisi />, ACCESS.mobileTeknisi) },
+      { path: 'riwayat-aduan', element: mobilePage(<MobileAduanHistory />) },
+      { path: 'riwayat-aduan/:id', element: mobilePage(<MobileAduanDetail />) },
+      { path: 'inventaris', element: mobilePage(<MobileInventaris />) },
+      { path: 'inventaris/:id', element: mobilePage(<MobileInventarisDetail />) },
+      { path: 'alat-baru', element: mobilePage(<MobileAlatBaru />, ACCESS.mobileUserRuangan) },
+      { path: 'alat-baru/add', element: mobilePage(<MobileAddAlatBaru />, ACCESS.mobileUserRuangan) },
+      { path: 'alat-baru/:id', element: mobilePage(<MobileAlatBaruDetail />, ACCESS.mobileUserRuangan) },
+      { path: 'scan', element: mobilePage(<MobileScanner />) },
+      { path: 'pemeliharaan', element: mobilePage(<MobilePemeliharaan />, ACCESS.mobileTeknisi) },
+      { path: 'pemeliharaan/history', element: mobilePage(<MobilePemeliharaanHistory />, ACCESS.mobileTeknisi) },
+      { path: 'pemeliharaan/:id', element: mobilePage(<MobilePemeliharaanDetail />, ACCESS.mobileTeknisi) },
+      { path: 'pemeliharaan/:id/form', element: mobilePage(<MobileFormPemeliharaan />, ACCESS.mobileTeknisi) },
+      { path: 'notifikasi', element: mobilePage(<MobileNotifikasi />) },
+      { path: 'notifikasi/:id', element: mobilePage(<MobileNotifikasiDetail />) },
+      { path: 'profile', element: mobilePage(<MobileProfile />) },
+    ]
+  },
+
+  { path: '/superadmin', element: <Navigate to="/dashboard" replace /> },
+  { path: '/userruangan', element: <Navigate to="/mobile/dashboard" replace /> },
+  { path: '/teknisi', element: <Navigate to="/mobile/dashboard" replace /> },
+  { path: '/admindivisi', element: <Navigate to="/dashboard" replace /> },
+  { path: '/pimpinan', element: <Navigate to="/dashboard" replace /> },
+
+  { path: '*', element: <NotFound /> },
+];
+
 const router = createBrowserRouter(
-  [
-    { path: '/', element: <LandingPage /> },
-    { path: '/login', element: <Login /> },
-    { path: '/register', element: <Register /> },
-    { path: '/forgot-password', element: <ForgotPassword /> },
-    { path: '/maintenance', element: <MaintenancePage /> },
-    { path: '/bypass/:token', element: <MaintenanceBypass /> },
-
-
-    { path: '/mobile/aduan/:id/disposisi', element: <MobileDisposisiAduan /> },
-    { path: '/mobile/pemeliharaan/:id/disposisi', element: <MobileDisposisiPemeliharaan /> },
-
-
-    {
-      path: '/dashboard',
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Dashboard />
-          </DashboardLayout>
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: '/profile',
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Profile />
-          </DashboardLayout>
-        </ProtectedRoute>
-      ),
-    },
-
-    {
-      path: '/inventaris',
-      element: <Navigate to="/inventaris/data" replace />
-    },
-    {
-      path: '/inventaris/kategori',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><MasterKategori /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/inventaris/nama-alat',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><MasterNamaAlat /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/inventaris/data',
-      element: <ProtectedRoute><DashboardLayout><InventarisList /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/inventaris/baru',
-      element: <ProtectedRoute><DashboardLayout><InventarisForm /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/inventaris/edit/:id',
-      element: <ProtectedRoute><DashboardLayout><InventarisForm /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/inventaris/detail/:id',
-      element: <ProtectedRoute><DashboardLayout><InventarisDetail /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/aduan',
-      element: <ProtectedRoute><DashboardLayout><AduanList /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/pemeliharaan',
-      element: <ProtectedRoute><DashboardLayout><PemeliharaanList /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/scanner',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.TEKNISI, ROLES.PIMPINAN]}><DashboardLayout><QrScanner /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/report/aduan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><ReportAduan /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/alat-baru',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI]}><DashboardLayout><AlatBaruList /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/report/aduan/:id',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailReportAduan /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/report/pemeliharaan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><ReportPemeliharaan /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/report/pemeliharaan/:id',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailReportPemeliharaan /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/anggaran/pengaturan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><PengaturanAnggaran /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/anggaran/pemeliharaan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><AnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/anggaran/pemeliharaan/:id',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><DetailAnggaranPemeliharaan /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/anggaran/biaya-perbaikan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN]}><DashboardLayout><BiayaPerbaikan /></DashboardLayout></ProtectedRoute>
-    },
-
-    {
-      path: '/notifications',
-      element: <ProtectedRoute><DashboardLayout><NotificationCenter /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/activities',
-      element: <ProtectedRoute><DashboardLayout><ActivitiesPage /></DashboardLayout></ProtectedRoute>
-    },
-
-    {
-      path: '/users',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><MasterUser /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/users/divisi',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><MasterDivisi /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/users/ruangan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><MasterRuangan /></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/konfigurasi/data',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiData /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/konfigurasi/integrasi',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiIntegrasi /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/konfigurasi/sistem',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><KonfigurasiSistem /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/konfigurasi/template-notifikasi',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]}><DashboardLayout><NotificationTemplatePage /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/analisis/keandalan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KeandalanAlatPage /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/analisis/kinerja',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KinerjaTeknisiPage /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/analisis/ruangan',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><SebaranRuanganPage /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/analisis/biaya',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><BiayaPemeliharaanPage /></DashboardLayout></ProtectedRoute>
-    },
-    {
-      path: '/analisis/kalibrasi',
-      element: <ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.PIMPINAN]}><DashboardLayout><KepatuhanKalibrasiPage /></DashboardLayout></ProtectedRoute>
-    },
-
-    {
-      path: '/scanner',
-      element: <ProtectedRoute><DashboardLayout><div className="bg-white rounded-2xl p-8 shadow-sm"><h1 className="text-2xl font-bold mb-4">Scanner QR Code</h1></div></DashboardLayout></ProtectedRoute>
-    },
-
-
-    {
-      path: '/mobile',
-      element: (
-        <ProtectedRoute allowedRoles={[ROLES.TEKNISI, ROLES.USER_RUANGAN]}>
-          <DashboardLayoutMobile />
-        </ProtectedRoute>
-      ),
-      children: [
-        { index: true, element: <Navigate to="/mobile/dashboard" replace /> },
-        { path: 'dashboard', element: <MobileDashboard /> },
-        { path: 'aduan', element: <MobileAduan /> },
-        { path: 'aduan/:id', element: <MobileAduanFormTeknisi /> },
-        { path: 'riwayat-aduan', element: <MobileAduanHistory /> },
-        { path: 'riwayat-aduan/:id', element: <MobileAduanDetail /> },
-        { path: 'inventaris', element: <MobileInventaris /> },
-        { path: 'inventaris/:id', element: <MobileInventarisDetail /> },
-        { path: 'alat-baru', element: <MobileAlatBaru /> },
-        { path: 'alat-baru/add', element: <MobileAddAlatBaru /> },
-        { path: 'alat-baru/:id', element: <MobileAlatBaruDetail /> },
-        { path: 'scan', element: <MobileScanner /> },
-        { path: 'pemeliharaan', element: <MobilePemeliharaan /> },
-        { path: 'pemeliharaan/history', element: <MobilePemeliharaanHistory /> },
-        { path: 'pemeliharaan/:id', element: <MobilePemeliharaanDetail /> },
-        { path: 'pemeliharaan/:id/form', element: <MobileFormPemeliharaan /> },
-        { path: 'notifikasi', element: <MobileNotifikasi /> },
-        { path: 'notifikasi/:id', element: <MobileNotifikasiDetail /> },
-        { path: 'profile', element: <MobileProfile /> },
-      ]
-    },
-
-
-    { path: '/superadmin', element: <Navigate to="/dashboard" replace /> },
-    { path: '/userruangan', element: <Navigate to="/mobile/dashboard" replace /> },
-    { path: '/teknisi', element: <Navigate to="/mobile/dashboard" replace /> },
-    { path: '/admindivisi', element: <Navigate to="/dashboard" replace /> },
-    { path: '/pimpinan', element: <Navigate to="/dashboard" replace /> },
-  ],
+  [{ errorElement: <RouteError />, children: routes }],
   {
     future: {
       v7_startTransition: true,
@@ -302,7 +187,6 @@ const router = createBrowserRouter(
     basename: '/'
   }
 );
-
 
 function App() {
   return (

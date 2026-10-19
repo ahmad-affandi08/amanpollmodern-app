@@ -1,9 +1,18 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, X, RotateCcw, Check, RefreshCw } from 'lucide-react';
 
+const stopStream = (stream) => {
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
 const CameraCapture = ({ isOpen, onClose, onCapture }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  // Stream disimpan di ref agar cleanup (unmount/tutup) selalu menghentikan stream yang AKTIF,
+  // bukan stream lama yang tertangkap closure.
+  const streamRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -16,9 +25,13 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
     setLoading(true);
     setError('');
 
+    stopStream(streamRef.current);
+    streamRef.current = null;
 
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Kamera tidak tersedia. Buka aplikasi lewat HTTPS atau gunakan perangkat yang mendukung kamera.');
+      setLoading(false);
+      return;
     }
 
     try {
@@ -29,62 +42,59 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
       };
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = newStream;
       setStream(newStream);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-      }
-
       setLoading(false);
     } catch (err) {
       console.error("Camera access error:", err);
       setError('Gagal mengakses kamera. Pastikan izin kamera diaktifkan.');
       setLoading(false);
     }
-  }, [stream]);
+  }, []);
 
 
+  // Buka kamera saat modal dibuka; hentikan saat ditutup atau komponen dilepas.
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return undefined;
 
-      const timer = setTimeout(() => {
-        startCamera();
+    const timer = setTimeout(async () => {
+      await startCamera();
 
-
-        navigator.mediaDevices.enumerateDevices()
-          .then(devices => {
-            const videoDevices = devices.filter(device => device.kind === 'videoinput');
-            setDevices(videoDevices);
-          })
-          .catch(console.error);
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
+      try {
+        const all = await navigator.mediaDevices?.enumerateDevices?.();
+        setDevices((all || []).filter((device) => device.kind === 'videoinput'));
+      } catch (err) {
+        console.error('Gagal membaca daftar kamera:', err);
+      }
+    }, 300);
 
     return () => {
-
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-
-  }, [isOpen]);
-
-
-  useEffect(() => {
-    if (!isOpen && stream) {
-      stream.getTracks().forEach(track => track.stop());
+      clearTimeout(timer);
+      stopStream(streamRef.current);
+      streamRef.current = null;
       setStream(null);
       setCapturedImage(null);
+    };
+  }, [isOpen, startCamera]);
+
+
+  // Pasang stream ke <video> setiap kali elemen video dibuat ulang (mis. setelah "Ulangi").
+  useEffect(() => {
+    if (!capturedImage && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
     }
-  }, [isOpen, stream]);
+  }, [capturedImage, stream]);
 
   const handleCapture = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
+      // Video belum punya frame (kamera belum siap): jangan hasilkan gambar kosong.
+      if (!video.videoWidth || !video.videoHeight) {
+        setError('Kamera belum siap, coba lagi sebentar.');
+        return;
+      }
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -100,6 +110,7 @@ const CameraCapture = ({ isOpen, onClose, onCapture }) => {
   };
 
   const handleRetake = () => {
+    setError('');
     setCapturedImage(null);
   };
 
