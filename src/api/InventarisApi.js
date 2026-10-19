@@ -41,6 +41,23 @@ const InventarisApi = {
   },
 
 
+  getKalibrasi: async (id) => {
+    const response = await axiosClient.get(`/inventaris/${id}/kalibrasi`);
+    return response.data;
+  },
+
+  addKalibrasi: async (id, data) => {
+    const headers = data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
+    const response = await axiosClient.post(`/inventaris/${id}/kalibrasi`, data, { headers });
+    return response.data;
+  },
+
+  deleteKalibrasi: async (id, historyId) => {
+    const response = await axiosClient.delete(`/inventaris/${id}/kalibrasi/${historyId}`);
+    return response.data;
+  },
+
+
   exportExcel: async (filters = {}) => {
     const response = await axiosClient.get('/inventaris/export', {
       params: filters,

@@ -67,6 +67,33 @@ export const useUpdateLocation = () => {
 };
 
 
+const invalidateKalibrasi = (queryClient, inventarisId) => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.inventaris.lists() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.inventaris.detail(inventarisId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+};
+
+
+export const useAddKalibrasi = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => InventarisApi.addKalibrasi(id, data),
+    onSuccess: (_, variables) => invalidateKalibrasi(queryClient, variables.id),
+  });
+};
+
+
+export const useDeleteKalibrasi = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, historyId }) => InventarisApi.deleteKalibrasi(id, historyId),
+    onSuccess: (_, variables) => invalidateKalibrasi(queryClient, variables.id),
+  });
+};
+
+
 export const useDeleteInventaris = () => {
   const queryClient = useQueryClient();
 
