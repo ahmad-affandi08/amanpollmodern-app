@@ -73,7 +73,6 @@ function FormBody({ id, data }) {
     status: '',
     kondisi_alat: '',
   });
-  const [showChecklistErrors, setShowChecklistErrors] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const getAnswer = (category, checklistId) =>
@@ -92,30 +91,12 @@ function FormBody({ id, data }) {
     });
   };
 
-  // Item checklist yang belum dijawab (untuk validasi dan penandaan).
-  const getUnanswered = () =>
-    categories.flatMap(category =>
-      category.checklists
-        .filter(checklist => !getAnswer(category.nama_kategori, checklist.id).trim())
-        .map(checklist => ({ category: category.nama_kategori, id: checklist.id, keterangan: checklist.keterangan }))
-    );
-
-  const unanswered = getUnanswered();
-  const isUnanswered = (category, checklistId) =>
-    showChecklistErrors && unanswered.some(item => item.category === category && item.id === checklistId);
+  // Checklist bersifat opsional: hanya item yang dijawab yang dikirim (jawaban kosong dibuang).
+  const answeredOnly = (items) => (items || []).filter(item => String(item.hasil ?? '').trim() !== '');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitMutation.isPending || submitted) return;
-
-    if (unanswered.length > 0) {
-      setShowChecklistErrors(true);
-      showToast(`Masih ada ${unanswered.length} item checklist yang belum dijawab`, 'warning');
-      const first = unanswered[0];
-      document.getElementById(`checklist-${first.category}-${first.id}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
 
     if (!formData.status) {
       showToast('Pilih status pemeliharaan terlebih dahulu', 'warning');
@@ -134,6 +115,9 @@ function FormBody({ id, data }) {
 
     const submitData = {
       ...formData,
+      safety_check: answeredOnly(formData.safety_check),
+      maintenance: answeredOnly(formData.maintenance),
+      p_fungsi: answeredOnly(formData.p_fungsi),
       ttd_teknisi: signatureTeknisiRef.current.toDataURL(),
       ttd_kepala_ruang: signatureKepalaRuangRef.current?.isEmpty()
         ? null
@@ -243,27 +227,28 @@ function FormBody({ id, data }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Checklist: hanya untuk pemeriksaan pertama, semua item wajib dijawab */}
+        {/* Checklist: hanya untuk pemeriksaan pertama; pengisian bersifat opsional */}
         {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-3">{category.display_kategori}</h3>
+            <h3 className="font-bold text-gray-800 mb-3">
+              {category.display_kategori}
+              <span className="ml-2 text-xs font-medium text-gray-400">(Opsional)</span>
+            </h3>
 
             {category.checklists.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
             ) : category.nama_kategori === 'safety_check' ? (
               <div className="space-y-3">
                 {category.checklists.map((checklist) => {
-                  const missing = isUnanswered(category.nama_kategori, checklist.id);
                   return (
                     <div key={checklist.id} id={`checklist-${category.nama_kategori}-${checklist.id}`}>
                       <textarea
                         placeholder={checklist.keterangan}
                         value={getAnswer(category.nama_kategori, checklist.id)}
                         onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
-                        className={`w-full px-3 py-2 rounded-xl border-2 focus:outline-none focus:border-indigo-500 text-sm resize-none ${missing ? 'border-red-400' : 'border-gray-300'}`}
+                        className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
                         rows="3"
                       />
-                      {missing && <p className="text-xs text-red-500 mt-1">Belum dijawab</p>}
                     </div>
                   );
                 })}
@@ -271,13 +256,12 @@ function FormBody({ id, data }) {
             ) : (
               <div className="space-y-3">
                 {category.checklists.map((checklist) => {
-                  const missing = isUnanswered(category.nama_kategori, checklist.id);
                   const answer = getAnswer(category.nama_kategori, checklist.id);
                   return (
                     <div
                       key={checklist.id}
                       id={`checklist-${category.nama_kategori}-${checklist.id}`}
-                      className={`rounded-xl p-3 ${missing ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}
+                      className="rounded-xl p-3 bg-gray-50"
                     >
                       <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
                       <div className="flex gap-6">
@@ -304,7 +288,6 @@ function FormBody({ id, data }) {
                           <span className="text-sm">Tidak Ok</span>
                         </label>
                       </div>
-                      {missing && <p className="text-xs text-red-500 mt-2">Belum dijawab</p>}
                     </div>
                   );
                 })}
