@@ -39,7 +39,7 @@ export default function MasterNamaAlat() {
   });
 
   const { showToast } = useToast();
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
 
   const { data: namaAlatData, isLoading } = useMasterNamaAlat({ all: 1 });
@@ -63,11 +63,14 @@ export default function MasterNamaAlat() {
   );
 
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  // Setelah filter/hapus, halaman aktif tidak boleh melebihi jumlah halaman (menghindari halaman kosong).
+  const activePage = Math.min(currentPage, totalPages);
   const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (activePage - 1) * itemsPerPage,
+    activePage * itemsPerPage
   );
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
 
   const handleOpenCreate = () => {
@@ -90,26 +93,23 @@ export default function MasterNamaAlat() {
     modal.open(item);
   };
 
-  const handleDeleteClick = (item) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Hapus Nama Alat',
-      message: `Apakah Anda yakin ingin menghapus "${item.nama_nama_alat}"?`,
-      type: 'error',
-      onConfirm: async () => {
-        try {
-          await deleteMutation.mutateAsync(item.id);
-          showToast('Data berhasil dihapus', 'success');
-          setConfirmDialog({ isOpen: false });
-        } catch (error) {
-          showToast('Gagal menghapus data. Mungkin sedang digunakan.', 'error');
-        }
-      }
-    });
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      showToast('Data berhasil dihapus', 'success');
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || 'Gagal menghapus data. Mungkin sedang digunakan.',
+        'error'
+      );
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
     try {
 
       const cleanedData = {
@@ -130,7 +130,6 @@ export default function MasterNamaAlat() {
     } catch (error) {
       const msg = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data';
       showToast(msg, 'error');
-      console.error('Validation errors:', error.response?.data);
     }
   };
 
@@ -149,13 +148,13 @@ export default function MasterNamaAlat() {
     <div className="space-y-6 animate-fade-in">
 
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        type={confirmDialog.type}
+        isOpen={!!deleteTarget}
+        title="Hapus Nama Alat"
+        message={`Apakah Anda yakin ingin menghapus "${deleteTarget?.nama_nama_alat ?? ''}"?`}
+        type="danger"
         confirmText="Ya, Hapus"
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ isOpen: false })}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -209,7 +208,7 @@ export default function MasterNamaAlat() {
               ) : (
                 paginatedData.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-4 text-sm font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <td className="py-2 px-4 text-sm font-bold">{(activePage - 1) * itemsPerPage + index + 1}</td>
                     <td className="py-2 px-4 text-sm font-bold text-text-dark">{item.nama_nama_alat}</td>
                     <td className="py-2 px-4 text-sm">
                       <div className="flex items-center gap-2">
@@ -233,10 +232,10 @@ export default function MasterNamaAlat() {
                         >
                           <ClipboardList size={16} />
                         </button>
-                        <button onClick={() => handleOpenEdit(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+                        <button onClick={() => handleOpenEdit(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Edit">
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => handleDeleteClick(item)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
+                        <button onClick={() => setDeleteTarget(item)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Hapus" disabled={deleteMutation.isPending}>
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -249,7 +248,7 @@ export default function MasterNamaAlat() {
         </div>
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={activePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalData={filteredData.length}
@@ -262,14 +261,14 @@ export default function MasterNamaAlat() {
         title={modal.data ? 'Edit Nama Alat' : 'Tambah Nama Alat'}
         footer={
           <>
-            <Button variant="ghost" onClick={modal.close} disabled={createMutation.isPending || updateMutation.isPending}>Batal</Button>
-            <Button onClick={handleSubmit} loading={createMutation.isPending || updateMutation.isPending}>
+            <Button variant="ghost" onClick={modal.close} disabled={isSaving}>Batal</Button>
+            <Button type="submit" form="form-nama-alat" loading={isSaving}>
               {modal.data ? 'Perbarui Data' : 'Simpan Data'}
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="form-nama-alat" onSubmit={handleSubmit} className="space-y-6">
           <Input
             label="Nama Alat"
             value={formData.nama_nama_alat}
@@ -280,8 +279,8 @@ export default function MasterNamaAlat() {
           />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-text-dark mb-2">Kategori</label>
               <SearchableSelect
+                label="Kategori"
                 name="kategori_alat_id"
                 options={categoryOptions}
                 value={formData.kategori_alat_id}
@@ -292,8 +291,8 @@ export default function MasterNamaAlat() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-text-dark mb-2">Divisi</label>
               <SearchableSelect
+                label="Divisi"
                 name="divisi_id"
                 options={divisionOptions}
                 value={formData.divisi_id}

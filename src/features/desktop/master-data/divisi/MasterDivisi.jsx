@@ -17,6 +17,7 @@ import Input from '../../../../components/Input';
 import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
 import ConfirmDialog from '../../../../components/Alert/Alert';
+import useConfirmAction from '../useConfirmAction';
 
 export default function MasterDivisi() {
   usePageTitle('Master Divisi');
@@ -27,12 +28,7 @@ export default function MasterDivisi() {
   const modal = useModal();
   const [formData, setFormData] = useState({ nama_divisi: '' });
 
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: null
-  });
+  const { confirm, dialogProps } = useConfirmAction();
 
   const { data: divisiData, isLoading } = useMasterDivisi({
     page: pagination.currentPage,
@@ -47,9 +43,10 @@ export default function MasterDivisi() {
   const data = divisiData?.data || [];
   const meta = divisiData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (meta) pagination.setMetadata(meta);
-  }, [meta]);
+    if (meta) setMetadata(meta);
+  }, [meta, setMetadata]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,8 +60,8 @@ export default function MasterDivisi() {
         showToast('Divisi berhasil ditambahkan', 'success');
       }
       modal.close();
-    } catch (error) {
-      showToast('Gagal menyimpan data', 'error');
+    } catch {
+      showToast('Gagal menyimpan data. Periksa kembali isian Anda.', 'error');
     }
   };
 
@@ -79,20 +76,19 @@ export default function MasterDivisi() {
   };
 
   const handleDelete = (item) => {
-    setConfirmDialog({
-      isOpen: true,
+    confirm({
       title: 'Hapus Divisi',
       message: `Apakah Anda yakin ingin menghapus divisi "${item.nama_divisi}"? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
       onConfirm: async () => {
-        setConfirmDialog({ isOpen: false });
         try {
           await deleteMutation.mutateAsync(item.id_divisi);
           showToast('Divisi berhasil dihapus', 'success');
-        } catch (error) {
-          showToast('Gagal menghapus divisi', 'error');
+        } catch {
+          showToast('Gagal menghapus divisi. Kemungkinan masih dipakai oleh data lain.', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false })
     });
   };
 
@@ -183,14 +179,7 @@ export default function MasterDivisi() {
         </form>
       </Modal>
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={confirmDialog.onCancel}
-        type="danger"
-      />
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

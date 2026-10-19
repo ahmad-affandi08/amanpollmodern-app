@@ -8,6 +8,7 @@ import {
   useDebounce,
   useModal,
   usePageTitle,
+  useToast,
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
@@ -30,8 +31,8 @@ export default function MasterKategori() {
     nama_kategori: ''
   });
 
-  const [toast, setToast] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
+  const { showToast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
 
   const { data: kategoriData, isLoading } = useMasterKategori({ all: 1 });
@@ -51,11 +52,14 @@ export default function MasterKategori() {
   );
 
 
-  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / itemsPerPage));
+  // Setelah filter/hapus, halaman aktif tidak boleh melebihi jumlah halaman (menghindari halaman kosong).
+  const activePage = Math.min(currentPage, totalPages);
   const paginatedCategories = filteredCategories.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (activePage - 1) * itemsPerPage,
+    activePage * itemsPerPage
   );
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
 
   const handleOpenCreate = () => {
@@ -71,57 +75,48 @@ export default function MasterKategori() {
     modal.open(category);
   };
 
-  const handleDeleteClick = (category) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Hapus Kategori',
-      message: `Apakah Anda yakin ingin menghapus kategori "${category.nama_kategori}"?`,
-      type: 'error',
-      onConfirm: async () => {
-        try {
-          await deleteMutation.mutateAsync(category.id);
-          setToast({ type: 'success', message: 'Kategori berhasil dihapus' });
-          setConfirmDialog({ isOpen: false });
-        } catch (error) {
-          setToast({ type: 'error', message: 'Gagal menghapus kategori. Mungkin data sedang digunakan.' });
-        }
-      }
-    });
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      showToast('Kategori berhasil dihapus', 'success');
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || 'Gagal menghapus kategori. Mungkin data sedang digunakan.',
+        'error'
+      );
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
     try {
       if (modal.data?.id) {
         await updateMutation.mutateAsync({ id: modal.data.id, data: formData });
-        setToast({ type: 'success', message: 'Kategori berhasil diperbarui' });
+        showToast('Kategori berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
-        setToast({ type: 'success', message: 'Kategori berhasil ditambahkan' });
+        showToast('Kategori berhasil ditambahkan', 'success');
       }
       modal.close();
     } catch (error) {
       const msg = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data';
-      setToast({ type: 'error', message: msg });
+      showToast(msg, 'error');
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {toast && (
-        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg animate-slide-in" style={{ backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white' }}>
-          <p className="text-sm font-semibold">{toast.message}</p>
-        </div>
-      )}
-
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        type={confirmDialog.type}
+        isOpen={!!deleteTarget}
+        title="Hapus Kategori"
+        message={`Apakah Anda yakin ingin menghapus kategori "${deleteTarget?.nama_kategori ?? ''}"?`}
+        type="danger"
         confirmText="Ya, Hapus"
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ isOpen: false })}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -173,17 +168,17 @@ export default function MasterKategori() {
               ) : (
                 paginatedCategories.map((category, index) => (
                   <tr key={category.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-4 text-sm font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <td className="py-2 px-4 text-sm font-bold">{(activePage - 1) * itemsPerPage + index + 1}</td>
                     <td className="py-2 px-4 text-sm">
                       <span className="px-2 py-0.5 rounded-md bg-purple-50 text-brand-primary font-bold text-xs">{category.kode_kategori_alat}</span>
                     </td>
                     <td className="py-2 px-4 text-sm font-bold text-text-dark">{category.nama_kategori}</td>
                     <td className="py-2 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleOpenEdit(category)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+                        <button onClick={() => handleOpenEdit(category)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Edit">
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => handleDeleteClick(category)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" disabled={deleteMutation.isPending}>
+                        <button onClick={() => setDeleteTarget(category)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Hapus" disabled={deleteMutation.isPending}>
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -196,7 +191,7 @@ export default function MasterKategori() {
         </div>
 
         <Pagination
-          currentPage={currentPage}
+          currentPage={activePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalData={filteredCategories.length}
@@ -209,14 +204,14 @@ export default function MasterKategori() {
         title={modal.data ? 'Edit Kategori' : 'Tambah Kategori Baru'}
         footer={
           <>
-            <Button variant="ghost" onClick={modal.close} disabled={createMutation.isPending || updateMutation.isPending}>Batal</Button>
-            <Button onClick={handleSubmit} loading={createMutation.isPending || updateMutation.isPending}>
+            <Button variant="ghost" onClick={modal.close} disabled={isSaving}>Batal</Button>
+            <Button type="submit" form="form-kategori" loading={isSaving}>
               {modal.data ? 'Perbarui Data' : 'Simpan Data'}
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="form-kategori" onSubmit={handleSubmit} className="space-y-6">
           <Input
             label="Kode Kategori"
             value={formData.kode_kategori_alat}

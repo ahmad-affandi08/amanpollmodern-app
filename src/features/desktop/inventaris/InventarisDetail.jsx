@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench, ShieldCheck } from 'lucide-react';
 import InventarisApi from '../../../api/InventarisApi';
@@ -6,7 +6,11 @@ import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle, useAuth } from '../../../hooks';
 import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
+import KondisiBadge from '../../../components/KondisiBadge';
+import StatusBadge from '../../../components/StatusBadge';
 import { canManageKalibrasi } from '../../../utils/kalibrasi';
+import { rupiah, formatDate } from '../../../utils/format';
+import { canManageInventaris } from '../../auth/constants';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
@@ -22,23 +26,31 @@ export default function InventarisDetail() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
 
-  useEffect(() => {
-    fetchDetail();
-  }, [id]);
+  const canManage = canManageInventaris(user);
 
-  const fetchDetail = async (silent = false) => {
+  // `silent` = muat ulang di latar belakang (mis. setelah ubah kalibrasi): halaman
+  // tidak boleh berpindah bila gagal, cukup tampilkan pemberitahuan.
+  const fetchDetail = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
       const response = await InventarisApi.getById(id);
       setData(response.data || response);
     } catch (error) {
       console.error(error);
-      showToast('Gagal memuat detail inventaris', 'error');
-      navigate('/inventaris');
+      if (silent) {
+        showToast('Gagal menyegarkan detail inventaris', 'error');
+      } else {
+        showToast('Gagal memuat detail inventaris', 'error');
+        navigate('/inventaris/data', { replace: true });
+      }
     } finally {
       if (!silent) setLoading(false);
     }
-  };
+  }, [id, navigate, showToast]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
 
   if (loading) {
     return <InventarisDetailSkeleton />;
@@ -48,42 +60,12 @@ export default function InventarisDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-gray-500">Data tidak ditemukan</p>
-        <Button onClick={() => navigate('/inventaris')} className="mt-4">
+        <Button onClick={() => navigate('/inventaris/data')} className="mt-4">
           Kembali
         </Button>
       </div>
     );
   }
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(value || 0);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const getStatusColor = (status) => {
-    const map = {
-      'Selesai': 'bg-green-100 text-green-700',
-      'Sedang Dikerjakan': 'bg-blue-100 text-blue-700',
-      'Pending': 'bg-yellow-100 text-yellow-700',
-      'Baru': 'bg-red-100 text-red-700',
-      'Baik': 'bg-green-100 text-green-700',
-      'Rusak Ringan': 'bg-yellow-100 text-yellow-700',
-      'Rusak Berat': 'bg-red-100 text-red-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-700';
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -91,7 +73,7 @@ export default function InventarisDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/inventaris')}
+            onClick={() => navigate('/inventaris/data')}
             className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
           >
             <ArrowLeft size={20} className="text-gray-600" />
@@ -101,13 +83,15 @@ export default function InventarisDetail() {
             <p className="text-[#808191] text-xs mt-0.5">Informasi lengkap alat inventaris</p>
           </div>
         </div>
-        <Button
-          size="sm"
-          onClick={() => navigate(`/inventaris/edit/${id}`)}
-          className="flex items-center gap-2"
-        >
-          Edit Data
-        </Button>
+        {canManage && (
+          <Button
+            size="sm"
+            onClick={() => navigate(`/inventaris/edit/${id}`)}
+            className="flex items-center gap-2"
+          >
+            Edit Data
+          </Button>
+        )}
       </div>
 
       {/* Tab Navigation */}
@@ -150,7 +134,7 @@ export default function InventarisDetail() {
             <DetailField label="Model/Tipe" value={data.model} />
             <DetailField label="No Seri" value={data.seri} />
             <DetailField label="Daya" value={data.daya} />
-            <DetailField label="Harga" value={formatCurrency(data.harga)} />
+            <DetailField label="Harga" value={rupiah(data.harga)} />
             <DetailField label="Tahun Pengadaan" value={data.tahun_pengadaan} />
             <DetailField label="Letak Saat Ini" value={data.ruangan_sekarang?.nama_ruangan || data.ruangan?.nama_ruangan} />
           </div>
@@ -162,7 +146,10 @@ export default function InventarisDetail() {
               <h2 className="text-base font-bold text-text-dark mb-3">Informasi Tambahan</h2>
 
               <DetailField label="Gedung" value={data.gedung} />
-              <DetailField label="Interval Maintenance" value={data.interval_maintenance} />
+              <DetailField
+                label="Interval Maintenance"
+                value={data.interval_maintenance > 0 ? `${data.interval_maintenance} kali / tahun` : null}
+              />
               <DetailField label="Awal Kalibrasi" value={formatDate(data.awal_kalibrasi)} />
               <DetailField label="Berlaku Hingga" value={formatDate(data.kadaluwarsa)} />
               <DetailField label="Kondisi Alat" value={data.kondisi_alat} />
@@ -266,9 +253,7 @@ export default function InventarisDetail() {
                       <p className="text-[10px] text-gray-400 font-medium mb-0.5">No. Aduan</p>
                       <p className="text-base font-bold text-brand-primary">{aduan.no_aduan}</p>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${getStatusColor(aduan.status_aduan)}`}>
-                      {aduan.status_aduan}
-                    </span>
+                    <StatusBadge status={aduan.status_aduan} size="sm" />
                   </div>
 
                   {/* Keluhan */}
@@ -301,15 +286,13 @@ export default function InventarisDetail() {
                         </div>
                         <div>
                           <p className="text-[10px] text-gray-400 font-medium mb-0.5">Kondisi Alat</p>
-                          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${getStatusColor(aduan.kondisi_alat)}`}>
-                            {aduan.kondisi_alat}
-                          </span>
+                          <KondisiBadge kondisi={aduan.kondisi_alat} size="sm" />
                         </div>
                       </div>
 
                       {aduan.tindakan_teknisi && (
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tindakan</p>
+                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tindakan Teknisi</p>
                           <p className="text-xs text-text-dark bg-blue-50 p-2.5 rounded-lg">{aduan.tindakan_teknisi}</p>
                         </div>
                       )}
@@ -321,10 +304,10 @@ export default function InventarisDetail() {
                         </div>
                       )}
 
-                      {aduan.biaya && (
+                      {parseFloat(aduan.biaya) > 0 && (
                         <div>
                           <p className="text-[10px] text-gray-400 font-medium mb-0.5">Biaya</p>
-                          <p className="text-lg font-bold text-green-600">{formatCurrency(aduan.biaya)}</p>
+                          <p className="text-lg font-bold text-green-600">{rupiah(aduan.biaya)}</p>
                         </div>
                       )}
                     </div>
@@ -354,9 +337,7 @@ export default function InventarisDetail() {
                       <p className="text-[10px] text-gray-400 font-medium mb-0.5">Jadwal Pemeliharaan</p>
                       <p className="text-base font-bold text-brand-primary">{formatDate(mt.jadwal_pemeliharaan)}</p>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${getStatusColor(mt.status)}`}>
-                      {mt.status}
-                    </span>
+                    <StatusBadge status={mt.status} size="sm" />
                   </div>
 
                   {/* Info Grid */}
@@ -367,16 +348,14 @@ export default function InventarisDetail() {
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tgl Pemeriksaan</p>
-                      <p className="text-xs font-semibold text-text-dark">{formatDate(mt.tanggal_pemeriksaan) || '-'}</p>
+                      <p className="text-xs font-semibold text-text-dark">{formatDate(mt.tanggal_pemeriksaan)}</p>
                     </div>
                   </div>
 
                   {/* Kondisi Alat */}
                   <div className="mb-3">
                     <p className="text-[10px] text-gray-400 font-medium mb-1">Kondisi Alat</p>
-                    <span className={`inline-block text-xs font-bold px-3 py-1.5 rounded-lg ${getStatusColor(mt.kondisi_alat)}`}>
-                      {mt.kondisi_alat}
-                    </span>
+                    <KondisiBadge kondisi={mt.kondisi_alat} size="md" />
                   </div>
 
                   {/* Keterangan */}
@@ -400,10 +379,10 @@ export default function InventarisDetail() {
                   )}
 
                   {/* Biaya */}
-                  {mt.biaya > 0 && (
+                  {parseFloat(mt.biaya) > 0 && (
                     <div className="border-t pt-3 mt-3">
                       <p className="text-[10px] text-gray-400 font-medium mb-0.5">Biaya Pemeliharaan</p>
-                      <p className="text-lg font-bold text-green-600">{formatCurrency(mt.biaya)}</p>
+                      <p className="text-lg font-bold text-green-600">{rupiah(mt.biaya)}</p>
                     </div>
                   )}
 
@@ -413,7 +392,7 @@ export default function InventarisDetail() {
                       TTD Teknisi: {mt.status_ttd_teknisi}
                     </div>
                     <div className={`flex-1 text-center py-1.5 rounded-lg text-[10px] font-medium ${mt.status_ttd_karu === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      TTD Ka.Ru: {mt.status_ttd_karu}
+                      TTD Kepala Ruangan: {mt.status_ttd_karu}
                     </div>
                   </div>
                 </div>

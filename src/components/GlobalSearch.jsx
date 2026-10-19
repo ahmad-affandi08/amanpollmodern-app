@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, FileText } from 'lucide-react';
 import ReactDOM from 'react-dom';
@@ -41,20 +41,35 @@ export default function GlobalSearch({ menuItems = [] }) {
     );
   }, [searchQuery, searchablePages]);
 
+  const closeSearch = useCallback(() => {
+    setIsOpen(false);
+    setSearchQuery('');
+    setSelectedIndex(0);
+  }, []);
+
   // Keyboard shortcut Ctrl+K / Cmd+K
+  const isOpenRef = useRef(false);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setIsOpen(prev => !prev);
+        if (isOpenRef.current) {
+          closeSearch();
+        } else {
+          setIsOpen(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [closeSearch]);
 
   useBodyScrollLock(isOpen);
-  useEscapeKey(isOpen, () => setIsOpen(false));
+  useEscapeKey(isOpen, closeSearch);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -62,11 +77,14 @@ export default function GlobalSearch({ menuItems = [] }) {
     const focusTimer = setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
-    setSearchQuery('');
-    setSelectedIndex(0);
 
     return () => clearTimeout(focusTimer);
   }, [isOpen]);
+
+  const handleSelect = useCallback((path) => {
+    navigate(path);
+    closeSearch();
+  }, [navigate, closeSearch]);
 
   // Handle arrow keys navigation inside the modal
   useEffect(() => {
@@ -89,12 +107,7 @@ export default function GlobalSearch({ menuItems = [] }) {
     };
     window.addEventListener('keydown', handleModalKeyDown);
     return () => window.removeEventListener('keydown', handleModalKeyDown);
-  }, [isOpen, filteredPages, selectedIndex]);
-
-  const handleSelect = (path) => {
-    navigate(path);
-    setIsOpen(false);
-  };
+  }, [isOpen, filteredPages, selectedIndex, handleSelect]);
 
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
@@ -120,7 +133,7 @@ export default function GlobalSearch({ menuItems = [] }) {
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 
-            onClick={() => setIsOpen(false)}
+            onClick={closeSearch}
           />
 
           {/* Palette */}
@@ -140,7 +153,7 @@ export default function GlobalSearch({ menuItems = [] }) {
                 }}
               />
               <button 
-                onClick={() => setIsOpen(false)}
+                onClick={closeSearch}
                 className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 <X size={20} />

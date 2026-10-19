@@ -43,7 +43,17 @@ axiosClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
+    // Unduhan (responseType: 'blob') yang gagal menerima pesan JSON server dalam bentuk Blob;
+    // ubah kembali agar error.response.data.message bisa dibaca pemanggil.
+    const data = error.response?.data;
+    if (data instanceof Blob && data.type?.includes('json')) {
+      try {
+        error.response.data = JSON.parse(await data.text());
+      } catch {
+        // biarkan sebagai Blob bila bukan JSON valid
+      }
+    }
 
     if (error.response?.status === 401) {
       const url = error.config?.url || '';

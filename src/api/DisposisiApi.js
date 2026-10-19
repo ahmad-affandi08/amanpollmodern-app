@@ -1,6 +1,6 @@
 import axiosClient from './axiosClient';
 
-export const disposisiApi = {
+const DisposisiApi = {
   /**
    * Create disposisi for Aduan
    */
@@ -15,3 +15,5 @@ export const disposisiApi = {
     return axiosClient.post(`/disposisi/pemeliharaan/${pemeliharaanId}`, data);
   },
 };
+
+export default DisposisiApi;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { refreshAllData } from '../../../../lib/queryClient';
+import { ROLES } from '../../../auth/constants';
 import { Edit2, Trash2, Plus, Search, Users } from 'lucide-react';
 import {
   useMasterUsers,
@@ -13,6 +14,7 @@ import {
   useDebounce,
   useModal,
   usePageTitle,
+  useAuth,
 } from '../../../../hooks';
 import Button from '../../../../components/Button';
 import Modal from '../../../../components/Modal';
@@ -23,37 +25,47 @@ import Pagination from '../../../../components/Pagination';
 import TableSkeleton from '../../../../components/TableSkeleton';
 import ConfirmDialog from '../../../../components/Alert/Alert';
 import MasterApi from '../../../../api/MasterApi';
+import { getStatusClassesWithBorder } from '../../../../utils/status';
+import useConfirmAction from '../useConfirmAction';
+
+const STATUS_AKTIF = 'Aktif';
+const STATUS_TIDAK_AKTIF = 'Tidak Aktif';
+
+const EMPTY_FORM = {
+  nama_lengkap: '',
+  username: '',
+  email: '',
+  password: '',
+  wa: '',
+  kategori_user_id: '',
+  divisi_id: '',
+  ruangan_id: '',
+  active: true
+};
+
+// Backend tidak memvalidasi divisi/ruangan per peran, padahal pembatasan data Admin Divisi
+// (per divisi) dan User Ruangan (per ruangan) bergantung padanya: tanpa isian ini akun tersebut
+// akan melihat SEMUA data. Karena itu diwajibkan di sini.
+const needsDivisi = (kategoriId) => Number(kategoriId) === ROLES.ADMIN_DIVISI;
+const needsRuangan = (kategoriId) => Number(kategoriId) === ROLES.USER_RUANGAN;
 
 export default function MasterUser() {
   usePageTitle('Master User');
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
+  const currentUserId = currentUser?.id_user;
+  const isSelf = (item) => currentUserId != null && Number(item.id_user) === Number(currentUserId);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
   const pagination = usePagination(10);
   const modal = useModal();
 
-  const [formData, setFormData] = useState({
-    nama_lengkap: '',
-    username: '',
-    email: '',
-    password: '',
-    wa: '',
-    kategori_user_id: '',
-    divisi_id: '',
-    ruangan_id: '',
-    active: true
-  });
-
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: null
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const { confirm, dialogProps } = useConfirmAction();
 
   const [kategoriOptions, setKategoriOptions] = useState([]);
 
-  const { data: usersData, isLoading, refetch } = useMasterUsers({
+  const { data: usersData, isLoading } = useMasterUsers({
     page: pagination.currentPage,
     per_page: pagination.perPage,
     search: debouncedSearch
@@ -69,9 +81,10 @@ export default function MasterUser() {
   const data = usersData?.data || [];
   const meta = usersData?.meta;
 
+  const { setMetadata } = pagination;
   useEffect(() => {
-    if (meta) pagination.setMetadata(meta);
-  }, [meta]);
+    if (meta) setMetadata(meta);
+  }, [meta, setMetadata]);
 
   useEffect(() => {
     const fetchKategori = async () => {
@@ -82,12 +95,12 @@ export default function MasterUser() {
           label: k.display_kategori,
           value: k.id_kategori_user
         })));
-      } catch (error) {
-        console.error(error);
+      } catch {
+        showToast('Gagal memuat daftar peran', 'error');
       }
     };
     fetchKategori();
-  }, []);
+  }, [showToast]);
 
   const divisiOptions = (divisiData?.data || []).map(d => ({
     label: d.nama_divisi,
@@ -101,37 +114,54 @@ export default function MasterUser() {
 
   const handleToggleStatus = (item) => {
     const newStatus = !item.active;
-    setConfirmDialog({
-      isOpen: true,
+
+    if (isSelf(item) && !newStatus) {
+      showToast('Anda tidak dapat menonaktifkan akun Anda sendiri.', 'warning');
+      return;
+    }
+
+    confirm({
       title: `${newStatus ? 'Aktifkan' : 'Nonaktifkan'} User`,
       message: `Apakah Anda yakin ingin ${newStatus ? 'mengaktifkan' : 'menonaktifkan'} user "${item.nama_lengkap}"?`,
+      confirmText: newStatus ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan',
+      type: newStatus ? 'info' : 'warning',
       onConfirm: async () => {
-        setConfirmDialog({ isOpen: false });
         try {
           await MasterApi.toggleUserStatus(item.id_user, newStatus);
           await refreshAllData();
-          showToast(`Status user berhasil diubah menjadi ${newStatus ? 'Active' : 'Inactive'}`, 'success');
-          refetch();
-        } catch (error) {
-          console.error('Error toggling user status:', error);
+          showToast(`Status user berhasil diubah menjadi ${newStatus ? STATUS_AKTIF : STATUS_TIDAK_AKTIF}`, 'success');
+        } catch {
           showToast('Gagal mengubah status user', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false })
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (needsDivisi(formData.kategori_user_id) && !formData.divisi_id) {
+      showToast('Divisi wajib dipilih untuk Admin Divisi.', 'warning');
+      return;
+    }
+    if (needsRuangan(formData.kategori_user_id) && !formData.ruangan_id) {
+      showToast('Ruangan wajib dipilih untuk User Ruangan.', 'warning');
+      return;
+    }
+
+    // roleName hanya untuk tampilan, tidak dikirim ke server.
+    const payload = { ...formData };
+    delete payload.roleName;
+
     try {
       if (modal.data?.id_user) {
         await updateMutation.mutateAsync({
           id: modal.data.id_user,
-          data: formData
+          data: payload
         });
         showToast('User berhasil diperbarui', 'success');
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(payload);
         pagination.reset();
         showToast('User berhasil ditambahkan', 'success');
       }
@@ -142,17 +172,7 @@ export default function MasterUser() {
   };
 
   const openAddModal = () => {
-    setFormData({
-      nama_lengkap: '',
-      username: '',
-      email: '',
-      password: '',
-      wa: '',
-      kategori_user_id: '',
-      divisi_id: '',
-      ruangan_id: '',
-      active: true
-    });
+    setFormData(EMPTY_FORM);
     modal.open();
   };
 
@@ -173,20 +193,24 @@ export default function MasterUser() {
   };
 
   const handleDelete = (item) => {
-    setConfirmDialog({
-      isOpen: true,
+    if (isSelf(item)) {
+      showToast('Anda tidak dapat menghapus akun Anda sendiri.', 'warning');
+      return;
+    }
+
+    confirm({
       title: 'Hapus User',
       message: `Apakah Anda yakin ingin menghapus user "${item.nama_lengkap}"? Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Ya, Hapus',
+      type: 'danger',
       onConfirm: async () => {
-        setConfirmDialog({ isOpen: false });
         try {
           await deleteMutation.mutateAsync(item.id_user);
           showToast('User berhasil dihapus', 'success');
         } catch (error) {
-          showToast('Gagal menghapus user', 'error');
+          showToast(error.response?.data?.message || 'Gagal menghapus user', 'error');
         }
       },
-      onCancel: () => setConfirmDialog({ isOpen: false })
     });
   };
 
@@ -236,7 +260,7 @@ export default function MasterUser() {
                 <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">No WA</th>
                 <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Email</th>
                 <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-center">Status</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-center">Action</th>
+                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-xs">
@@ -264,27 +288,32 @@ export default function MasterUser() {
                     <td className="py-2.5 px-4">{item.email}</td>
                     <td className="py-2.5 px-4 text-center">
                       <button
+                        type="button"
                         onClick={() => handleToggleStatus(item)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${item.active
-                          ? 'bg-success-50 text-success-600 border-success-200'
-                          : 'bg-gray-100 text-gray-500 border-gray-200'
-                          }`}
+                        disabled={isSelf(item) && item.active}
+                        title={isSelf(item) && item.active ? 'Anda tidak dapat menonaktifkan akun sendiri' : undefined}
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${getStatusClassesWithBorder(item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF)}`}
                       >
-                        {item.active ? 'Active' : 'Pending'}
+                        {item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF}
                       </button>
                     </td>
                     <td className="py-2.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
+                          type="button"
                           onClick={() => openEditModal(item)}
+                          aria-label={`Ubah user ${item.nama_lengkap}`}
                           className="p-2 bg-brand-primary text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDelete(item)}
-                          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
-                          disabled={deleteMutation.isPending}
+                          aria-label={`Hapus user ${item.nama_lengkap}`}
+                          title={isSelf(item) ? 'Anda tidak dapat menghapus akun sendiri' : undefined}
+                          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                          disabled={deleteMutation.isPending || isSelf(item)}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -355,11 +384,11 @@ export default function MasterUser() {
 
           {modal.data ? (
             <div className="bg-gray-50 p-1 rounded-xl">
-              <Input label="Role / Kategori User" value={formData.roleName} disabled className="bg-gray-100" />
+              <Input label="Peran / Kategori User" value={formData.roleName} disabled className="bg-gray-100" />
             </div>
           ) : (
             <SearchableSelect
-              label="Role / Kategori User"
+              label="Peran / Kategori User"
               options={kategoriOptions}
               value={formData.kategori_user_id}
               onChange={(e) => setFormData({ ...formData, kategori_user_id: e.target.value })}
@@ -368,17 +397,21 @@ export default function MasterUser() {
           )}
 
           <SearchableSelect
-            label="Divisi (Optional)"
-            options={[{ label: 'Pilih Divisi', value: '' }, ...divisiOptions]}
+            label={needsDivisi(formData.kategori_user_id) ? 'Divisi' : 'Divisi (Opsional)'}
+            options={divisiOptions}
             value={formData.divisi_id}
             onChange={(e) => setFormData({ ...formData, divisi_id: e.target.value })}
+            placeholder="Pilih Divisi"
+            required={needsDivisi(formData.kategori_user_id)}
           />
 
           <SearchableSelect
-            label="Ruangan (Optional)"
-            options={[{ label: 'Pilih Ruangan', value: '' }, ...ruanganOptions]}
+            label={needsRuangan(formData.kategori_user_id) ? 'Ruangan' : 'Ruangan (Opsional)'}
+            options={ruanganOptions}
             value={formData.ruangan_id}
             onChange={(e) => setFormData({ ...formData, ruangan_id: e.target.value })}
+            placeholder="Pilih Ruangan"
+            required={needsRuangan(formData.kategori_user_id)}
           />
 
           <div className="md:col-span-2 flex justify-end pt-3">
@@ -393,14 +426,7 @@ export default function MasterUser() {
         </form>
       </Modal>
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={confirmDialog.onCancel}
-        type="danger"
-      />
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

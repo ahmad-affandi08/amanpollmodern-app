@@ -1,7 +1,6 @@
-import React, { createContext, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { ToastDialog } from './Alert'
-
-export const ToastContext = createContext()
+import { ToastContext } from './toastContext'
 
 export default function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)

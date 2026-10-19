@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useInventaris } from '../../../../hooks';
 import SearchableSelect from '../../../../components/SearchableSelect';
 
 export default function InventarisSelect({ ruanganId, value, onChange, onInventarisChange, error }) {
   const { data: inventarisData, isLoading } = useInventaris({ ruangan_id: ruanganId, per_page: 500 });
-
-  const [selectedInventaris, setSelectedInventaris] = useState(null);
 
 
   const inventarisList = inventarisData?.data || [];
@@ -20,32 +18,29 @@ export default function InventarisSelect({ ruanganId, value, onChange, onInventa
 
     if (selectedId && inventarisList.length > 0) {
       const found = inventarisList.find(
-        (inv) => String(inv.id_inventaris || inv.id) === String(selectedId)
+        (inv) => String(inv.id) === String(selectedId)
       );
       if (found) {
 
         const transformedData = {
-          id_inventaris: found.id_inventaris || found.id,
+          id_inventaris: found.id,
           id_nama_alat: found.nama_alat?.id || null,
           no_inventaris: found.no_inventaris,
-          nama_alat: found.nama_alat?.nama_nama_alat || 'Unknown',
-          merk: found.merk || found.type || '',
-          divisi_id: found.nama_alat?.divisi_id || null,
-          nama_divisi: found.nama_alat?.divisi?.nama_divisi || '',
+          nama_alat: found.nama_alat?.nama_nama_alat || '-',
+          merk: found.merk || '',
+          divisi_id: found.divisi?.id_divisi ?? found.nama_alat?.divisi_id ?? null,
+          nama_divisi: found.divisi?.nama_divisi || found.nama_alat?.divisi?.nama_divisi || '',
         };
 
-        setSelectedInventaris(found);
         if (onInventarisChange) {
           onInventarisChange(transformedData);
         }
       } else {
-        setSelectedInventaris(null);
         if (onInventarisChange) {
           onInventarisChange(null);
         }
       }
     } else {
-      setSelectedInventaris(null);
       if (onInventarisChange) {
         onInventarisChange(null);
       }
@@ -80,10 +75,9 @@ export default function InventarisSelect({ ruanganId, value, onChange, onInventa
 
 
   const options = inventarisList.map((inv) => ({
-    value: inv.id_inventaris || inv.id,
-    label: `${inv.nama_alat?.nama_nama_alat || 'Unknown'} - ${inv.no_inventaris}`,
-
-    namaAlat: inv.nama_alat?.nama_nama_alat || 'Unknown',
+    value: inv.id,
+    label: `${inv.nama_alat?.nama_nama_alat || '-'} - ${inv.no_inventaris}`,
+    namaAlat: inv.nama_alat?.nama_nama_alat || '-',
     noInventaris: inv.no_inventaris,
   }));
 
