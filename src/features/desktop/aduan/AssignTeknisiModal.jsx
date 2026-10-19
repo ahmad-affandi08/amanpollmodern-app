@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import Modal from '../../../components/Modal';
 import Select from '../../../components/Select';
 import Button from '../../../components/Button';
@@ -20,6 +21,7 @@ export default function AssignTeknisiModal({ isOpen, onClose, aduan, teknisiOpti
     setLoading(true);
     try {
       await AduanApi.assignTeknisi(aduan.id_aduan, teknisiId);
+      await refreshAllData();
       showToast('Teknisi berhasil ditugaskan', 'success');
       onSuccess();
       onClose();

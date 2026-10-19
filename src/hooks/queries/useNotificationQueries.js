@@ -46,6 +46,7 @@ export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { skipInvalidate: true },
     mutationFn: (id) => NotificationApi.markAsRead(id),
     onSuccess: () => {
 
@@ -59,6 +60,7 @@ export const useMarkAllAsRead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { skipInvalidate: true },
     mutationFn: () => NotificationApi.markAllAsRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -71,6 +73,7 @@ export const useDeleteNotification = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { skipInvalidate: true },
     mutationFn: (id) => NotificationApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -83,6 +86,7 @@ export const useDeleteAllNotifications = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { skipInvalidate: true },
     mutationFn: () => NotificationApi.deleteAll(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });

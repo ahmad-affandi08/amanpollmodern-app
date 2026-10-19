@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../../lib/queryClient';
 import ReactDOM from 'react-dom';
 import { X, Plus, Trash2, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
 import Button from '../../../../components/Button';
@@ -60,6 +61,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
         kategori_checklist_maintenance_id: activeTab,
         keterangan: newItemText
       });
+      refreshAllData();
 
 
       setChecklists([...checklists, newItem.data]);
@@ -79,6 +81,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
   const handleDeleteItem = async (id) => {
     try {
       await ChecklistMaintenanceApi.delete(id);
+      refreshAllData();
       setChecklists(checklists.filter(item => item.id !== id));
       setToast({ type: 'success', message: 'Item berhasil dihapus' });
       setTimeout(() => setToast(null), 2000);

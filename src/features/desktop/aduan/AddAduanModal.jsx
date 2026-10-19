@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import Modal from '../../../components/Modal';
 import Input from '../../../components/Input';
 import SearchableSelect from '../../../components/SearchableSelect';
@@ -121,6 +122,7 @@ export default function AddAduanModal({ isOpen, onClose, onSuccess }) {
       }
 
       await AduanApi.create(payload);
+      await refreshAllData();
       showToast('Aduan berhasil dilaporkan', 'success');
       
       // Reset form state so next opening is fresh

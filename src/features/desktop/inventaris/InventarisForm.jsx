@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft, Upload, FileText } from 'lucide-react';
 import InventarisApi from '../../../api/InventarisApi';
@@ -313,9 +314,11 @@ export default function InventarisForm() {
 
       if (isEdit) {
         await InventarisApi.update(id, payload);
+        await refreshAllData();
         showToast('Data berhasil diperbarui', 'success');
       } else {
         await InventarisApi.create(payload);
+        await refreshAllData();
         showToast('Data berhasil ditambahkan', 'success');
       }
 

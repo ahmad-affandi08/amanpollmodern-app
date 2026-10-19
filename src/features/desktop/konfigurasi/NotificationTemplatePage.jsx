@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import { Save, AlertCircle, RefreshCw, MessageSquare, Wrench, Package, ListChecks, BellRing } from 'lucide-react';
 import KonfigurasiApi from '../../../api/KonfigurasiApi';
 import Button from '../../../components/Button';
@@ -51,6 +52,7 @@ export default function NotificationTemplatePage() {
         konten_pesan: editContent,
         is_active: editIsActive
       });
+      refreshAllData();
       showToast('Template berhasil diperbarui', 'success');
       setSelectedTemplate(null);
       fetchTemplates();
