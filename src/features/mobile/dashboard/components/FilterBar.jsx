@@ -57,7 +57,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         <select
           value={filters.tahun_filter}
           onChange={(e) => handleChange('tahun_filter', e.target.value)}
-          className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-lg text-brand-primary focus:outline-none focus:ring-2 focus:ring-purple-300"
+          className="px-2.5 py-2 text-xs font-medium bg-white border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
         >
           <option value="">Tahun</option>
           {years.map(year => (
@@ -69,7 +69,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         <select
           value={filters.bulan_filter}
           onChange={(e) => handleChange('bulan_filter', e.target.value)}
-          className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-lg text-info-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className="px-2.5 py-2 text-xs font-medium bg-white border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
         >
           <option value="">Bulan</option>
           {months.map(month => (
@@ -81,7 +81,7 @@ export default function FilterBar({ filters, onFilterChange }) {
         <select
           value={filters.kategori_filter}
           onChange={(e) => handleChange('kategori_filter', e.target.value)}
-          className="px-2.5 py-2 text-xs font-medium bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-lg text-accent-green focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          className="px-2.5 py-2 text-xs font-medium bg-white border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
         >
           <option value="">Kategori</option>
           {kategoriList.map((kat, index) => (

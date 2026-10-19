@@ -42,19 +42,19 @@ const COLUMN_DEFS = [
   { key: 'merk', label: 'Merk', defaultVisible: true },
   { key: 'model', label: 'Model/Tipe', defaultVisible: true },
   { key: 'seri', label: 'No. Seri', defaultVisible: true },
-  { key: 'daya', label: 'Daya (watt)', defaultVisible: true },
+  { key: 'daya', label: 'Daya (watt)', defaultVisible: false },
   { key: 'harga', label: 'Harga', defaultVisible: true },
-  { key: 'harga_ganti', label: 'Harga Ganti (AIC)', defaultVisible: true },
-  { key: 'tahun_pengadaan', label: 'Tahun Pengadaan', defaultVisible: true },
-  { key: 'ruang_sekarang', label: 'Letak Saat Ini/Ruang', defaultVisible: true },
-  { key: 'gedung', label: 'Gedung', defaultVisible: true },
-  { key: 'kategori_alat', label: 'Kategori Alat', defaultVisible: true },
-  { key: 'interval_maintenance', label: 'Interval Maintenance (kali/tahun)', defaultVisible: true },
+  { key: 'harga_ganti', label: 'Harga Ganti (AIC)', defaultVisible: false },
+  { key: 'tahun_pengadaan', label: 'Tahun Pengadaan', defaultVisible: false },
+  { key: 'ruang_sekarang', label: 'Letak Saat Ini/Ruang', defaultVisible: false },
+  { key: 'gedung', label: 'Gedung', defaultVisible: false },
+  { key: 'kategori_alat', label: 'Kategori Alat', defaultVisible: false },
+  { key: 'interval_maintenance', label: 'Interval Maintenance (kali/tahun)', defaultVisible: false },
   { key: 'img_alat', label: 'Foto', defaultVisible: true },
-  { key: 'file_sertifikat', label: 'Sertifikat', defaultVisible: true },
+  { key: 'file_sertifikat', label: 'Sertifikat', defaultVisible: false },
   { key: 'kadaluwarsa', label: 'Berlaku Hingga', defaultVisible: true },
-  { key: 'file_sop', label: 'File SOP', defaultVisible: true },
-  { key: 'qrcode', label: 'QR Code', defaultVisible: true },
+  { key: 'file_sop', label: 'File SOP', defaultVisible: false },
+  { key: 'qrcode', label: 'QR Code', defaultVisible: false },
   { key: 'kondisi_alat', label: 'Kondisi Alat', defaultVisible: true },
   { key: 'actions', label: 'Aksi', defaultVisible: true, alwaysVisible: true }
 ];
@@ -470,7 +470,7 @@ export default function InventarisList() {
 
                     {/* No Seri */}
                     {isVisible('seri') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
+                      <td className="py-1.5 px-3 text-xs text-gray-600 whitespace-nowrap">
                         {item.seri || '-'}
                       </td>
                     )}

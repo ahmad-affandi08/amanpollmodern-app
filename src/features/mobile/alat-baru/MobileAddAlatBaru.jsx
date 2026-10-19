@@ -5,6 +5,7 @@ import { useCreateAlatBaru, useMasterNamaAlat, useToast, usePageTitle } from '..
 import { IMAGE_ACCEPT, IMAGE_HINT, validateImageFile } from '../validateImage';
 import Input from '../../../components/Input';
 import Button from '../../../components/Button';
+import SearchableSelect from '../../../components/SearchableSelect';
 
 export default function MobileAddAlatBaru() {
   usePageTitle('Tambah Alat Baru');
@@ -132,23 +133,18 @@ export default function MobileAddAlatBaru() {
             <label className="block text-sm font-semibold text-text-dark mb-2">
               Nama Alat <span className="text-danger-500">*</span>
             </label>
-            <select
+            <SearchableSelect
               name="nama_alat_id"
               value={formData.nama_alat_id}
               onChange={(e) => {
                 setFormData((prev) => ({ ...prev, nama_alat_id: e.target.value }));
                 setErrors((prev) => ({ ...prev, nama_alat_id: '' }));
               }}
-              className={`w-full px-4 py-3 rounded-xl border ${errors.nama_alat_id ? 'border-danger-500' : 'border-gray-200'
-                } focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all`}
-            >
-              <option value="">Pilih Nama Alat</option>
-              {namaAlatOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              options={namaAlatOptions}
+              placeholder="Pilih Nama Alat"
+              searchPlaceholder="Cari nama alat..."
+              className="!mb-0"
+            />
             {errors.nama_alat_id && (
               <p className="text-xs text-danger-500 mt-1">{errors.nama_alat_id}</p>
             )}

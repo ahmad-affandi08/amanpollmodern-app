@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, AlertCircle, Trash2 } from 'lucide-react';
+import { Search, Plus, AlertCircle, Trash2 } from 'lucide-react';
 import {
   useAduan,
   useDeleteAduan,
@@ -168,16 +168,14 @@ export default function AduanList() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <Input
-                  size="sm"
-                  placeholder="Cari aduan..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
-                />
-              </div>
+              <Input
+                size="sm"
+                placeholder="Cari aduan..."
+                icon={<Search size={16} />}
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="bg-bg-light border-none"
+              />
             </div>
 
             {/* Ruangan Filter */}
@@ -208,22 +206,20 @@ export default function AduanList() {
             <Input
               type="date"
               size="sm"
-              label=""
+              label="Dari Tanggal"
               value={filters.start_date}
               onChange={(e) => handleFilterChange('start_date', e.target.value)}
-              icon={<Calendar className="w-4 h-4" />}
               className="bg-bg-light border-none"
             />
             <Input
               type="date"
               size="sm"
-              label=""
+              label="Sampai Tanggal"
               value={filters.end_date}
               onChange={(e) => handleFilterChange('end_date', e.target.value)}
-              icon={<Calendar className="w-4 h-4" />}
               className="bg-bg-light border-none"
             />
-            <div className="flex items-center gap-3">
+            <div className="flex items-end gap-3">
               <Button
                 variant="outline"
                 size="sm"
