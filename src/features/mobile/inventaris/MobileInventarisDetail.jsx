@@ -7,6 +7,9 @@ import {
 import { useInventarisDetail } from '../../../hooks/queries/useInventarisQueries';
 import { rupiah } from '../../../utils/format';
 import UpdateLocationModal from './components/UpdateLocationModal';
+import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
+import { useAuth } from '../../../hooks';
+import { canManageKalibrasi } from '../../../utils/kalibrasi';
 
 
 const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
@@ -36,6 +39,7 @@ export default function MobileInventarisDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: inventaris, isLoading, isError } = useInventarisDetail(id);
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('info');
   const [isLocationModalOpen, setLocationModalOpen] = useState(false);
 
@@ -153,7 +157,7 @@ export default function MobileInventarisDetail() {
         {/* Tab Navigation */}
         <div className="px-5 mt-4">
           <div className="flex bg-gray-100/80 p-1 rounded-2xl backdrop-blur-sm">
-            {['info', 'aduan', 'pemeliharaan'].map((tab) => (
+            {['info', 'aduan', 'pemeliharaan', 'kalibrasi'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -212,6 +216,7 @@ export default function MobileInventarisDetail() {
                   <InfoRow icon={Zap} label="Daya" value={inventaris.daya ? `${inventaris.daya} Watt` : '-'} />
                   <InfoRow icon={DollarSign} label="Harga" value={rupiah(inventaris.harga)} />
                   <InfoRow icon={Calendar} label="Tahun Pengadaan" value={inventaris.tahun_pengadaan} />
+                  <InfoRow icon={Calendar} label="Awal Kalibrasi" value={inventaris.awal_kalibrasi} />
                   <InfoRow icon={Calendar} label="Kadaluwarsa" value={inventaris.kadaluwarsa} />
                 </div>
               </div>
@@ -400,6 +405,15 @@ export default function MobileInventarisDetail() {
                 ))
               )}
             </div>
+          )}
+
+          {/* TAB: KALIBRASI */}
+          {activeTab === 'kalibrasi' && (
+            <KalibrasiHistoryList
+              inventarisId={inventaris.id}
+              items={inventaris.kalibrasi_history || []}
+              canManage={canManageKalibrasi(user)}
+            />
           )}
         </div>
 

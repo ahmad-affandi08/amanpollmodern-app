@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench } from 'lucide-react';
+import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench, ShieldCheck } from 'lucide-react';
 import InventarisApi from '../../../api/InventarisApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
-import { usePageTitle } from '../../../hooks';
+import { usePageTitle, useAuth } from '../../../hooks';
+import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
+import { canManageKalibrasi } from '../../../utils/kalibrasi';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
@@ -14,6 +16,7 @@ export default function InventarisDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,8 +26,8 @@ export default function InventarisDetail() {
     fetchDetail();
   }, [id]);
 
-  const fetchDetail = async () => {
-    setLoading(true);
+  const fetchDetail = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const response = await InventarisApi.getById(id);
       setData(response.data || response);
@@ -33,7 +36,7 @@ export default function InventarisDetail() {
       showToast('Gagal memuat detail inventaris', 'error');
       navigate('/inventaris');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -113,7 +116,8 @@ export default function InventarisDetail() {
           {[
             { id: 'info', label: 'Informasi Alat', icon: FileText },
             { id: 'aduan', label: 'Riwayat Aduan', icon: AlertCircle },
-            { id: 'pemeliharaan', label: 'Riwayat Pemeliharaan', icon: Wrench }
+            { id: 'pemeliharaan', label: 'Riwayat Pemeliharaan', icon: Wrench },
+            { id: 'kalibrasi', label: 'Riwayat Kalibrasi', icon: ShieldCheck }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -159,6 +163,7 @@ export default function InventarisDetail() {
 
               <DetailField label="Gedung" value={data.gedung} />
               <DetailField label="Interval Maintenance" value={data.interval_maintenance} />
+              <DetailField label="Awal Kalibrasi" value={formatDate(data.awal_kalibrasi)} />
               <DetailField label="Berlaku Hingga" value={formatDate(data.kadaluwarsa)} />
               <DetailField label="Kondisi Alat" value={data.kondisi_alat} />
               <DetailField
@@ -416,6 +421,16 @@ export default function InventarisDetail() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab: Kalibrasi */}
+      {activeTab === 'kalibrasi' && (
+        <KalibrasiHistoryList
+          inventarisId={data.id}
+          items={data.kalibrasi_history || []}
+          canManage={canManageKalibrasi(user)}
+          onChanged={() => fetchDetail(true)}
+        />
       )}
     </div>
   );
