@@ -13,6 +13,7 @@ export const usePemeliharaan = (filters = {}) => {
         meta: res.meta,
       };
     },
+    placeholderData: keepPreviousData,
   });
 };
 

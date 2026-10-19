@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import NotificationApi from '../../api/NotificationApi';
 import { queryKeys } from '../../lib/queryKeys';
 
@@ -38,6 +38,7 @@ export const useNotifications = (page = 1, perPage = 20) => {
         meta: res.data?.meta,
       };
     },
+    placeholderData: keepPreviousData,
   });
 };
 

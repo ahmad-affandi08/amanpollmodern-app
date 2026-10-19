@@ -13,6 +13,7 @@ export const useAduan = (filters = {}) => {
         meta: res.meta,
       };
     },
+    placeholderData: keepPreviousData,
   });
 };
 

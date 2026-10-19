@@ -14,6 +14,7 @@ export const useDashboardStats = (filters = {}) => {
     queryFn: () => DashboardApi.getStats(filters),
     staleTime: 2 * 60 * 1000,
 
+    placeholderData: keepPreviousData,
   });
 };
 
