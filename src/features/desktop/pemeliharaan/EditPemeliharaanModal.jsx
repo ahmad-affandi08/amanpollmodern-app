@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
 import Select from '../../../components/Select';
@@ -67,6 +68,7 @@ export default function EditPemeliharaanModal({ isOpen, onClose, onSuccess, peme
 
     try {
       await PemeliharaanApi.update(pemeliharaan.id_pemeliharaan || pemeliharaan.id, formData);
+      await refreshAllData();
       showToast('Jadwal berhasil diperbarui', 'success');
       onSuccess();
       onClose();

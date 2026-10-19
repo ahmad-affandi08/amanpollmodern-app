@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import { Calendar, User, CheckSquare, Plus, Trash2 } from 'lucide-react';
 import Modal from '../../../components/Modal';
 import Button from '../../../components/Button';
@@ -207,6 +208,7 @@ export default function AddPemeliharaanModal({ isOpen, onClose, onSuccess }) {
       };
 
       await PemeliharaanApi.create(payload);
+      await refreshAllData();
       showToast(`${schedules.length} jadwal berhasil dibuat`, 'success');
       onSuccess();
       onClose();

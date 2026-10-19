@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../../lib/queryClient';
 import { Edit2, Trash2, Plus, Search, Users } from 'lucide-react';
 import {
   useMasterUsers,
@@ -108,6 +109,7 @@ export default function MasterUser() {
         setConfirmDialog({ isOpen: false });
         try {
           await MasterApi.toggleUserStatus(item.id_user, newStatus);
+          await refreshAllData();
           showToast(`Status user berhasil diubah menjadi ${newStatus ? 'Active' : 'Inactive'}`, 'success');
           refetch();
         } catch (error) {

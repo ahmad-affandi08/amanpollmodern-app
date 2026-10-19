@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/AuthContext';
 import ToastProvider from './components/Alert/ToastProvider';
@@ -302,20 +303,6 @@ const router = createBrowserRouter(
   }
 );
 
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      cacheTime: 10 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
 
 function App() {
   return (

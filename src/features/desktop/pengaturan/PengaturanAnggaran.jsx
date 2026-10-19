@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { refreshAllData } from '../../../lib/queryClient';
 import { Save, Trash2, TrendingUp, DollarSign, Calendar, Plus } from 'lucide-react';
 import AnggaranApi from '../../../api/AnggaranApi';
 import Button from '../../../components/Button';
@@ -48,6 +49,7 @@ export default function PengaturanAnggaran() {
     try {
       setUpdateLoading(true);
       const res = await AnggaranApi.updateRab({ persentase: rabInput });
+      refreshAllData();
       setRabData(res.data.data);
       showToast('Persentase RAB berhasil diperbarui', 'success');
     } catch (error) {
@@ -64,6 +66,7 @@ export default function PengaturanAnggaran() {
       setUpdateLoading(true);
 
       await AnggaranApi.createInflasi(inflasiForm);
+      refreshAllData();
       showToast('Data inflasi berhasil ditambahkan', 'success');
       setInflasiForm({
         tahun: new Date().getFullYear(),
@@ -86,6 +89,7 @@ export default function PengaturanAnggaran() {
   const confirmDeleteInflasi = async () => {
     try {
       await AnggaranApi.deleteInflasi(confirmDialog.id);
+      refreshAllData();
       showToast('Data inflasi berhasil dihapus', 'success');
       setConfirmDialog({ isOpen: false, id: null });
       fetchData();
