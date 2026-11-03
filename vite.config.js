@@ -80,6 +80,11 @@ export default defineConfig({
     }
   },
   build: {
+    // Hasil build langsung ke public Laravel: satu folder (backend) untuk diunggah, satu domain untuk
+    // aplikasi + API. emptyOutDir WAJIB false: public berisi index.php, .htaccess, storage, dll.
+    // Berkas build lama dibersihkan oleh scripts/clean-backend-public.mjs (hook `prebuild`).
+    outDir: '../backend/public',
+    emptyOutDir: false,
     rollupOptions: {
       output: {
         manualChunks: {
