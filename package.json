@@ -1,11 +1,11 @@
 {
-  "name": "frontend",
+  "name": "application",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/clean-backend-public.mjs",
+    "prebuild": "node scripts/clean-webservices-public.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

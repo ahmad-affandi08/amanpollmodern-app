@@ -1,7 +1,7 @@
 /**
  * Base URL API. Dipakai axios dan semua link unduhan/ekspor.
  *
- * Default `/api` (relatif): aplikasi dan API satu domain (hasil build ada di backend/public), jadi satu
+ * Default `/api` (relatif): aplikasi dan API satu domain (hasil build ada di webservices/public), jadi satu
  * build berlaku untuk domain mana pun tanpa mengganti URL. Isi VITE_API_URL dengan URL absolut hanya
  * bila API ada di domain lain. Saat `npm run dev`, `/api` diteruskan ke server lewat proxy di vite.config.js.
  */
