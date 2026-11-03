@@ -4,7 +4,6 @@ import { queryClient } from './lib/queryClient';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/AuthContext';
 import ToastProvider from './components/Alert/ToastProvider';
-import LandingPage from './features/LandingPage';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
@@ -86,7 +85,9 @@ const mobilePage = (element, roles = ACCESS.mobile) => (
 const guestOnly = (element) => <PublicOnlyRoute>{element}</PublicOnlyRoute>;
 
 const routes = [
-  { path: '/', element: <LandingPage /> },
+  // Landing page (features/LandingPage.jsx) disembunyikan: beranda langsung ke login. Pengguna yang
+  // sudah login dialihkan PublicOnlyRoute ke beranda perannya.
+  { path: '/', element: <Navigate to="/login" replace /> },
   { path: '/login', element: guestOnly(<Login />) },
   { path: '/register', element: guestOnly(<Register />) },
   { path: '/forgot-password', element: guestOnly(<ForgotPassword />) },
