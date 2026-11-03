@@ -3,22 +3,22 @@ import KonfigurasiApi from '../../api/KonfigurasiApi';
 import { queryKeys } from '../../lib/queryKeys';
 
 
-export const useFonnteConfig = () => {
+export const useWhatsAppConfig = () => {
   return useQuery({
-    queryKey: queryKeys.konfigurasi.fonnte(),
+    queryKey: queryKeys.konfigurasi.whatsapp(),
     queryFn: async () => {
-      const res = await KonfigurasiApi.getFonnteConfig();
+      const res = await KonfigurasiApi.getWhatsAppConfig();
       return res.data || {};
     },
   });
 };
 
 
-export const useSaveFonnteConfig = () => {
+export const useSaveWhatsAppConfig = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => KonfigurasiApi.saveFonnteConfig(data),
+    mutationFn: (data) => KonfigurasiApi.saveWhatsAppConfig(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.konfigurasi.all });
     },
@@ -26,8 +26,8 @@ export const useSaveFonnteConfig = () => {
 };
 
 
-export const useTestFonnteConnection = () => {
+export const useTestWhatsAppConnection = () => {
   return useMutation({
-    mutationFn: (apiToken) => KonfigurasiApi.testFonnteConnection(apiToken),
+    mutationFn: (data) => KonfigurasiApi.testWhatsAppConnection(data),
   });
 };

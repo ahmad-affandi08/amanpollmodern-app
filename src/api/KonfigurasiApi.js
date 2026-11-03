@@ -2,13 +2,14 @@ import axiosClient from './axiosClient';
 
 const KonfigurasiApi = {
 
-  getFonnteConfig: () => axiosClient.get('/konfigurasi/fonnte'),
+  // WhatsApp multi-provider: GET mengembalikan semua provider + yang aktif (rahasia tersamar).
+  getWhatsAppConfig: () => axiosClient.get('/konfigurasi/whatsapp'),
 
+  // { provider, fields } - rahasia tersamar/kosong berarti "pakai yang tersimpan".
+  saveWhatsAppConfig: (data) => axiosClient.post('/konfigurasi/whatsapp', data),
 
-  saveFonnteConfig: (data) => axiosClient.post('/konfigurasi/fonnte', data),
-
-
-  testFonnteConnection: (apiToken) => axiosClient.post('/konfigurasi/fonnte/test', { api_token: apiToken }),
+  // { provider, fields, test_target? } - test_target wajib untuk provider tanpa uji pasif.
+  testWhatsAppConnection: (data) => axiosClient.post('/konfigurasi/whatsapp/test', data),
 
   getNotificationTemplates: () => axiosClient.get('/notification-templates'),
   getNotificationTemplate: (kode) => axiosClient.get(`/notification-templates/${kode}`),

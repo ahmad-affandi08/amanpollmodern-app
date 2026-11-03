@@ -65,6 +65,6 @@ export const queryKeys = {
 
   konfigurasi: {
     all: ['konfigurasi'],
-    fonnte: () => [...queryKeys.konfigurasi.all, 'fonnte'],
+    whatsapp: () => [...queryKeys.konfigurasi.all, 'whatsapp'],
   },
 };
