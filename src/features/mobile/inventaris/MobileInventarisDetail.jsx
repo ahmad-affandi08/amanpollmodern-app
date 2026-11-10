@@ -192,6 +192,11 @@ export default function MobileInventarisDetail() {
                 </h3>
 
                 <div className="space-y-0.5">
+                  <InfoRow
+                    icon={Info}
+                    label="Tingkat Risiko"
+                    value={inventaris.nama_alat?.tingkat_risiko ? `${inventaris.nama_alat.tingkat_risiko} (skor ${inventaris.nama_alat.skor_risiko})` : 'Belum dinilai'}
+                  />
                   <InfoRow icon={Tag} label="Merk" value={inventaris.merk} />
                   <InfoRow icon={Info} label="Model/Tipe" value={inventaris.model} />
                   <InfoRow icon={Info} label="No Seri" value={inventaris.seri} />

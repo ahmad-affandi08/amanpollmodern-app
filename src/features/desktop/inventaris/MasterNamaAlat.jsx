@@ -14,12 +14,17 @@ import {
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
+import Select from '../../../components/Select';
+import RisikoBadge from '../../../components/RisikoBadge';
+import { SKOR_FUNGSI, SKOR_RISIKO_KLINIS, SKOR_PEMELIHARAAN, KELAS_AMDD, hitungRisiko } from '../../../utils/risiko';
 import Modal from '../../../components/Modal';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Pagination from '../../../components/Pagination';
 import ChecklistMaintenanceModal from './components/ChecklistMaintenanceModal';
 import TableSkeleton from '../../../components/TableSkeleton';
+
+const RISIKO_KOSONG = { skor_fungsi: '', skor_risiko_klinis: '', skor_pemeliharaan: '', kelas_amdd: '' };
 
 export default function MasterNamaAlat() {
   usePageTitle('Master Nama Alat');
@@ -35,7 +40,8 @@ export default function MasterNamaAlat() {
     nama_nama_alat: '',
     standar_usia_pakai: '',
     kategori_alat_id: '',
-    divisi_id: ''
+    divisi_id: '',
+    ...RISIKO_KOSONG
   });
 
   const { showToast } = useToast();
@@ -78,7 +84,8 @@ export default function MasterNamaAlat() {
       nama_nama_alat: '',
       standar_usia_pakai: '',
       kategori_alat_id: '',
-      divisi_id: ''
+      divisi_id: '',
+      ...RISIKO_KOSONG
     });
     modal.open();
   };
@@ -88,7 +95,11 @@ export default function MasterNamaAlat() {
       nama_nama_alat: item.nama_nama_alat,
       standar_usia_pakai: item.standar_usia_pakai,
       kategori_alat_id: item.kategori_alat_id || item.kategori_alat?.id_kategori_alat || '',
-      divisi_id: item.divisi_id || item.divisi?.id_divisi || ''
+      divisi_id: item.divisi_id || item.divisi?.id_divisi || '',
+      skor_fungsi: item.skor_fungsi ?? '',
+      skor_risiko_klinis: item.skor_risiko_klinis ?? '',
+      skor_pemeliharaan: item.skor_pemeliharaan ?? '',
+      kelas_amdd: item.kelas_amdd ?? ''
     });
     modal.open(item);
   };
@@ -117,6 +128,10 @@ export default function MasterNamaAlat() {
         standar_usia_pakai: parseInt(formData.standar_usia_pakai) || 0,
         kategori_alat_id: formData.kategori_alat_id ? parseInt(formData.kategori_alat_id) : null,
         divisi_id: formData.divisi_id ? parseInt(formData.divisi_id) : null,
+        skor_fungsi: formData.skor_fungsi ? parseInt(formData.skor_fungsi) : null,
+        skor_risiko_klinis: formData.skor_risiko_klinis ? parseInt(formData.skor_risiko_klinis) : null,
+        skor_pemeliharaan: formData.skor_pemeliharaan ? parseInt(formData.skor_pemeliharaan) : null,
+        kelas_amdd: formData.kelas_amdd || null,
       };
 
       if (modal.data?.id) {
@@ -133,6 +148,9 @@ export default function MasterNamaAlat() {
     }
   };
 
+
+  const setField = (name) => (e) => setFormData({ ...formData, [name]: e.target.value });
+  const risiko = hitungRisiko(formData.skor_fungsi, formData.skor_risiko_klinis, formData.skor_pemeliharaan);
 
   const categoryOptions = categories.map(cat => ({
     value: cat.id_kategori_alat || cat.id,
@@ -191,15 +209,16 @@ export default function MasterNamaAlat() {
                 <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Kategori</th>
                 <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Divisi</th>
                 <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Usia Pakai</th>
+                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Risiko</th>
                 <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <TableSkeleton rows={5} columns={6} />
+                <TableSkeleton rows={5} columns={7} />
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center">
+                  <td colSpan="7" className="py-12 text-center">
                     <Package size={32} className="mx-auto text-gray-400 mb-4" />
                     <p className="font-bold text-gray-600">Belum ada data</p>
                     <p className="text-sm text-gray-400 mt-1">Silakan tambahkan nama alat baru</p>
@@ -223,6 +242,7 @@ export default function MasterNamaAlat() {
                       </div>
                     </td>
                     <td className="py-2 px-4 text-sm font-bold">{item.standar_usia_pakai} Tahun</td>
+                    <td className="py-2 px-4"><RisikoBadge tingkat={item.tingkat_risiko} skor={item.skor_risiko} size="sm" /></td>
                     <td className="py-2 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
@@ -310,6 +330,48 @@ export default function MasterNamaAlat() {
             placeholder="Contoh: 5"
             required
           />
+
+          <div className="border-t border-gray-100 pt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-text-dark">Penilaian Risiko (Fennig-Koh)</h3>
+              <RisikoBadge tingkat={risiko?.tingkat} skor={risiko?.total} />
+            </div>
+            <Select
+              label="Fungsi Alat"
+              value={formData.skor_fungsi}
+              onChange={setField('skor_fungsi')}
+              options={SKOR_FUNGSI}
+              placeholder="Belum dinilai"
+              placeholderDisabled={false}
+            />
+            <Select
+              label="Risiko Klinis (bila alat gagal)"
+              value={formData.skor_risiko_klinis}
+              onChange={setField('skor_risiko_klinis')}
+              options={SKOR_RISIKO_KLINIS}
+              placeholder="Belum dinilai"
+              placeholderDisabled={false}
+            />
+            <Select
+              label="Persyaratan Pemeliharaan"
+              value={formData.skor_pemeliharaan}
+              onChange={setField('skor_pemeliharaan')}
+              options={SKOR_PEMELIHARAAN}
+              placeholder="Belum dinilai"
+              placeholderDisabled={false}
+            />
+            <Select
+              label="Kelas Risiko Kemenkes (opsional)"
+              value={formData.kelas_amdd}
+              onChange={setField('kelas_amdd')}
+              options={KELAS_AMDD}
+              placeholder="Tidak diisi"
+              placeholderDisabled={false}
+            />
+            <p className="text-xs text-gray-500">
+              Isi ketiga skor sekaligus atau kosongkan semuanya. Tinggi (9-12): PM 2x/tahun; Sedang (6-8) dan Rendah (3-5): PM 1x/tahun.
+            </p>
+          </div>
         </form>
       </Modal>
 

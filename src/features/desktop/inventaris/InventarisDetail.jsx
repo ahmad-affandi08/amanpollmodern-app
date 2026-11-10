@@ -154,6 +154,10 @@ export default function InventarisDetail() {
               <DetailField label="Berlaku Hingga" value={formatDate(data.kadaluwarsa)} />
               <DetailField label="Kondisi Alat" value={data.kondisi_alat} />
               <DetailField
+                label="Tingkat Risiko"
+                value={data.nama_alat?.tingkat_risiko ? `${data.nama_alat.tingkat_risiko} (skor ${data.nama_alat.skor_risiko})` : 'Belum dinilai'}
+              />
+              <DetailField
                 label="Alat Kesehatan"
                 value={data.alat_kesehatan ? 'Ya' : 'Tidak'}
               />

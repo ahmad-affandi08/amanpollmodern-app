@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Download, Calendar, Layers, Edit2, Trash2, Eye } from 'lucide-react';
 import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
 import KondisiBadge from '../../../components/KondisiBadge';
+import RisikoBadge from '../../../components/RisikoBadge';
 import {
   useInventaris,
   useDeleteInventaris,
@@ -55,6 +56,7 @@ const COLUMN_DEFS = [
   { key: 'kadaluwarsa', label: 'Berlaku Hingga', defaultVisible: true },
   { key: 'file_sop', label: 'File SOP', defaultVisible: false },
   { key: 'qrcode', label: 'QR Code', defaultVisible: false },
+  { key: 'risiko', label: 'Tingkat Risiko', defaultVisible: true },
   { key: 'kondisi_alat', label: 'Kondisi Alat', defaultVisible: true },
   { key: 'actions', label: 'Aksi', defaultVisible: true, alwaysVisible: true }
 ];
@@ -402,6 +404,7 @@ export default function InventarisList() {
                 {isVisible('kadaluwarsa') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Berlaku Hingga</th>}
                 {isVisible('file_sop') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">File SOP</th>}
                 {isVisible('qrcode') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">QR Code</th>}
+                {isVisible('risiko') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Risiko</th>}
                 {isVisible('kondisi_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Kondisi Alat</th>}
                 {isVisible('actions') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase text-right">Aksi</th>}
               </tr>
@@ -636,6 +639,13 @@ export default function InventarisList() {
                         ) : (
                           <span className="text-gray-400">Tidak ada QR</span>
                         )}
+                      </td>
+                    )}
+
+                    {/* Risiko */}
+                    {isVisible('risiko') && (
+                      <td className="py-1.5 px-3 text-xs">
+                        <RisikoBadge tingkat={item.nama_alat?.tingkat_risiko} skor={item.nama_alat?.skor_risiko} size="sm" />
                       </td>
                     )}
 
