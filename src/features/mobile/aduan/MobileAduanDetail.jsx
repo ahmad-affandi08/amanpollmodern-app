@@ -7,6 +7,7 @@ import {
 import { usePageTitle, useAduanDetail } from '../../../hooks';
 import { apiUrl } from '../../../config';
 import { formatDateTime, formatDate, rupiah } from '../../../utils/format';
+import RisikoBadge from '../../../components/RisikoBadge';
 import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
@@ -89,6 +90,12 @@ export default function MobileAduanDetail() {
           </div>
         </div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">{aduan.nama_alat_nama}</h2>
+        {aduan.tingkat_risiko === 'Tinggi' && (
+          <div className="mb-2 flex items-center gap-2">
+            <RisikoBadge tingkat="Tinggi" size="sm" />
+            <span className="text-xs text-red-600 font-medium">Alat risiko tinggi: prioritaskan penanganan</span>
+          </div>
+        )}
         <p className="text-sm text-gray-500 mb-2">{aduan.no_inventaris}</p>
         <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
           <p className="text-xs text-gray-500 mb-1 font-medium">Keluhan:</p>

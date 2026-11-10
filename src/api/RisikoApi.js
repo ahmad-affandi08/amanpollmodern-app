@@ -7,6 +7,9 @@ const RisikoApi = {
   // inventaris_ids kosong/null = semua alat yang interval-nya kurang dalam cakupan pengguna.
   terapkanInterval: async (inventarisIds = null) =>
     (await axiosClient.post('/risiko/terapkan-interval', { inventaris_ids: inventarisIds })).data,
+  // format: 'xls' (default) atau 'pdf'. Mengembalikan Blob.
+  exportRegister: async (params = {}, format = 'xls') =>
+    (await axiosClient.get('/risiko/export', { params: { ...params, format }, responseType: 'blob', timeout: 120000 })).data,
 };
 
 export default RisikoApi;

@@ -6,6 +6,7 @@ import Pagination from '../../../components/Pagination';
 import TableSkeleton from '../../../components/TableSkeleton';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
+import RisikoBadge from '../../../components/RisikoBadge';
 import { CheckCircle, Trash2, Eye, Construction, Search, AlertCircle } from 'lucide-react';
 import AlatBaruDetailModal from './components/AlatBaruDetailModal';
 import noImage from '../../../assets/img/no_image.png';
@@ -184,6 +185,9 @@ export default function AlatBaruList() {
                     <td className="py-3 px-4">
                       <div className="text-xs font-bold text-text-dark">{item.nama_alat?.nama_nama_alat || '-'}</div>
                       <div className="text-[10px] text-text-gray">{item.merk} - {item.model}</div>
+                      <div className="mt-1">
+                        <RisikoBadge tingkat={item.nama_alat?.tingkat_risiko} skor={item.nama_alat?.skor_risiko} size="sm" />
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700">
@@ -204,9 +208,9 @@ export default function AlatBaruList() {
                         </button>
                         <button
                           onClick={() => handleApproveClick(item)}
-                          disabled={approveMutation.isPending || deleteMutation.isPending}
+                          disabled={approveMutation.isPending || deleteMutation.isPending || !item.nama_alat?.tingkat_risiko}
                           className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                          title="Setujui"
+                          title={item.nama_alat?.tingkat_risiko ? 'Setujui' : 'Nilai risiko jenis alat ini dulu di menu Register Risiko'}
                         >
                           <CheckCircle size={16} />
                         </button>

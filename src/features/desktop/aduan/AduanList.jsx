@@ -24,6 +24,7 @@ import AssignTeknisiModal from './AssignTeknisiModal';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import StatusBadge from '../../../components/StatusBadge';
+import RisikoBadge from '../../../components/RisikoBadge';
 import { isReadOnlyRole } from '../../auth/constants';
 import { formatDateTime } from '../../../utils/format';
 import useTeknisiList from '../pemeliharaan/useTeknisiList';
@@ -308,6 +309,11 @@ export default function AduanList() {
                       <td className="py-3 px-4 text-gray-600">
                         <div className="flex flex-col">
                           <span className="font-medium text-text-dark">{item.nama_alat_nama || '-'}</span>
+                          {item.tingkat_risiko === 'Tinggi' && (
+                            <span className="mt-1 w-fit" title="Alat risiko tinggi: prioritaskan penanganan">
+                              <RisikoBadge tingkat="Tinggi" size="sm" />
+                            </span>
+                          )}
                         </div>
                       </td>
                     )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert, Search, AlertTriangle, ClipboardCheck, Wrench } from 'lucide-react';
+import { ShieldAlert, Search, AlertTriangle, ClipboardCheck, Wrench, Download } from 'lucide-react';
 import {
   useRisikoRegister,
   useRisikoRingkasan,
@@ -24,6 +24,7 @@ import TableSkeleton from '../../../components/TableSkeleton';
 import RisikoBadge from '../../../components/RisikoBadge';
 import { ACCESS, ROLES, hasRole, isRole } from '../../auth/constants';
 import { formatDateShort } from '../../../utils/format';
+import RisikoApi from '../../../api/RisikoApi';
 import {
   SKOR_FUNGSI, SKOR_RISIKO_KLINIS, SKOR_PEMELIHARAAN, KELAS_AMDD, hitungRisiko,
 } from '../../../utils/risiko';
@@ -140,6 +141,26 @@ export default function RegisterRisiko() {
     }
   };
 
+  const [exporting, setExporting] = useState(false);
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const blob = await RisikoApi.exportRegister({ ...filters, search: debouncedSearch }, format);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `register_risiko_${new Date().toISOString().slice(0, 10)}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      showToast('Gagal mengekspor register risiko', 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const risiko = hitungRisiko(skor.skor_fungsi, skor.skor_risiko_klinis, skor.skor_pemeliharaan);
   const setSkorField = (name) => (e) => setSkor((prev) => ({ ...prev, [name]: e.target.value }));
 
@@ -156,14 +177,24 @@ export default function RegisterRisiko() {
         onCancel={() => setConfirm(null)}
       />
 
-      <div>
-        <h1 className="text-xl font-bold text-text-dark flex items-center gap-2">
-          <ShieldAlert size={22} className="text-brand-primary" />
-          Register Risiko Alat
-        </h1>
-        <p className="text-text-gray text-xs mt-1">
-          Tingkat risiko peralatan medis metode Fennig-Koh (MFK 7) dan kesesuaian interval pemeliharaan.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-text-dark flex items-center gap-2">
+            <ShieldAlert size={22} className="text-brand-primary" />
+            Register Risiko Alat
+          </h1>
+          <p className="text-text-gray text-xs mt-1">
+            Tingkat risiko peralatan medis metode Fennig-Koh (MFK 7) dan kesesuaian interval pemeliharaan.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" className="py-1.5 px-3 text-xs flex items-center gap-1.5" onClick={() => handleExport('xls')} disabled={exporting}>
+            <Download size={14} /> Excel
+          </Button>
+          <Button variant="ghost" className="py-1.5 px-3 text-xs flex items-center gap-1.5" onClick={() => handleExport('pdf')} disabled={exporting}>
+            <Download size={14} /> PDF
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
