@@ -7,6 +7,7 @@ import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
 import SignaturePad from '../../../components/SignaturePad';
 import SearchableSelect from '../../../components/SearchableSelect';
+import Input from '../../../components/Input';
 import axiosClient from '../../../api/axiosClient';
 
 export default function MobileAduanFormTeknisi() {
@@ -393,14 +394,13 @@ export default function MobileAduanFormTeknisi() {
           <label className="text-xs font-bold text-gray-700 mb-2 block">
             {formData.status_aduan === 'Selesai' ? 'Biaya Riil Perbaikan (Rp)' : 'Estimasi Biaya Perbaikan (Rp)'}
           </label>
-          <input
-            type="number"
+          <Input
+            currency
             name="biaya"
             value={formData.biaya}
             onChange={handleChange}
-            placeholder="Contoh: 150000"
-            min="0"
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+            placeholder="Contoh: 150.000"
+            inputMode="numeric"
             required
           />
           <small className="text-xs text-gray-500 mt-1 block">

@@ -6,6 +6,7 @@ import { formatDateTime, rupiah } from '../../../utils/format';
 import SignaturePad from '../../../components/SignaturePad';
 import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
+import Input from '../../../components/Input';
 
 const SELECT_CLASS =
   'w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white';
@@ -402,13 +403,13 @@ function FormBody({ id, data }) {
           <label className="block text-sm font-bold text-gray-800 mb-2">
             {formData.status === 'Selesai' ? 'Biaya Riil Pemeliharaan (Rp)' : 'Estimasi Biaya Pemeliharaan (Rp)'}
           </label>
-          <input
-            type="number"
+          <Input
+            currency
+            name="biaya"
             value={formData.biaya}
             onChange={(e) => setFormData(prev => ({ ...prev, biaya: parseFloat(e.target.value) || 0 }))}
-            placeholder="Contoh: 75000"
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-            min="0"
+            placeholder="Contoh: 75.000"
+            inputMode="numeric"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
