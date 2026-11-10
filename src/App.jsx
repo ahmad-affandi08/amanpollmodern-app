@@ -70,6 +70,8 @@ import KinerjaTeknisiPage from './features/desktop/analisis/KinerjaTeknisiPage';
 import SebaranRuanganPage from './features/desktop/analisis/SebaranRuanganPage';
 import BiayaPemeliharaanPage from './features/desktop/analisis/BiayaPemeliharaanPage';
 import KepatuhanKalibrasiPage from './features/desktop/analisis/KepatuhanKalibrasiPage';
+import KepatuhanRisikoPage from './features/desktop/analisis/KepatuhanRisikoPage';
+import RegisterRisiko from './features/desktop/risiko/RegisterRisiko';
 /** Halaman desktop: butuh login, dibatasi peran (jika ada), dan dibungkus layout dashboard. */
 const desktopPage = (element, roles = []) => (
   <ProtectedRoute allowedRoles={roles}>
@@ -140,6 +142,8 @@ const routes = [
   { path: '/analisis/ruangan', element: desktopPage(<SebaranRuanganPage />, ACCESS.analisis) },
   { path: '/analisis/biaya', element: desktopPage(<BiayaPemeliharaanPage />, ACCESS.analisis) },
   { path: '/analisis/kalibrasi', element: desktopPage(<KepatuhanKalibrasiPage />, ACCESS.analisis) },
+  { path: '/analisis/risiko', element: desktopPage(<KepatuhanRisikoPage />, ACCESS.analisis) },
+  { path: '/risiko', element: desktopPage(<RegisterRisiko />, ACCESS.risiko) },
 
   {
     path: '/mobile',

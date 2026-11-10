@@ -53,6 +53,9 @@ export const ACCESS = {
   users: [ROLES.SUPER_ADMIN],
   konfigurasi: [ROLES.SUPER_ADMIN],
   analisis: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN],
+  // Register risiko alat: pemantau melihat; hanya Super Admin dan Admin Divisi yang menilai/menyesuaikan.
+  risiko: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN],
+  risikoKelola: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI],
 
   // Mobile
   mobile: [ROLES.TEKNISI, ROLES.USER_RUANGAN],

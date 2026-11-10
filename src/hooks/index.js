@@ -11,6 +11,7 @@ export * from './queries/useProfileQueries';
 export * from './queries/useAlatBaruQueries';
 export * from './queries/useAnalisisQueries';
 export * from './queries/useDisposisiQueries';
+export * from './queries/useRisikoQueries';
 
 
 export * from './mutations/useDisposisiMutations';

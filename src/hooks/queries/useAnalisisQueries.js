@@ -46,3 +46,10 @@ export const useAnalisisKalibrasi = () => {
     queryFn: async () => unwrap(await AnalisisApi.getKalibrasi()),
   });
 };
+
+export const useAnalisisRisiko = () => {
+  return useQuery({
+    queryKey: [...ANALISIS_KEY, 'risiko'],
+    queryFn: async () => unwrap(await AnalisisApi.getRisiko()),
+  });
+};

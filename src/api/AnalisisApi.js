@@ -6,6 +6,7 @@ const AnalisisApi = {
   getSebaranRuangan: () => axiosClient.get('/analisis/ruangan'),
   getBiaya: () => axiosClient.get('/analisis/biaya'),
   getKalibrasi: () => axiosClient.get('/analisis/kalibrasi'),
+  getRisiko: () => axiosClient.get('/analisis/risiko'),
 };
 
 export default AnalisisApi;

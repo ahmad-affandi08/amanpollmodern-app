@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
   Wallet, Users, QrCode, LogOut, Menu, X, ChevronDown, ChevronRight,
   User as UserIcon, Layers, Tag, Server, PlusCircle, Settings, Phone,
-  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck
+  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
 import { ACCESS, getRoleId } from '../features/auth/constants';
@@ -123,6 +123,12 @@ export default function DashboardLayout({ children }) {
       ]
     },
     {
+      icon: ShieldAlert,
+      label: 'Register Risiko',
+      path: '/risiko',
+      roles: ACCESS.risiko
+    },
+    {
       icon: Wallet,
       label: 'Anggaran & Biaya',
       roles: ACCESS.anggaran,
@@ -163,6 +169,7 @@ export default function DashboardLayout({ children }) {
         { icon: Map, label: 'Sebaran Ruangan', path: '/analisis/ruangan' },
         { icon: DollarSign, label: 'Biaya Pemeliharaan', path: '/analisis/biaya' },
         { icon: ShieldCheck, label: 'Kepatuhan Kalibrasi', path: '/analisis/kalibrasi' },
+        { icon: ShieldAlert, label: 'Kepatuhan PM per Risiko', path: '/analisis/risiko' },
       ]
     },
     {

@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import {
-  Package, DollarSign, Activity, CheckCircle2, AlertCircle, Plus, QrCode, FileText
+  Package, DollarSign, Activity, CheckCircle2, AlertCircle, Plus, QrCode, FileText, ShieldAlert
 } from 'lucide-react';
 import { useDashboardStats, useMasterDivisi, useFilters, useAuth, usePageTitle } from '../../../hooks';
 import { useNavigate, Link } from 'react-router-dom';
@@ -173,7 +173,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard
           icon={<Package size={20} />}
           title="Total Aset Inventaris"
@@ -208,6 +208,15 @@ export default function Dashboard() {
           bgColor="bg-gradient-to-br from-[#F0F9FF] via-[#E3F2FF] to-[#93C5FD]"
           iconColor="text-[#2563EB]"
           cardBgColor="bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30"
+        />
+        <StatCard
+          icon={<ShieldAlert size={20} />}
+          title="Alat Risiko Tinggi"
+          value={`${formatNumber(Number(stats.risiko_tinggi) || 0)} Unit`}
+          subValue="Fennig-Koh skor 9-12"
+          bgColor="bg-gradient-to-br from-[#FFF1F2] via-[#FFE0E3] to-[#FCA5A5]"
+          iconColor="text-[#DC2626]"
+          cardBgColor="bg-gradient-to-br from-red-50/50 via-white to-red-50/30"
         />
       </div>
 
