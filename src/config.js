@@ -18,3 +18,6 @@ export const apiUrl = (path, params) => {
 
   return query ? `${url}?${query}` : url;
 };
+
+/** Nomor versi aplikasi (dari package.json saat build). 'dev' hanya bila dijalankan di luar build. */
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';

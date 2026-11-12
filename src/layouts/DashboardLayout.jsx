@@ -14,6 +14,7 @@ import IconLogo from '../assets/img/icon-logo-amanpoll.png';
 import NotificationBell from '../components/NotificationBell';
 import ConfirmDialog from '../components/Alert/Alert';
 import GlobalSearch from '../components/GlobalSearch';
+import { APP_VERSION } from '../config';
 
 // Label breadcrumb untuk halaman yang tidak punya entri menu sendiri.
 const DETAIL_CRUMBS = [
@@ -342,6 +343,14 @@ export default function DashboardLayout({ children }) {
               </div>
             ))}
           </nav>
+
+          {/* Nomor versi aplikasi */}
+          <div
+            className="px-3 py-2.5 text-center text-[11px] font-semibold text-white/85 select-none truncate"
+            title={`AmanPoll versi ${APP_VERSION}`}
+          >
+            {collapsed ? `v${APP_VERSION}` : `Versi ${APP_VERSION}`}
+          </div>
 
           {/* User Profile in Sidebar (Mobile Only) */}
           <div className="lg:hidden p-4 border-t border-white/10 bg-white/5 backdrop-blur-md">

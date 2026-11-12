@@ -3,6 +3,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'node:fs'
+
+// Nomor versi aplikasi: satu sumber di package.json (aturan kenaikan: VERSIONING.md), ditanam saat build.
+const APP_VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')).version
 
 // Tombol darurat PWA: `PWA_SELF_DESTROY=true npm run build` menghasilkan service worker yang mencopot dirinya
 // dari semua perangkat, dan aplikasi berhenti mendaftarkannya lagi (tanpa ini akan terjadi loop reload).
@@ -12,6 +16,7 @@ const PWA_KILL = process.env.PWA_SELF_DESTROY === 'true'
 export default defineConfig({
   define: {
     'import.meta.env.VITE_PWA_KILL': JSON.stringify(PWA_KILL ? 'true' : ''),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(APP_VERSION),
   },
   plugins: [
     react(),

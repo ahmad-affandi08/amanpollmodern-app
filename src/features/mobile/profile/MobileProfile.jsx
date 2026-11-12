@@ -7,6 +7,7 @@ import LogoutButton from './components/LogoutButton';
 import ChangePasswordModal from './components/ChangePasswordModal';
 import InstallAppCard from '../../../pwa/InstallAppCard';
 import { useProfile } from '../../../hooks/queries/useProfileQueries';
+import { APP_VERSION } from '../../../config';
 
 export default function MobileProfile() {
   usePageTitle('Profil');
@@ -63,6 +64,8 @@ export default function MobileProfile() {
 
       {/* Logout */}
       <LogoutButton />
+
+      <p className="text-center text-[11px] text-gray-400 select-none">AmanPoll versi {APP_VERSION}</p>
 
       {/* Modals */}
       <ChangePasswordModal
