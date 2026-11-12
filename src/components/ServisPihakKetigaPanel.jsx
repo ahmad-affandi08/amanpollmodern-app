@@ -66,7 +66,7 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
   };
 
   return (
-    <div className="animate-fade-in space-y-3" data-testid="servis-pihak-ketiga">
+    <div className="@container animate-fade-in space-y-3" data-testid="servis-pihak-ketiga">
       <div className="flex items-center justify-between gap-3">
         <div>
           {!tanpaJudul && (
@@ -101,7 +101,8 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
       )}
 
       {laporan.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        // Dua kolom menurut lebar wadah (bukan layar): halaman mobile di monitor lebar tetap satu kolom.
+        <div className="grid grid-cols-1 @2xl:grid-cols-2 gap-3">
           {laporan.map((item) => {
             const gambar = item.jenis_file === 'jpg' || item.jenis_file === 'jpeg' || item.jenis_file === 'png';
             const IkonBerkas = gambar ? ImageIcon : FileText;
