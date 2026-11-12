@@ -20,6 +20,7 @@ import MasterNamaAlat from './features/desktop/inventaris/MasterNamaAlat';
 import InventarisList from './features/desktop/inventaris/InventarisList';
 import InventarisForm from './features/desktop/inventaris/InventarisForm';
 import InventarisDetail from './features/desktop/inventaris/InventarisDetail';
+import InventarisArsip from './features/desktop/inventaris/InventarisArsip';
 import MasterDivisi from './features/desktop/master-data/divisi/MasterDivisi';
 import MasterRuangan from './features/desktop/master-data/ruangan/MasterRuangan';
 import MasterUser from './features/desktop/master-data/user/MasterUser';
@@ -109,6 +110,7 @@ const routes = [
   { path: '/inventaris/kategori', element: desktopPage(<MasterKategori />, ACCESS.masterKategori) },
   { path: '/inventaris/nama-alat', element: desktopPage(<MasterNamaAlat />, ACCESS.masterNamaAlat) },
   { path: '/inventaris/data', element: desktopPage(<InventarisList />, ACCESS.inventarisView) },
+  { path: '/inventaris/riwayat-rusak-berat', element: desktopPage(<InventarisArsip />, ACCESS.inventarisArsip) },
   { path: '/inventaris/baru', element: desktopPage(<InventarisForm />, ACCESS.inventarisManage) },
   { path: '/inventaris/edit/:id', element: desktopPage(<InventarisForm />, ACCESS.inventarisManage) },
   { path: '/inventaris/detail/:id', element: desktopPage(<InventarisDetail />, ACCESS.inventarisView) },

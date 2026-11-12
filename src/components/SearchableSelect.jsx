@@ -1,7 +1,11 @@
-import React, { useState, useRef, useEffect, useId } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useId } from 'react';
 import { Search, ChevronDown, X } from 'lucide-react';
 
 import ReactDOM from 'react-dom';
+
+// Lebar minimum menu agar daftar tidak sempit di trigger yang kecil (mis. filter di toolbar).
+const MIN_MENU_WIDTH = 220;
+const VIEWPORT_MARGIN = 8;
 
 /**
  * Searchable Select Component
@@ -72,23 +76,35 @@ export default function SearchableSelect({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const updatePosition = () => {
-      if (dropdownRef.current) {
-         const rect = dropdownRef.current.getBoundingClientRect();
-         // Buka ke atas bila ruang di bawah sempit dan ruang di atas lebih lega.
-         const spaceBelow = window.innerHeight - rect.bottom;
-         const openUp = spaceBelow < 360 && rect.top > spaceBelow;
-         setDropdownPosition({
-           top: openUp ? null : rect.bottom, // Use viewport relative top (fixed positioning)
-           bottom: openUp ? window.innerHeight - rect.top : null,
-           left: rect.left,
-           width: rect.width
-         });
-      }
+  // Posisi menu (fixed) dari kotak trigger. Dipanggil di handler klik SEBELUM menu dirender dan di
+  // useLayoutEffect (sebelum browser menggambar), supaya menu tidak pernah tampil sekejap di pojok kiri atas.
+  const measurePosition = () => {
+    const el = dropdownRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const width = Math.max(rect.width, MIN_MENU_WIDTH);
+    // Buka ke atas bila ruang di bawah sempit dan ruang di atas lebih lega.
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < 360 && rect.top > spaceBelow;
+    return {
+      top: openUp ? null : rect.bottom,
+      bottom: openUp ? window.innerHeight - rect.top : null,
+      // Jangan melewati tepi kanan layar.
+      left: Math.max(VIEWPORT_MARGIN, Math.min(rect.left, window.innerWidth - width - VIEWPORT_MARGIN)),
+      width,
     };
-    
+  };
+
+  // Ikuti trigger saat halaman di-scroll atau ukuran layar berubah.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const updatePosition = (event) => {
+      // Scroll di dalam daftar opsi tidak menggeser trigger.
+      if (event?.target instanceof Element && event.target.closest('.searchable-select-portal')) return;
+      const next = measurePosition();
+      if (next) setDropdownPosition(next);
+    };
+
     updatePosition();
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
@@ -138,10 +154,12 @@ export default function SearchableSelect({
       }`}
       role="listbox"
       style={{
-        top: dropdownPosition.bottom != null ? 'auto' : (dropdownPosition.top ? `${dropdownPosition.top}px` : 0),
+        top: dropdownPosition.bottom != null ? 'auto' : (dropdownPosition.top != null ? `${dropdownPosition.top}px` : 0),
         bottom: dropdownPosition.bottom != null ? `${dropdownPosition.bottom}px` : 'auto',
-        left: dropdownPosition.left ? `${dropdownPosition.left}px` : 0,
+        left: dropdownPosition.left != null ? `${dropdownPosition.left}px` : 0,
         width: dropdownPosition.width ? `${dropdownPosition.width}px` : 'auto',
+        // Belum terukur → jangan tampil dulu (mencegah kedipan di posisi awal).
+        visibility: dropdownPosition.left == null ? 'hidden' : 'visible',
       }}
     >
       {/* Search Input */}
@@ -232,6 +250,7 @@ export default function SearchableSelect({
           onClick={() => {
             if (disabled) return;
             if (isOpen) setSearchTerm('');
+            else setDropdownPosition(measurePosition() ?? {});
             setIsOpen(!isOpen);
           }}
           onKeyDown={(e) => {

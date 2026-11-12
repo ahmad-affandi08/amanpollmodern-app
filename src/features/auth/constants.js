@@ -41,6 +41,8 @@ export const ACCESS = {
   inventarisView: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN],
   // Sama dengan aturan canManage di backend (peran 1, 3, 4).
   inventarisManage: [ROLES.SUPER_ADMIN, ROLES.TEKNISI, ROLES.ADMIN_DIVISI],
+  // Riwayat alat rusak berat yang digudangkan/dihapus: sama dengan inventarisView (Pimpinan baca-saja).
+  inventarisArsip: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI, ROLES.PIMPINAN],
   masterKategori: [ROLES.SUPER_ADMIN],
   masterNamaAlat: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI],
   alatBaru: [ROLES.SUPER_ADMIN, ROLES.ADMIN_DIVISI],

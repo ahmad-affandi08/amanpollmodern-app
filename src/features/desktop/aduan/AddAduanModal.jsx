@@ -256,7 +256,7 @@ function AddAduanForm({ onClose, onSuccess }) {
             </div>
           </div>
 
-          <Button
+          <Button size="md"
             type="button"
             variant="outline"
             onClick={() => setShowCamera(true)}

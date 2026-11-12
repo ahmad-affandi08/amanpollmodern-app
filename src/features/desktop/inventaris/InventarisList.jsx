@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Download, Calendar, Layers, Edit2, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Download, Layers, Edit2, Trash2, Eye, Archive, ChevronDown } from 'lucide-react';
 import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
 import KondisiBadge from '../../../components/KondisiBadge';
-import RisikoBadge from '../../../components/RisikoBadge';
+import StatusAsetModal from '../../../components/StatusAsetModal';
 import {
   useInventaris,
   useDeleteInventaris,
@@ -12,54 +12,64 @@ import {
   useMasterRuangan,
   useAuth,
   useToast,
-  usePagination,
-  useFilters,
-  useDebounce,
   useMasterNamaAlat,
   usePageTitle,
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import SearchableSelect from '../../../components/SearchableSelect';
-import Pagination from '../../../components/Pagination';
+import DataTable from '../../../components/DataTable';
+import FilterBar from '../../../components/FilterBar';
 import ConfirmDialog from '../../../components/Alert/Alert';
-import TableSkeleton from '../../../components/TableSkeleton';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
-import qrCodeIcon from '../../../assets/img/icon-qr-code.png';
+import InventarisRowDetail from './components/InventarisRowDetail';
 import InventarisApi from '../../../api/InventarisApi';
 import { ROLES, isRole, canManageInventaris } from '../../auth/constants';
-import { rupiah, formatDateShort } from '../../../utils/format';
+import { rupiah } from '../../../utils/format';
 
+// Tabel ringkas: kolom yang berkaitan digabung dalam satu sel. Kolom lain (divisi, seri, daya, dokumen, dst.)
+// ada di panel yang terbuka lewat tombol panah di tiap baris. Kolom panah tidak masuk daftar: selalu tampil.
 const COLUMN_DEFS = [
-  { key: 'no_inventaris', label: 'No. Inventaris', defaultVisible: true },
-  { key: 'nama_alat', label: 'Nama Alat', defaultVisible: true },
-  { key: 'divisi', label: 'Divisi', defaultVisible: true },
-  { key: 'ruangan', label: 'Nama Bagian/Ruangan', defaultVisible: true },
-  { key: 'merk', label: 'Merk', defaultVisible: true },
-  { key: 'model', label: 'Model/Tipe', defaultVisible: true },
-  { key: 'seri', label: 'No. Seri', defaultVisible: true },
-  { key: 'daya', label: 'Daya (watt)', defaultVisible: false },
-  { key: 'harga', label: 'Harga', defaultVisible: true },
-  { key: 'harga_ganti', label: 'Harga Ganti (AIC)', defaultVisible: false },
-  { key: 'tahun_pengadaan', label: 'Tahun Pengadaan', defaultVisible: false },
-  { key: 'ruang_sekarang', label: 'Letak Saat Ini/Ruang', defaultVisible: false },
-  { key: 'gedung', label: 'Gedung', defaultVisible: false },
-  { key: 'kategori_alat', label: 'Kategori Alat', defaultVisible: false },
-  { key: 'interval_maintenance', label: 'Interval Maintenance (kali/tahun)', defaultVisible: false },
   { key: 'img_alat', label: 'Foto', defaultVisible: true },
-  { key: 'file_sertifikat', label: 'Sertifikat', defaultVisible: false },
-  { key: 'kadaluwarsa', label: 'Berlaku Hingga', defaultVisible: true },
-  { key: 'file_sop', label: 'File SOP', defaultVisible: false },
-  { key: 'qrcode', label: 'QR Code', defaultVisible: false },
-  { key: 'risiko', label: 'Tingkat Risiko', defaultVisible: true },
-  { key: 'kondisi_alat', label: 'Kondisi Alat', defaultVisible: true },
+  { key: 'alat', label: 'Alat / No. Inventaris', defaultVisible: true, alwaysVisible: true },
+  { key: 'merk_model', label: 'Merk / Model', defaultVisible: true },
+  { key: 'lokasi', label: 'Lokasi', defaultVisible: true },
+  { key: 'kategori_alat', label: 'Kategori', defaultVisible: true },
+  { key: 'harga', label: 'Harga / Tahun', defaultVisible: true },
+  { key: 'kondisi_alat', label: 'Kondisi', defaultVisible: true },
   { key: 'actions', label: 'Aksi', defaultVisible: true, alwaysVisible: true }
 ];
+
+// Isian angka tanpa panah naik/turun agar rapi di sel yang sempit.
+const YEAR_INPUT = '!bg-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
+// Filter diatur lewat state TanStack (columnFilters). Peta: id kolom -> parameter query server.
+// Array = rentang [min, max] pada satu kolom.
+const FILTER_MAP = {
+  nama_alat: 'nama_alat',
+  kategori_alat: 'kategori_alat_id',
+  divisi: 'divisi_id',
+  ruangan: 'ruangan_id',
+  kondisi_alat: 'kondisi_alat',
+  tahun_pengadaan: ['tahun_awal', 'tahun_akhir'],
+};
+
+/** Sel dua baris: teks utama + keterangan kecil di bawahnya (dipotong bila terlalu panjang). */
+function Stacked({ main, sub, right = false, subClassName = '' }) {
+  return (
+    <div className={`max-w-[15rem] ${right ? 'ml-auto' : ''}`}>
+      <p className="truncate text-[13px] font-semibold leading-tight text-text-dark" title={main}>{main}</p>
+      {/* &nbsp; menjaga tinggi baris sama saat tidak ada keterangan */}
+      <p className={`mt-0.5 truncate text-[11px] leading-tight text-text-gray ${subClassName}`} title={sub || undefined}>{sub || '\u00A0'}</p>
+    </div>
+  );
+}
 
 export default function InventarisList() {
   usePageTitle('Daftar Inventaris');
@@ -72,39 +82,42 @@ export default function InventarisList() {
   const canManage = canManageInventaris(user);
 
 
-  const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
+  const { visibleColumns, toggleColumn, showAll, hideAll } = useColumnToggle(
     COLUMN_DEFS,
-    'inventaris_columns'
+    'inventaris_columns_v2'
   );
 
 
-  const pagination = usePagination(10);
-  const { filters, updateFilter, resetFilters } = useFilters({
-    search: '',
-    nama_alat: '',
-    kategori_alat_id: '',
-    divisi_id: '',
-    ruangan_id: '',
-    kondisi_alat: '',
-    tahun_awal: '',
-    tahun_akhir: ''
-  });
-  const debouncedSearch = useDebounce(filters.search, 500);
+  // Pagination, filter kolom, dan pencarian disimpan di state TanStack; `params` dikirim ke server.
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
+  const { filters, params } = tableState;
 
 
   const { showToast } = useToast();
   const [deleteId, setDeleteId] = useState(null);
+  // Alat rusak berat yang akan digudangkan/dihapus dari daftar aset.
+  const [statusItem, setStatusItem] = useState(null);
 
 
   const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '', altText: '' });
+  // Hanya satu baris yang terbuka pada satu waktu agar tabel tidak memanjang.
+  const [expandedId, setExpandedId] = useState(null);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef(null);
+  // Menutup: jalankan animasi dulu, baru lepas panelnya (durasi sama dengan transisi di InventarisRowDetail).
+  const toggleRow = (id) => {
+    clearTimeout(closeTimer.current);
+    if (expandedId === id && !closing) {
+      setClosing(true);
+      closeTimer.current = setTimeout(() => { setExpandedId(null); setClosing(false); }, 300);
+    } else {
+      setClosing(false);
+      setExpandedId(id);
+    }
+  };
 
 
-  const { data: inventarisData, isLoading } = useInventaris({
-    ...filters,
-    search: debouncedSearch,
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-  });
+  const { data: inventarisData, isLoading } = useInventaris(params);
 
 
   const { data: kategoriData } = useMasterKategori({ all: 1 });
@@ -117,14 +130,6 @@ export default function InventarisList() {
 
   const dataList = inventarisData?.data || [];
   const meta = inventarisData?.meta;
-
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) {
-      setMetadata(meta);
-    }
-  }, [meta, setMetadata]);
 
 
   const categories = kategoriData?.data || [];
@@ -142,16 +147,6 @@ export default function InventarisList() {
     } finally {
       setDeleteId(null);
     }
-  };
-
-  const handleFilterChange = (key, value) => {
-    updateFilter(key, value);
-    pagination.reset();
-  };
-
-  const handleResetFilters = () => {
-    resetFilters();
-    pagination.reset();
   };
 
   const handleExportExcel = async () => {
@@ -200,6 +195,151 @@ export default function InventarisList() {
 
 
 
+  // id kolom = key di COLUMN_DEFS, supaya ColumnToggle tetap mengendalikan visibilitas.
+  const columns = [
+    { id: 'expand', header: '', meta: { cellClassName: '!pr-0 w-10' }, cell: ({ row: { original: item } }) => {
+      const open = expandedId === item.id && !closing;
+      return (
+        <button
+          type="button"
+          onClick={() => toggleRow(item.id)}
+          aria-expanded={open}
+          aria-label={open ? 'Tutup detail' : 'Buka detail'}
+          className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${open ? 'border-brand-primary/30 bg-brand-primary-soft text-brand-primary' : 'border-gray-200 text-text-gray hover:bg-gray-50'}`}
+        >
+          <ChevronDown size={14} className={`transition-transform duration-300 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} />
+        </button>
+      );
+    } },
+    { id: 'img_alat', header: 'Foto', cell: ({ row: { original: item } }) => (
+      <div className="flex items-center">
+        {item.img_alat_url ? (
+          <div className="w-11 h-11 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-brand-primary">
+            <LazyLoadImage
+              src={item.img_alat_url}
+              alt="Foto Alat"
+              effect="blur"
+              className="object-cover"
+              style={{ width: '44px', height: '44px', display: 'block' }}
+              placeholderSrc={noImage}
+              onError={(e) => { e.target.src = noImage; }}
+              onClick={() => setImagePreview({ isOpen: true, imageUrl: item.img_alat_url, altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || item.no_inventaris || ''}` })}
+            />
+          </div>
+        ) : (
+          <div className="w-11 h-11 rounded-lg overflow-hidden border border-gray-200">
+            <img
+              src={noImage}
+              alt="Tidak ada foto"
+              className="w-full h-full object-cover opacity-50"
+            />
+          </div>
+        )}
+      </div>
+    ) },
+    { id: 'alat', header: 'Alat', cell: ({ row: { original: item } }) => (
+      <Stacked
+        main={item.nama_alat?.nama_nama_alat || '-'}
+        sub={item.no_inventaris}
+        subClassName="font-mono"
+      />
+    ) },
+    // Di bawah 1400px kolom ini disembunyikan supaya tabel tidak perlu digeser; merk & model tetap ada di panel detail.
+    { id: 'merk_model', header: 'Merk / Model', meta: { headerClassName: 'hidden min-[1400px]:table-cell', cellClassName: 'hidden min-[1400px]:table-cell' }, cell: ({ row: { original: item } }) => (
+      <Stacked main={item.merk || '-'} sub={item.model} />
+    ) },
+    { id: 'lokasi', header: 'Lokasi', cell: ({ row: { original: item } }) => {
+      const ruangan = item.ruangan?.nama_ruangan;
+      const letak = item.ruangan_sekarang?.nama_ruangan;
+      // Letak saat ini hanya ditulis bila berbeda dari ruangan asal; selengkapnya ada di panel detail.
+      const sub = [item.gedung && `Gedung ${item.gedung}`, letak && letak !== ruangan && letak].filter(Boolean).join(' · ');
+      return <Stacked main={ruangan || '-'} sub={sub} />;
+    } },
+    { id: 'kategori_alat', header: 'Kategori', cell: ({ row: { original: item } }) => {
+      const alkes = item.alat_kesehatan === 1 || item.alat_kesehatan === true;
+      return (
+        <Stacked
+          main={item.nama_alat?.kategori_alat?.nama_kategori || '-'}
+          sub={alkes ? (item.kategori_alkes ? `Alkes · ${item.kategori_alkes}` : 'Alkes') : ''}
+        />
+      );
+    } },
+    { id: 'harga', header: 'Harga', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <Stacked
+        right
+        main={parseFloat(item.harga) > 0 ? rupiah(item.harga) : '-'}
+        sub={item.tahun_pengadaan ? `Pengadaan ${item.tahun_pengadaan}` : ''}
+      />
+    ) },
+    { id: 'kondisi_alat', header: 'Kondisi', cell: ({ row }) => <KondisiBadge kondisi={row.original.kondisi_alat} size="sm" /> },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-1.5">
+        {/* Cetak label */}
+        <PrintLabelDropdown
+          variant="icon"
+          onSelect={(type) => handlePrintLabelWithType(type, item.id)}
+          isPrinting={isPrinting}
+        />
+
+        {/* Detail */}
+        <button
+          onClick={() => navigate(`/inventaris/detail/${item.id}`)}
+          className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
+          title="Detail"
+        >
+          <Eye size={14} />
+        </button>
+
+        {/* Ubah dan hapus hanya untuk peran pengelola inventaris */}
+        {canManage && (
+          <>
+            <button
+              onClick={() => navigate(`/inventaris/edit/${item.id}`)}
+              className="p-1.5 bg-brand-primary text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
+              title="Edit"
+            >
+              <Edit2 size={14} />
+            </button>
+
+            {/* Alat rusak berat tidak dihapus permanen: digudangkan / dihapus dari daftar aset, riwayat tetap tersimpan */}
+            {item.kondisi_alat === 'Rusak Berat' && (
+              <button
+                onClick={() => setStatusItem(item)}
+                className="p-1.5 bg-amber-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
+                title="Gudangkan / Hapus dari Daftar Aset"
+              >
+                <Archive size={14} />
+              </button>
+            )}
+
+            <button
+              onClick={() => setDeleteId(item.id)}
+              disabled={deleteMutation.isPending}
+              className="p-1.5 bg-danger-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all disabled:opacity-50"
+              title="Hapus permanen (hanya untuk salah input)"
+            >
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
+      </div>
+    ) },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: dataList,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    columnVisibility: visibleColumns,
+    getRowId: (item) => item.id,
+  });
+
+  // Filter lewat state TanStack. Nilai kosong menghapus filter; mengubah filter kembali ke halaman 1.
+  const f = getTableFilters(table);
+  const [tahunAwal, tahunAkhir] = f.getRange('tahun_pengadaan');
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -216,7 +356,7 @@ export default function InventarisList() {
           />
           <Button
             variant="outline"
-            size="md"
+            size="sm"
             onClick={handleExportExcel}
             className="gap-2 w-full md:w-auto"
           >
@@ -227,7 +367,7 @@ export default function InventarisList() {
           {canManage && (
             <Button
               onClick={() => navigate('/inventaris/baru')}
-              size="md"
+              size="sm"
               className="gap-2 shadow-lg shadow-brand-primary/20 w-full md:w-auto"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -237,497 +377,179 @@ export default function InventarisList() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[20px] p-4 md:p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        {/* Filters */}
-        <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Global Search */}
-            <div>
-              <Input
-                name="search"
-                size="sm"
-                placeholder="Cari No. Inventaris, Seri..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                icon={<Search className="w-3.5 h-3.5" />}
-                className="bg-bg-light border-none h-[36px]"
-              />
-            </div>
-
-            {/* Search Nama Alat */}
-            <div>
-              <SearchableSelect
-                name="nama_alat"
-                size="sm"
-                value={filters.nama_alat}
-                onChange={(e) => handleFilterChange('nama_alat', e.target.value)}
-                options={[
-                  { label: 'Semua Alat', value: '' },
-                  ...(namaAlatData?.data || []).map(item => ({
-                    label: item.nama_nama_alat,
-                    value: item.nama_nama_alat
-                  }))
-                ]}
-                placeholder="Semua Alat"
-                searchPlaceholder="Cari nama alat..."
-              />
-            </div>
-
-            {/* Kategori Filter */}
-            <SearchableSelect
-              name="kategori_alat_id"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
               size="sm"
-              value={filters.kategori_alat_id}
-              onChange={(e) => handleFilterChange('kategori_alat_id', e.target.value)}
-              options={[
-                { label: 'Semua Kategori', value: '' },
-                ...categories.map(c => ({ label: c.nama_kategori, value: c.id }))
-              ]}
-              placeholder="Semua Kategori"
-              searchPlaceholder="Cari kategori..."
+              placeholder="Cari No. Inventaris, Seri..."
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-
-            {/* Divisi Filter - Hide for Admin Divisi */}
-            {!isAdminDivisi && (
-              <SearchableSelect
-                name="divisi_id"
+          }
+          actions={
+            <>
+              <Button
+                variant="outline"
                 size="sm"
-                value={filters.divisi_id}
-                onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
-                options={[
-                  { label: 'Semua Divisi', value: '' },
-                  ...divisions.map(d => ({ label: d.nama_divisi, value: d.id_divisi }))
-                ]}
-                placeholder="Semua Divisi"
-                searchPlaceholder="Cari divisi..."
+                onClick={f.reset}
+                className="!rounded-lg whitespace-nowrap border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+              >
+                Reset Filter
+              </Button>
+              <ColumnToggle
+                columns={COLUMN_DEFS}
+                visibleColumns={visibleColumns}
+                onToggle={toggleColumn}
+                onShowAll={showAll}
+                onHideAll={hideAll}
+                size="sm"
+                className="!rounded-lg"
               />
-            )}
+            </>
+          }
+          gridClassName="grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_minmax(0,1.5fr)]"
+        >
+          <SearchableSelect
+            name="nama_alat"
+            size="sm"
+            value={f.get('nama_alat')}
+            onChange={(e) => f.set('nama_alat', e.target.value)}
+            options={[
+              { label: 'Semua Alat', value: '' },
+              ...(namaAlatData?.data || []).map(item => ({
+                label: item.nama_nama_alat,
+                value: item.nama_nama_alat
+              }))
+            ]}
+            placeholder="Semua Alat"
+            searchPlaceholder="Cari nama alat..."
+          />
 
-            {/* Ruangan Filter */}
+          <SearchableSelect
+            name="kategori_alat_id"
+            size="sm"
+            value={f.get('kategori_alat')}
+            onChange={(e) => f.set('kategori_alat', e.target.value)}
+            options={[
+              { label: 'Semua Kategori', value: '' },
+              ...categories.map(c => ({ label: c.nama_kategori, value: c.id }))
+            ]}
+            placeholder="Semua Kategori"
+            searchPlaceholder="Cari kategori..."
+          />
+
+          {/* Divisi Filter - Hide for Admin Divisi */}
+          {!isAdminDivisi && (
             <SearchableSelect
-              name="ruangan_id"
+              name="divisi_id"
               size="sm"
-              value={filters.ruangan_id}
-              onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
+              value={f.get('divisi')}
+              onChange={(e) => f.set('divisi', e.target.value)}
               options={[
-                { label: 'Semua Ruangan', value: '' },
-                ...rooms.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }))
+                { label: 'Semua Divisi', value: '' },
+                ...divisions.map(d => ({ label: d.nama_divisi, value: d.id_divisi }))
               ]}
-              placeholder="Semua Ruangan"
-              searchPlaceholder="Cari ruangan..."
+              placeholder="Semua Divisi"
+              searchPlaceholder="Cari divisi..."
             />
+          )}
 
-            {/* Kondisi Alat Filter */}
-            <SearchableSelect
-              name="kondisi_alat"
-              size="sm"
-              value={filters.kondisi_alat}
-              onChange={(e) => handleFilterChange('kondisi_alat', e.target.value)}
-              options={[
-                { label: 'Semua Kondisi', value: '' },
-                { label: 'Baik', value: 'Baik' },
-                { label: 'Rusak Ringan', value: 'Rusak Ringan' },
-                { label: 'Rusak Berat', value: 'Rusak Berat' },
-                { label: 'Dalam Perbaikan', value: 'Dalam Perbaikan' }
-              ]}
-              placeholder="Semua Kondisi"
-              searchPlaceholder="Cari kondisi..."
-            />
+          <SearchableSelect
+            name="ruangan_id"
+            size="sm"
+            value={f.get('ruangan')}
+            onChange={(e) => f.set('ruangan', e.target.value)}
+            options={[
+              { label: 'Semua Ruangan', value: '' },
+              ...rooms.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }))
+            ]}
+            placeholder="Semua Ruangan"
+            searchPlaceholder="Cari ruangan..."
+          />
 
-            {/* Tahun Awal */}
+          <SearchableSelect
+            name="kondisi_alat"
+            size="sm"
+            value={f.get('kondisi_alat')}
+            onChange={(e) => f.set('kondisi_alat', e.target.value)}
+            options={[
+              { label: 'Semua Kondisi', value: '' },
+              { label: 'Baik', value: 'Baik' },
+              { label: 'Rusak Ringan', value: 'Rusak Ringan' },
+              { label: 'Rusak Berat', value: 'Rusak Berat' },
+              { label: 'Dalam Perbaikan', value: 'Dalam Perbaikan' }
+            ]}
+            placeholder="Semua Kondisi"
+            searchPlaceholder="Cari kondisi..."
+          />
+
+          {/* Rentang Tahun Pengadaan: satu filter kolom, dua isian */}
+          <div className="grid grid-cols-2 gap-2 col-span-2 md:col-span-1">
             <Input
               type="number"
               size="sm"
-              placeholder="Tahun Awal (ex: 2020)"
-              value={filters.tahun_awal}
-              onChange={(e) => handleFilterChange('tahun_awal', e.target.value)}
-              icon={<Calendar className="w-3.5 h-3.5" />}
-              className="bg-bg-light border-none"
+              placeholder="Tahun Awal"
+              aria-label="Tahun pengadaan awal"
+              value={tahunAwal}
+              onChange={(e) => f.setRangePart('tahun_pengadaan', 0, e.target.value)}
+              className={YEAR_INPUT}
             />
-
-            {/* Tahun Akhir */}
             <Input
               type="number"
               size="sm"
-              placeholder="Tahun Akhir (ex: 2024)"
-              value={filters.tahun_akhir}
-              onChange={(e) => handleFilterChange('tahun_akhir', e.target.value)}
-              icon={<Calendar className="w-3.5 h-3.5" />}
-              className="bg-bg-light border-none"
-            />
-
-            {/* Reset Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetFilters}
-              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
-            >
-              Reset Filter
-            </Button>
-
-            {/* Column Toggle */}
-            <ColumnToggle
-              columns={COLUMN_DEFS}
-              visibleColumns={visibleColumns}
-              onToggle={toggleColumn}
-              onShowAll={showAll}
-              onHideAll={hideAll}
-              size="sm"
+              placeholder="Tahun Akhir"
+              aria-label="Tahun pengadaan akhir"
+              value={tahunAkhir}
+              onChange={(e) => f.setRangePart('tahun_pengadaan', 1, e.target.value)}
+              className={YEAR_INPUT}
             />
           </div>
-        </div>
+        </FilterBar>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">No</th>
-                {isVisible('no_inventaris') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">No. Inventaris</th>}
-                {isVisible('nama_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Nama Alat</th>}
-                {isVisible('divisi') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Divisi</th>}
-                {isVisible('ruangan') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Nama Bagian/Ruangan</th>}
-                {isVisible('merk') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Merk</th>}
-                {isVisible('model') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Model/Tipe</th>}
-                {isVisible('seri') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">No. Seri</th>}
-                {isVisible('daya') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Daya (watt)</th>}
-                {isVisible('harga') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Harga</th>}
-                {isVisible('harga_ganti') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Harga Ganti (AIC)</th>}
-                {isVisible('tahun_pengadaan') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Tahun Pengadaan</th>}
-                {isVisible('ruang_sekarang') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Letak Saat Ini/Ruang</th>}
-                {isVisible('gedung') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Gedung</th>}
-                {isVisible('kategori_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Kategori Alat</th>}
-                {isVisible('interval_maintenance') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Interval (kali/tahun)</th>}
-                {isVisible('img_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Foto</th>}
-                {isVisible('file_sertifikat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Sertifikat</th>}
-                {isVisible('kadaluwarsa') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Berlaku Hingga</th>}
-                {isVisible('file_sop') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">File SOP</th>}
-                {isVisible('qrcode') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">QR Code</th>}
-                {isVisible('risiko') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Risiko</th>}
-                {isVisible('kondisi_alat') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase">Kondisi Alat</th>}
-                {isVisible('actions') && <th className="py-2 px-3 text-xs font-bold text-[#808191] uppercase text-right">Aksi</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <TableSkeleton columns={Object.values(visibleColumns).filter(Boolean).length + 1} rows={10} />
-              ) : dataList.length === 0 ? (
-                <tr>
-                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length + 1} className="py-12 text-center">
-                    <Layers size={32} className="mx-auto text-gray-400 mb-4" />
-                    <p className="font-bold text-gray-600">Tidak ada data inventaris</p>
-                    <p className="text-sm text-gray-400 mt-1">Coba ubah filter pencarian Anda</p>
-                  </td>
-                </tr>
-              ) : (
-                dataList.map((item, index) => (
-                  <tr key={item.id || `row-${index}`} className="hover:bg-gray-50/50 transition-colors">
-                    {/* No Urut */}
-                    <td className="py-1.5 px-3 font-bold text-gray-800 text-xs">
-                      {(pagination.currentPage - 1) * pagination.perPage + index + 1}
-                    </td>
-                    {/* No Inventaris */}
-                    {isVisible('no_inventaris') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#6C5DD3] text-[10px] font-bold">
-                          {item.no_inventaris}
-                        </span>
-                      </td>
-                    )}
-
-                    {/* Nama Alat */}
-                    {isVisible('nama_alat') && (
-                      <td className="py-1.5 px-3 text-xs font-bold text-text-dark">
-                        {item.nama_alat?.nama_nama_alat || '-'}
-                      </td>
-                    )}
-
-                    {/* Divisi */}
-                    {isVisible('divisi') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.nama_alat?.divisi?.nama_divisi || item.divisi?.nama_divisi || '-'}
-                      </td>
-                    )}
-
-                    {/* Ruangan */}
-                    {isVisible('ruangan') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.ruangan?.nama_ruangan || '-'}
-                      </td>
-                    )}
-
-                    {/* Merk */}
-                    {isVisible('merk') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.merk || '-'}
-                      </td>
-                    )}
-
-                    {/* Model */}
-                    {isVisible('model') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.model || '-'}
-                      </td>
-                    )}
-
-                    {/* No Seri */}
-                    {isVisible('seri') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600 whitespace-nowrap">
-                        {item.seri || '-'}
-                      </td>
-                    )}
-
-                    {/* Daya */}
-                    {isVisible('daya') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.daya || '-'}
-                      </td>
-                    )}
-
-                    {/* Harga */}
-                    {isVisible('harga') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {parseFloat(item.harga) > 0 ? rupiah(item.harga) : '-'}
-                      </td>
-                    )}
-
-                    {/* Harga Ganti (AIC) */}
-                    {isVisible('harga_ganti') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {parseFloat(item.harga_pengganti) > 0 ? rupiah(item.harga_pengganti) : '-'}
-                      </td>
-                    )}
-
-                    {/* Tahun Pengadaan */}
-                    {isVisible('tahun_pengadaan') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.tahun_pengadaan || '-'}
-                      </td>
-                    )}
-
-                    {/* Ruang Sekarang */}
-                    {isVisible('ruang_sekarang') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.ruangan_sekarang?.nama_ruangan || item.ruangan?.nama_ruangan || '-'}
-                      </td>
-                    )}
-
-                    {/* Gedung */}
-                    {isVisible('gedung') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.gedung || '-'}
-                      </td>
-                    )}
-
-                    {/* Kategori Alat */}
-                    {isVisible('kategori_alat') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-semibold text-gray-600">
-                            {item.nama_alat?.kategori_alat?.nama_kategori || '-'}
-                          </span>
-                          {(item.alat_kesehatan === 1 || item.alat_kesehatan === true) && (
-                            item.kategori_alkes ? (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium inline-block w-fit mt-0.5">
-                                {item.kategori_alkes}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium inline-block w-fit mt-0.5">
-                                Alat Kesehatan
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </td>
-                    )}
-
-                    {/* Interval Maintenance */}
-                    {isVisible('interval_maintenance') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {item.interval_maintenance > 0 ? `${item.interval_maintenance}x` : '-'}
-                      </td>
-                    )}
-
-                    {/* Foto */}
-                    {isVisible('img_alat') && (
-                      <td className="py-1.5 px-3">
-                        <div className="flex items-center justify-center">
-                          {item.img_alat_url ? (
-                            <div className="w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '64px', minHeight: '64px', width: '64px', height: '64px' }}>
-                              <LazyLoadImage
-                                src={item.img_alat_url}
-                                alt="Foto Alat"
-                                effect="blur"
-                                className="object-cover"
-                                style={{ width: '64px', height: '64px', display: 'block' }}
-                                placeholderSrc={noImage}
-                                onError={(e) => { e.target.src = noImage; }}
-                                onClick={() => setImagePreview({ isOpen: true, imageUrl: item.img_alat_url, altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || item.no_inventaris || ''}` })}
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
-                              <img
-                                src={noImage}
-                                alt="Tidak ada foto"
-                                className="w-full h-full object-cover opacity-50"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    )}
-
-                    {/* Sertifikat */}
-                    {isVisible('file_sertifikat') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        {item.file_sertifikat_url ? (
-                          <a
-                            href={item.file_sertifikat_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-primary hover:underline"
-                          >
-                            Tampilkan
-                          </a>
-                        ) : (
-                          <span className="text-gray-400">Tidak ada berkas</span>
-                        )}
-                      </td>
-                    )}
-
-                    {/* Kadaluwarsa */}
-                    {isVisible('kadaluwarsa') && (
-                      <td className="py-1.5 px-3 text-xs text-gray-600">
-                        {formatDateShort(item.kadaluwarsa)}
-                      </td>
-                    )}
-
-                    {/* File SOP */}
-                    {isVisible('file_sop') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        {item.file_sop_url ? (
-                          <a
-                            href={item.file_sop_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-primary hover:underline"
-                          >
-                            Tampilkan
-                          </a>
-                        ) : (
-                          <span className="text-gray-400">Tidak ada berkas</span>
-                        )}
-                      </td>
-                    )}
-
-                    {/* QR Code */}
-                    {isVisible('qrcode') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        {item.qrcode_url ? (
-                          <img
-                            src={qrCodeIcon}
-                            alt="QR Code"
-                            className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform"
-                            onClick={() => setImagePreview({
-                              isOpen: true,
-                              imageUrl: item.qrcode_url,
-                              altText: `QR Code - ${item.no_inventaris || ''}`
-                            })}
-                          />
-                        ) : (
-                          <span className="text-gray-400">Tidak ada QR</span>
-                        )}
-                      </td>
-                    )}
-
-                    {/* Risiko */}
-                    {isVisible('risiko') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        <RisikoBadge tingkat={item.nama_alat?.tingkat_risiko} skor={item.nama_alat?.skor_risiko} size="sm" />
-                      </td>
-                    )}
-
-                    {/* Kondisi */}
-                    {isVisible('kondisi_alat') && (
-                      <td className="py-1.5 px-3 text-xs">
-                        <KondisiBadge kondisi={item.kondisi_alat} size="sm" />
-                      </td>
-                    )}
-
-                    {/* Action */}
-                    {isVisible('actions') && (
-                      <td className="py-1.5 px-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Cetak label */}
-                          <PrintLabelDropdown
-                            variant="icon"
-                            onSelect={(type) => handlePrintLabelWithType(type, item.id)}
-                            isPrinting={isPrinting}
-                          />
-
-                          {/* Detail */}
-                          <button
-                            onClick={() => navigate(`/inventaris/detail/${item.id}`)}
-                            className="p-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
-                            title="Detail"
-                          >
-                            <Eye size={14} />
-                          </button>
-
-                          {/* Ubah dan hapus hanya untuk peran pengelola inventaris */}
-                          {canManage && (
-                            <>
-                              <button
-                                onClick={() => navigate(`/inventaris/edit/${item.id}`)}
-                                className="p-1.5 bg-brand-primary text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all"
-                                title="Edit"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-
-                              <button
-                                onClick={() => setDeleteId(item.id)}
-                                disabled={deleteMutation.isPending}
-                                className="p-1.5 bg-danger-500 text-white rounded-lg shadow-sm hover:-translate-y-0.5 transition-all disabled:opacity-50"
-                                title="Hapus"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-6">
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={pagination.goToPage}
-            totalData={pagination.totalItems}
-            size="sm"
-          />
-        </div>
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          skeletonRows={10}
+          tableClassName="[&_th]:!px-3 [&_td]:!px-3"
+          containerClassName="@container"
+          empty={{ icon: Layers, title: 'Tidak ada data inventaris', description: 'Coba ubah filter pencarian Anda' }}
+          rowClassName={(item) => (expandedId === item.id ? '!border-b-0' : '')}
+          renderSubRow={(item, colCount) => (expandedId === item.id ? (
+            <tr key={`detail-${item.id}`}>
+              <td colSpan={colCount} className="px-4 !py-0">
+                <InventarisRowDetail
+                  item={item}
+                  closing={closing}
+                  onPreviewQr={() => setImagePreview({ isOpen: true, imageUrl: item.qrcode_url, altText: `QR Code - ${item.no_inventaris || ''}` })}
+                />
+              </td>
+            </tr>
+          ) : null)}
+        />
       </div>
 
       <ConfirmDialog
         isOpen={deleteId !== null}
         title="Konfirmasi Hapus"
-        message="Apakah Anda yakin ingin menghapus inventaris ini?"
+        message="Hapus permanen hanya untuk data salah input dan tidak bisa dibatalkan. Alat yang sudah punya riwayat aduan/pemeliharaan harus digudangkan atau dihapus dari daftar aset. Lanjutkan?"
         confirmText="Ya, Hapus"
         type="danger"
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteId(null)}
       />
+
+      {statusItem && (
+        <StatusAsetModal
+          key={`${statusItem.id}-${statusItem.status_aset}`}
+          isOpen
+          inventaris={statusItem}
+          onClose={() => setStatusItem(null)}
+        />
+      )}
 
       {/* Image Preview Modal */}
       <ImagePreviewModal

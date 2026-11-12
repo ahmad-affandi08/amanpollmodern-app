@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench, ShieldCheck, Archive, Building2 } from 'lucide-react';
 import InventarisApi from '../../../api/InventarisApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle, useAuth } from '../../../hooks';
 import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 import StatusBadge from '../../../components/StatusBadge';
+import StatusAsetBadge from '../../../components/StatusAsetBadge';
+import StatusAsetModal from '../../../components/StatusAsetModal';
+import { isNonAktif, statusAsetOf, statusTujuanFor } from '../../../utils/statusAset';
 import { canManageKalibrasi } from '../../../utils/kalibrasi';
 import { rupiah, formatDate } from '../../../utils/format';
 import { canManageInventaris } from '../../auth/constants';
@@ -25,6 +29,7 @@ export default function InventarisDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   const canManage = canManageInventaris(user);
 
@@ -83,16 +88,42 @@ export default function InventarisDetail() {
             <p className="text-[#808191] text-xs mt-0.5">Informasi lengkap alat inventaris</p>
           </div>
         </div>
-        {canManage && (
-          <Button
-            size="sm"
-            onClick={() => navigate(`/inventaris/edit/${id}`)}
-            className="flex items-center gap-2"
-          >
-            Edit Data
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canManage && (data.kondisi_alat === 'Rusak Berat' || isNonAktif(data)) && statusTujuanFor(user, statusAsetOf(data)).length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setStatusModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Archive size={14} />
+              {isNonAktif(data) ? 'Ubah Status Aset' : 'Gudangkan / Hapus dari Daftar Aset'}
+            </Button>
+          )}
+          {/* Alat yang sudah digudangkan/dihapus tidak dapat diubah datanya */}
+          {canManage && !isNonAktif(data) && (
+            <Button
+              size="sm"
+              onClick={() => navigate(`/inventaris/edit/${id}`)}
+              className="flex items-center gap-2"
+            >
+              Edit Data
+            </Button>
+          )}
+        </div>
       </div>
+
+      {isNonAktif(data) && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <StatusAsetBadge status={data.status_aset} />
+          <p className="text-sm text-amber-900">
+            Alat ini <b>{data.status_aset?.toLowerCase()}</b>
+            {data.tanggal_status ? <> sejak <b>{formatDate(data.tanggal_status)}</b></> : null}
+            {data.status_log?.[0]?.alasan ? <>. Alasan: {data.status_log[0].alasan}</> : null}
+            . Data dan riwayatnya tetap tersimpan, tetapi tidak muncul di daftar kerja, dashboard, dan analisis.
+          </p>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-[24px] p-2 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
@@ -101,7 +132,9 @@ export default function InventarisDetail() {
             { id: 'info', label: 'Informasi Alat', icon: FileText },
             { id: 'aduan', label: 'Riwayat Aduan', icon: AlertCircle },
             { id: 'pemeliharaan', label: 'Riwayat Pemeliharaan', icon: Wrench },
-            { id: 'kalibrasi', label: 'Riwayat Kalibrasi', icon: ShieldCheck }
+            { id: 'kalibrasi', label: 'Riwayat Kalibrasi', icon: ShieldCheck },
+            { id: 'servis', label: 'Servis Pihak Ketiga', icon: Building2 },
+            { id: 'status', label: 'Riwayat Status Aset', icon: Archive }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -404,6 +437,58 @@ export default function InventarisDetail() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab: Riwayat Status Aset */}
+      {activeTab === 'status' && (
+        <div className="bg-white rounded-[20px] p-5 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] space-y-3 animate-fade-in">
+          {(data.status_log || []).length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">
+              Belum ada riwayat. Alat ini belum pernah digudangkan atau dihapus dari daftar aset.
+            </p>
+          ) : (
+            data.status_log.map((log) => (
+              <div key={log.id} className="border border-gray-100 rounded-xl p-4 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusAsetBadge status={log.status_lama} size="sm" />
+                  <span className="text-gray-400">→</span>
+                  <StatusAsetBadge status={log.status_baru} size="sm" />
+                  <span className="text-xs text-gray-500 ml-auto">
+                    {formatDate(log.tanggal_status)}{log.dibuat_oleh ? ` · ${log.dibuat_oleh}` : ''}
+                  </span>
+                </div>
+                <p className="text-sm text-text-dark">{log.alasan}</p>
+                <div className="text-xs text-gray-500 space-y-0.5">
+                  {log.ruangan_asal && <p>Ruangan asal: {log.ruangan_asal}</p>}
+                  {log.kondisi_alat && <p>Kondisi saat itu: {log.kondisi_alat}</p>}
+                  {log.lokasi_penyimpanan && <p>Lokasi penyimpanan: {log.lokasi_penyimpanan}</p>}
+                  {log.tindak_lanjut && <p>Tindak lanjut: {log.tindak_lanjut}</p>}
+                  {log.nomor_sk && <p>SK: {log.nomor_sk} ({formatDate(log.tanggal_sk)})</p>}
+                  {log.nomor_ba && <p>Berita Acara: {log.nomor_ba} ({formatDate(log.tanggal_ba)})</p>}
+                  {log.file_dokumen_url && (
+                    <a href={log.file_dokumen_url} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
+                      Lihat dokumen
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {statusModalOpen && (
+        <StatusAsetModal
+          key={`${data.id}-${data.status_aset}`}
+          isOpen
+          inventaris={data}
+          onClose={() => { setStatusModalOpen(false); fetchDetail(true); }}
+        />
+      )}
+
+      {/* Tab: Servis Pihak Ketiga (gabungan aduan dan pemeliharaan, hanya baca) */}
+      {activeTab === 'servis' && (
+        <ServisPihakKetigaPanel jenis="inventaris" indukId={data.id} tanpaJudul />
       )}
 
       {/* Tab: Kalibrasi */}

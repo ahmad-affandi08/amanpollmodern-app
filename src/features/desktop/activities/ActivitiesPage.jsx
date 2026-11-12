@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useActivities } from '../../../hooks/queries/useDashboardQueries';
 import { Calendar, MapPin, Package } from 'lucide-react';
-import { usePageTitle, usePagination } from '../../../hooks';
-import Pagination from '../../../components/Pagination';
+import { usePageTitle } from '../../../hooks';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
+import FilterBar from '../../../components/FilterBar';
+import SegmentTabs from '../../../components/SegmentTabs';
+import TablePagination from '../../../components/TablePagination';
 import StatusBadge from '../../../components/StatusBadge';
 import { formatDateTime } from '../../../utils/format';
 import { getActivityIcon, getActivityColor, getActivityLabel } from './activityMeta';
@@ -14,9 +17,15 @@ const ACTIVITY_FILTERS = [
   { value: 'pemeliharaan', label: 'Pemeliharaan' },
 ];
 
+// Filter diatur lewat state TanStack. Peta: id filter -> parameter query server. Tipe awal 'all' (seperti sebelumnya).
+const FILTER_MAP = { tipe: 'type' };
+const INITIAL_FILTERS = [{ id: 'tipe', value: 'all' }];
+// Daftar kartu: state halaman & filter dipegang instance TanStack, kartunya dirender dari baris tabel.
+const NO_COLUMNS = [];
+
 const ActivityCard = ({ activity }) => (
-  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
-    <div className="flex items-start gap-4">
+  <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex items-start gap-3 sm:gap-4">
       <div className={`p-3 rounded-full ${getActivityColor(activity.type)}`}>
         {getActivityIcon(activity.type, 20)}
       </div>
@@ -52,56 +61,47 @@ const ActivityCard = ({ activity }) => (
 
 const ActivitiesPage = () => {
   usePageTitle('Riwayat Aktivitas');
-  const [filterType, setFilterType] = useState('all');
-  const pagination = usePagination(10);
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP, initialFilters: INITIAL_FILTERS });
+  const { params } = tableState;
 
   // Hook sudah memakai placeholderData, jadi daftar lama bertahan saat pindah halaman/filter.
   const { data, isLoading, isFetching } = useActivities({
-    type: filterType,
-    page: pagination.currentPage,
-    per_page: pagination.perPage
+    type: params.type,
+    page: params.page,
+    per_page: params.per_page,
   });
 
   const activities = data?.data || [];
 
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (data) {
-      setMetadata({
-        current_page: data.current_page,
-        last_page: data.last_page,
-        total: data.total,
-      });
-    }
-  }, [data, setMetadata]);
-
-  const handleFilterChange = (type) => {
-    setFilterType(type);
-    pagination.reset();
-  };
+  const table = useDataTable({
+    columns: NO_COLUMNS,
+    data: activities,
+    tableState,
+    pageCount: data?.last_page,
+    rowCount: data?.total,
+    getRowId: (activity) => `${activity.type}-${activity.id}`,
+  });
+  const f = getTableFilters(table);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Riwayat Aktivitas</h1>
-          <p className="text-gray-500 text-sm mt-1">Memantau semua aktivitas sistem terkini</p>
-        </div>
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-xl font-bold text-text-dark">Riwayat Aktivitas</h1>
+        <p className="text-text-gray text-xs mt-1">Memantau semua aktivitas sistem terkini</p>
+      </div>
 
-        <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-          {ACTIVITY_FILTERS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => handleFilterChange(value)}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${filterType === value
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-50'
-                }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          className="mb-0"
+          actions={
+            <SegmentTabs
+              ariaLabel="Tipe aktivitas"
+              tabs={ACTIVITY_FILTERS}
+              value={f.get('tipe')}
+              onChange={(value) => f.set('tipe', value)}
+            />
+          }
+        />
       </div>
 
       {isLoading ? (
@@ -112,8 +112,8 @@ const ActivitiesPage = () => {
         </div>
       ) : (
         <div className={`grid grid-cols-1 gap-4 transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
-          {activities.map((activity) => (
-            <ActivityCard key={`${activity.type}-${activity.id}`} activity={activity} />
+          {table.getRowModel().rows.map(({ original: activity, id }) => (
+            <ActivityCard key={id} activity={activity} />
           ))}
 
           {activities.length === 0 && (
@@ -125,15 +125,11 @@ const ActivitiesPage = () => {
         </div>
       )}
 
-      <div className="pb-8">
-        <Pagination
-          size="sm"
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.goToPage}
-          totalData={data ? pagination.totalItems : undefined}
-        />
-      </div>
+      {data && (
+        <div className="pb-8">
+          <TablePagination table={table} />
+        </div>
+      )}
     </div>
   );
 };

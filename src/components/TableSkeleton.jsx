@@ -23,7 +23,7 @@ export default function TableSkeleton({ rows = 5, columns = 5 }) {
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <tr key={rowIndex} className="animate-pulse border-b border-gray-50">
           {Array.from({ length: columns }).map((_, colIndex) => (
-            <td key={colIndex} className="px-6 py-4">
+            <td key={colIndex} className="px-4 py-2.5">
               <div className="h-4 bg-gray-200 rounded w-full"></div>
             </td>
           ))}

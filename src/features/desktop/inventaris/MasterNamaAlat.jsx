@@ -7,32 +7,27 @@ import {
   useDeleteNamaAlat,
   useMasterKategori,
   useMasterDivisi,
-  useDebounce,
   useModal,
   usePageTitle,
   useToast,
 } from '../../../hooks';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
-import Select from '../../../components/Select';
 import RisikoBadge from '../../../components/RisikoBadge';
 import { SKOR_FUNGSI, SKOR_RISIKO_KLINIS, SKOR_PEMELIHARAAN, KELAS_AMDD, hitungRisiko } from '../../../utils/risiko';
 import Modal from '../../../components/Modal';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import SearchableSelect from '../../../components/SearchableSelect';
-import Pagination from '../../../components/Pagination';
+import DataTable from '../../../components/DataTable';
+import FilterBar from '../../../components/FilterBar';
+import { useLocalTable, getTableFilters } from '../../../hooks/utils/useServerTable';
+import { indexColumn } from '../../../utils/tableColumns';
 import ChecklistMaintenanceModal from './components/ChecklistMaintenanceModal';
-import TableSkeleton from '../../../components/TableSkeleton';
 
 const RISIKO_KOSONG = { skor_fungsi: '', skor_risiko_klinis: '', skor_pemeliharaan: '', kelas_amdd: '' };
 
 export default function MasterNamaAlat() {
   usePageTitle('Master Nama Alat');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const debouncedSearch = useDebounce(searchTerm, 300);
   const modal = useModal();
   const checklistModal = useModal();
 
@@ -63,19 +58,6 @@ export default function MasterNamaAlat() {
   const divisions = divisiData?.data || divisiData || [];
 
 
-  const filteredData = dataList.filter(item =>
-    item.nama_nama_alat?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-    item.kategori_alat?.nama_kategori?.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
-
-
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  // Setelah filter/hapus, halaman aktif tidak boleh melebihi jumlah halaman (menghindari halaman kosong).
-  const activePage = Math.min(currentPage, totalPages);
-  const paginatedData = filteredData.slice(
-    (activePage - 1) * itemsPerPage,
-    activePage * itemsPerPage
-  );
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
 
@@ -162,6 +144,53 @@ export default function MasterNamaAlat() {
     label: div.nama_divisi
   }));
 
+  const columns = [
+    indexColumn(),
+    { id: 'nama_nama_alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_nama_alat, meta: { cellClassName: 'font-bold text-text-dark' } },
+    { id: 'kategori', header: 'Kategori', cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Tag size={12} className="text-brand-primary" />
+        <span className="font-semibold text-xs">{row.original.kategori_alat?.nama_kategori || '-'}</span>
+      </div>
+    ) },
+    { id: 'divisi', header: 'Divisi', cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Users size={12} className="text-[#FF754C]" />
+        <span className="font-semibold text-xs">{row.original.divisi?.nama_divisi || '-'}</span>
+      </div>
+    ) },
+    { id: 'standar_usia_pakai', header: 'Usia Pakai', cell: ({ row }) => `${row.original.standar_usia_pakai} Tahun`, meta: { cellClassName: 'font-bold' } },
+    { id: 'risiko', header: 'Risiko', cell: ({ row: { original: item } }) => <RisikoBadge tingkat={item.tingkat_risiko} skor={item.skor_risiko} size="sm" /> },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => checklistModal.open(item)}
+          className="p-2 bg-purple-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+          title="Checklist Maintenance"
+        >
+          <ClipboardList size={16} />
+        </button>
+        <button onClick={() => handleOpenEdit(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Edit">
+          <Edit2 size={16} />
+        </button>
+        <button onClick={() => setDeleteTarget(item)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Hapus" disabled={deleteMutation.isPending}>
+          <Trash2 size={16} />
+        </button>
+      </div>
+    ) },
+  ];
+
+  const table = useLocalTable({
+    columns,
+    data: dataList,
+    pageSize: 10,
+    getRowId: (item) => item.id,
+    matchSearch: (item, q) =>
+      item.nama_nama_alat?.toLowerCase().includes(q) ||
+      item.kategori_alat?.nama_kategori?.toLowerCase().includes(q),
+  });
+  const f = getTableFilters(table);
+
   return (
     <div className="space-y-6 animate-fade-in">
 
@@ -180,98 +209,31 @@ export default function MasterNamaAlat() {
           <h1 className="text-xl font-bold text-text-dark">Master Nama Alat</h1>
           <p className="text-text-gray text-xs mt-1">Standarisasi nama alat dan masa pakai</p>
         </div>
-        <Button onClick={handleOpenCreate} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20 py-2 px-4 text-sm">
+        <Button onClick={handleOpenCreate} className="flex items-center gap-2 shadow-lg shadow-brand-primary/20">
           <Plus size={16} />
           <span>Tambah Nama Alat</span>
         </Button>
       </div>
 
-      <div className="bg-white rounded-[20px] p-4 md:p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="mb-4 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
+              size="sm"
               placeholder="Cari nama alat..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-          </div>
-        </div>
+          }
+        />
 
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">No</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Nama Alat</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Kategori</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Divisi</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Usia Pakai</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase">Risiko</th>
-                <th className="py-3 px-4 text-xs font-bold text-text-gray uppercase text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <TableSkeleton rows={5} columns={7} />
-              ) : filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="py-12 text-center">
-                    <Package size={32} className="mx-auto text-gray-400 mb-4" />
-                    <p className="font-bold text-gray-600">Belum ada data</p>
-                    <p className="text-sm text-gray-400 mt-1">Silakan tambahkan nama alat baru</p>
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-4 text-sm font-bold">{(activePage - 1) * itemsPerPage + index + 1}</td>
-                    <td className="py-2 px-4 text-sm font-bold text-text-dark">{item.nama_nama_alat}</td>
-                    <td className="py-2 px-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Tag size={12} className="text-brand-primary" />
-                        <span className="font-semibold text-xs">{item.kategori_alat?.nama_kategori || '-'}</span>
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users size={12} className="text-[#FF754C]" />
-                        <span className="font-semibold text-xs">{item.divisi?.nama_divisi || '-'}</span>
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 text-sm font-bold">{item.standar_usia_pakai} Tahun</td>
-                    <td className="py-2 px-4"><RisikoBadge tingkat={item.tingkat_risiko} skor={item.skor_risiko} size="sm" /></td>
-                    <td className="py-2 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => checklistModal.open(item)}
-                          className="p-2 bg-purple-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                          title="Checklist Maintenance"
-                        >
-                          <ClipboardList size={16} />
-                        </button>
-                        <button onClick={() => handleOpenEdit(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Edit">
-                          <Edit2 size={16} />
-                        </button>
-                        <button onClick={() => setDeleteTarget(item)} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Hapus" disabled={deleteMutation.isPending}>
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={activePage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalData={filteredData.length}
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          empty={{ icon: Package, title: 'Belum ada data', description: 'Silakan tambahkan nama alat baru' }}
         />
       </div>
 
@@ -336,37 +298,41 @@ export default function MasterNamaAlat() {
               <h3 className="text-sm font-bold text-text-dark">Penilaian Risiko (Fennig-Koh)</h3>
               <RisikoBadge tingkat={risiko?.tingkat} skor={risiko?.total} />
             </div>
-            <Select
+            <SearchableSelect
               label="Fungsi Alat"
+              name="skor_fungsi"
+              options={[{ label: 'Belum dinilai', value: '' }, ...SKOR_FUNGSI]}
               value={formData.skor_fungsi}
               onChange={setField('skor_fungsi')}
-              options={SKOR_FUNGSI}
               placeholder="Belum dinilai"
-              placeholderDisabled={false}
+              searchPlaceholder="Cari skor..."
             />
-            <Select
+            <SearchableSelect
               label="Risiko Klinis (bila alat gagal)"
+              name="skor_risiko_klinis"
+              options={[{ label: 'Belum dinilai', value: '' }, ...SKOR_RISIKO_KLINIS]}
               value={formData.skor_risiko_klinis}
               onChange={setField('skor_risiko_klinis')}
-              options={SKOR_RISIKO_KLINIS}
               placeholder="Belum dinilai"
-              placeholderDisabled={false}
+              searchPlaceholder="Cari skor..."
             />
-            <Select
+            <SearchableSelect
               label="Persyaratan Pemeliharaan"
+              name="skor_pemeliharaan"
+              options={[{ label: 'Belum dinilai', value: '' }, ...SKOR_PEMELIHARAAN]}
               value={formData.skor_pemeliharaan}
               onChange={setField('skor_pemeliharaan')}
-              options={SKOR_PEMELIHARAAN}
               placeholder="Belum dinilai"
-              placeholderDisabled={false}
+              searchPlaceholder="Cari skor..."
             />
-            <Select
+            <SearchableSelect
               label="Kelas Risiko Kemenkes (opsional)"
+              name="kelas_amdd"
+              options={[{ label: 'Tidak diisi', value: '' }, ...KELAS_AMDD]}
               value={formData.kelas_amdd}
               onChange={setField('kelas_amdd')}
-              options={KELAS_AMDD}
               placeholder="Tidak diisi"
-              placeholderDisabled={false}
+              searchPlaceholder="Cari skor..."
             />
             <p className="text-xs text-gray-500">
               Isi ketiga skor sekaligus atau kosongkan semuanya. Tinggi (9-12): PM 2x/tahun; Sedang (6-8) dan Rendah (3-5): PM 1x/tahun.

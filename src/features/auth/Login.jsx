@@ -166,7 +166,7 @@ export default function Login() {
               </Link>
             </div>
 
-            <Button
+            <Button size="md"
               type="submit"
               loading={loading}
               className="w-full bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg shadow-brand-primary/20 hover:shadow-xl hover:shadow-brand-primary/30 transform hover:scale-[1.02] transition-all"

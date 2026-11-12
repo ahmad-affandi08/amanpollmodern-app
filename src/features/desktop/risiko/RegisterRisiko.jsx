@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ShieldAlert, Search, AlertTriangle, ClipboardCheck, Wrench, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldAlert, Shield, ShieldCheck, HelpCircle, Wrench, Search, AlertTriangle, ClipboardCheck, Download, Clock } from 'lucide-react';
 import {
   useRisikoRegister,
   useRisikoRingkasan,
@@ -9,18 +9,19 @@ import {
   useMasterDivisi,
   useMasterRuangan,
   useAuth,
-  useDebounce,
   useModal,
-  usePagination,
   usePageTitle,
   useToast,
 } from '../../../hooks';
 import Button from '../../../components/Button';
-import Select from '../../../components/Select';
+import Input from '../../../components/Input';
+import SearchableSelect from '../../../components/SearchableSelect';
+import StatCard from '../../../components/StatCard';
 import Modal from '../../../components/Modal';
-import Pagination from '../../../components/Pagination';
+import DataTable from '../../../components/DataTable';
+import FilterBar from '../../../components/FilterBar';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import ConfirmDialog from '../../../components/Alert/Alert';
-import TableSkeleton from '../../../components/TableSkeleton';
 import RisikoBadge from '../../../components/RisikoBadge';
 import { ACCESS, ROLES, hasRole, isRole } from '../../auth/constants';
 import { formatDateShort } from '../../../utils/format';
@@ -29,23 +30,12 @@ import {
   SKOR_FUNGSI, SKOR_RISIKO_KLINIS, SKOR_PEMELIHARAAN, KELAS_AMDD, hitungRisiko,
 } from '../../../utils/risiko';
 
-const TH = 'py-2 px-3 text-xs font-bold text-[#808191] uppercase';
+// Filter diatur lewat state TanStack (columnFilters); id filter = parameter query server.
+// `interval` tidak punya kontrol sendiri: diisi dari kartu ringkasan "Interval Tidak Sesuai".
+const FILTER_MAP = { tingkat: 'tingkat', interval: 'interval', divisi_id: 'divisi_id', ruangan_id: 'ruangan_id' };
 const SKOR_KOSONG = { skor_fungsi: '', skor_risiko_klinis: '', skor_pemeliharaan: '', kelas_amdd: '' };
 
 const errorMessage = (error, fallback) => error?.response?.data?.message || fallback;
-
-function SummaryCard({ label, value, color, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`text-left rounded-2xl border p-4 bg-white transition-all hover:shadow-md ${active ? 'ring-2 ring-brand-primary border-brand-primary' : 'border-gray-100'}`}
-    >
-      <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-extrabold ${color}`}>{value ?? '-'}</p>
-    </button>
-  );
-}
 
 export default function RegisterRisiko() {
   usePageTitle('Register Risiko Alat');
@@ -55,10 +45,8 @@ export default function RegisterRisiko() {
   const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
 
   const [tab, setTab] = useState('register');
-  const [filters, setFilters] = useState({ search: '', tingkat: '', interval: '', divisi_id: '', ruangan_id: '' });
-  const debouncedSearch = useDebounce(filters.search, 400);
-  const pagination = usePagination(15);
-  const { setMetadata, reset: resetPage } = pagination;
+  const tableState = useTableState({ pageSize: 15, filterMap: FILTER_MAP, searchDelay: 400 });
+  const { filters, params } = tableState;
 
   const [selectedUnits, setSelectedUnits] = useState([]);
   const [confirm, setConfirm] = useState(null); // { semua: bool }
@@ -67,12 +55,7 @@ export default function RegisterRisiko() {
   const nilaiModal = useModal();
 
   const { data: ringkasan } = useRisikoRingkasan();
-  const { data: registerData, isLoading } = useRisikoRegister({
-    ...filters,
-    search: debouncedSearch,
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-  });
+  const { data: registerData, isLoading } = useRisikoRegister(params);
   const { data: namaAlatData } = useMasterNamaAlat({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
@@ -81,7 +64,6 @@ export default function RegisterRisiko() {
 
   const rows = registerData?.data || [];
   const meta = registerData?.meta;
-  useEffect(() => { if (meta) setMetadata(meta); }, [meta, setMetadata]);
 
   const divisions = divisiData?.data || [];
   const rooms = ruanganData?.data || [];
@@ -90,18 +72,6 @@ export default function RegisterRisiko() {
   const belumDinilai = (namaAlatData?.data || namaAlatData || [])
     .filter((n) => !n.tingkat_risiko)
     .filter((n) => !isAdminDivisi || n.divisi_id === user?.divisi_id);
-
-  const setFilter = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setSelectedUnits([]);
-    resetPage();
-  };
-  const pickSummary = (patch) => {
-    setTab('register');
-    setFilters((prev) => ({ ...prev, tingkat: '', interval: '', ...patch }));
-    setSelectedUnits([]);
-    resetPage();
-  };
 
   const selectableIds = rows.filter((r) => r.interval_kurang).map((r) => r.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedUnits.includes(id));
@@ -145,7 +115,7 @@ export default function RegisterRisiko() {
   const handleExport = async (format) => {
     setExporting(true);
     try {
-      const blob = await RisikoApi.exportRegister({ ...filters, search: debouncedSearch }, format);
+      const blob = await RisikoApi.exportRegister(filters, format);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -164,6 +134,79 @@ export default function RegisterRisiko() {
   const risiko = hitungRisiko(skor.skor_fungsi, skor.skor_risiko_klinis, skor.skor_pemeliharaan);
   const setSkorField = (name) => (e) => setSkor((prev) => ({ ...prev, [name]: e.target.value }));
 
+  // Kolom checkbox hanya untuk pengelola; dibangun kondisional.
+  const registerColumns = [
+    ...(canManage ? [{
+      id: 'select',
+      header: () => (
+        <input type="checkbox" aria-label="Pilih semua yang tidak sesuai" checked={allSelected} disabled={selectableIds.length === 0}
+          onChange={() => setSelectedUnits(allSelected ? [] : selectableIds)} />
+      ),
+      cell: ({ row: { original: r } }) => (
+        r.interval_kurang && (
+          <input type="checkbox" aria-label={`Pilih ${r.no_inventaris}`} checked={selectedUnits.includes(r.id)} onChange={() => toggleUnit(r.id)} />
+        )
+      ),
+      meta: { headerClassName: 'w-8' },
+    }] : []),
+    { id: 'no_inventaris', header: 'No. Inventaris', cell: ({ row }) => row.original.no_inventaris || '-', meta: { cellClassName: 'font-semibold' } },
+    { id: 'nama_alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat || '-' },
+    { id: 'ruangan', header: 'Ruangan', cell: ({ row }) => row.original.ruangan || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'risiko', header: 'Risiko', cell: ({ row: { original: r } }) => <RisikoBadge tingkat={r.tingkat_risiko} skor={r.skor_risiko} size="sm" /> },
+    { id: 'interval', header: 'Interval PM', cell: ({ row: { original: r } }) => (
+      r.interval_kurang ? (
+        <span className="inline-flex items-center gap-1 text-orange-700 font-semibold" title="Di bawah minimum pedoman">
+          <AlertTriangle size={12} />
+          {r.interval_maintenance > 0 ? `${r.interval_maintenance}x` : 'Belum diatur'} (min {r.interval_rekomendasi}x)
+        </span>
+      ) : (
+        <span className="text-gray-600">{r.interval_maintenance > 0 ? `${r.interval_maintenance}x / tahun` : '-'}</span>
+      )
+    ) },
+    { id: 'kadaluwarsa', header: 'Berlaku Hingga', cell: ({ row: { original: r } }) => (r.kadaluwarsa ? formatDateShort(r.kadaluwarsa) : '-'), meta: { cellClassName: 'text-gray-600' } },
+  ];
+
+  const belumColumns = [
+    ...(canManage ? [{
+      id: 'select',
+      header: () => (
+        <input type="checkbox" aria-label="Pilih semua" checked={allJenisSelected} disabled={belumDinilai.length === 0}
+          onChange={() => setSelectedJenis(allJenisSelected ? [] : belumDinilai.map((n) => n.id))} />
+      ),
+      cell: ({ row: { original: n } }) => (
+        <input type="checkbox" aria-label={`Pilih ${n.nama_nama_alat}`} checked={selectedJenis.includes(n.id)} onChange={() => toggleJenis(n.id)} />
+      ),
+      meta: { headerClassName: 'w-8' },
+    }] : []),
+    { id: 'nama_alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_nama_alat, meta: { cellClassName: 'font-semibold' } },
+    { id: 'kategori', header: 'Kategori', cell: ({ row }) => row.original.kategori_alat?.nama_kategori || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi?.nama_divisi || '-', meta: { cellClassName: 'text-gray-600' } },
+  ];
+
+  const table = useDataTable({
+    columns: registerColumns,
+    data: rows,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    getRowId: (r) => r.id,
+  });
+  const f = getTableFilters(table);
+
+  // Mengubah filter/pencarian mengosongkan pilihan baris (halaman kembali ke 1 otomatis oleh hook).
+  const setFilter = (id, value) => { f.set(id, value); setSelectedUnits([]); };
+  const handleResetFilters = () => { f.reset(); setSelectedUnits([]); };
+  // Kartu ringkasan: ganti tingkat & interval sekaligus (filter lain dipertahankan).
+  const pickSummary = (patch) => {
+    setTab('register');
+    table.setColumnFilters((old) => [
+      ...old.filter((x) => x.id !== 'tingkat' && x.id !== 'interval'),
+      ...Object.entries(patch).map(([id, value]) => ({ id, value })),
+    ]);
+    setSelectedUnits([]);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <ConfirmDialog
@@ -177,35 +220,58 @@ export default function RegisterRisiko() {
         onCancel={() => setConfirm(null)}
       />
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-dark flex items-center gap-2">
-            <ShieldAlert size={22} className="text-brand-primary" />
-            Register Risiko Alat
-          </h1>
-          <p className="text-text-gray text-xs mt-1">
-            Tingkat risiko peralatan medis metode Fennig-Koh (MFK 7) dan kesesuaian interval pemeliharaan.
-          </p>
+          <h1 className="text-xl font-bold text-text-dark">Register Risiko Alat</h1>
+          <p className="text-text-gray text-xs mt-1">Tingkat risiko alat metode Fennig-Koh (MFK 7) dan kesesuaian interval pemeliharaan</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" className="py-1.5 px-3 text-xs flex items-center gap-1.5" onClick={() => handleExport('xls')} disabled={exporting}>
-            <Download size={14} /> Excel
+        <div className="grid grid-cols-1 md:flex gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={() => handleExport('xls')} disabled={exporting} className="gap-2 w-full md:w-auto">
+            <Download className="w-3.5 h-3.5" />
+            Export Excel
           </Button>
-          <Button variant="ghost" className="py-1.5 px-3 text-xs flex items-center gap-1.5" onClick={() => handleExport('pdf')} disabled={exporting}>
-            <Download size={14} /> PDF
+          <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} disabled={exporting} className="gap-2 w-full md:w-auto">
+            <Download className="w-3.5 h-3.5" />
+            Export PDF
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <SummaryCard label="Risiko Tinggi" value={ringkasan?.tinggi} color="text-red-600" active={tab === 'register' && filters.tingkat === 'Tinggi'} onClick={() => pickSummary({ tingkat: 'Tinggi' })} />
-        <SummaryCard label="Risiko Sedang" value={ringkasan?.sedang} color="text-amber-600" active={tab === 'register' && filters.tingkat === 'Sedang'} onClick={() => pickSummary({ tingkat: 'Sedang' })} />
-        <SummaryCard label="Risiko Rendah" value={ringkasan?.rendah} color="text-emerald-600" active={tab === 'register' && filters.tingkat === 'Rendah'} onClick={() => pickSummary({ tingkat: 'Rendah' })} />
-        <SummaryCard label="Belum Dinilai" value={ringkasan?.belum_dinilai} color="text-gray-600" active={tab === 'register' && filters.tingkat === 'Belum'} onClick={() => pickSummary({ tingkat: 'Belum' })} />
-        <SummaryCard label="Interval Tidak Sesuai" value={ringkasan?.interval_kurang} color="text-orange-600" active={tab === 'register' && filters.interval === 'kurang'} onClick={() => pickSummary({ interval: 'kurang' })} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          icon={<ShieldAlert size={20} />} title="Risiko Tinggi" value={ringkasan?.tinggi ?? '-'}
+          bgColor="bg-gradient-to-br from-[#FFF1F2] via-[#FFE0E3] to-[#FCA5A5]" iconColor="text-[#DC2626]"
+          cardBgColor="bg-gradient-to-br from-red-50/50 via-white to-red-50/30"
+          active={tab === 'register' && f.get('tingkat') === 'Tinggi'} onClick={() => pickSummary({ tingkat: 'Tinggi' })}
+        />
+        <StatCard
+          icon={<Shield size={20} />} title="Risiko Sedang" value={ringkasan?.sedang ?? '-'}
+          bgColor="bg-gradient-to-br from-[#FFF7ED] via-[#FFE5D3] to-[#FDBA74]" iconColor="text-[#EA580C]"
+          cardBgColor="bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30"
+          active={tab === 'register' && f.get('tingkat') === 'Sedang'} onClick={() => pickSummary({ tingkat: 'Sedang' })}
+        />
+        <StatCard
+          icon={<ShieldCheck size={20} />} title="Risiko Rendah" value={ringkasan?.rendah ?? '-'}
+          bgColor="bg-gradient-to-br from-[#F0FDF9] via-[#D1FBEA] to-[#6EE7B7]" iconColor="text-[#059669]"
+          cardBgColor="bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/30"
+          active={tab === 'register' && f.get('tingkat') === 'Rendah'} onClick={() => pickSummary({ tingkat: 'Rendah' })}
+        />
+        <StatCard
+          icon={<HelpCircle size={20} />} title="Belum Dinilai" value={ringkasan?.belum_dinilai ?? '-'}
+          bgColor="bg-gradient-to-br from-[#F2F0FF] via-[#E2DBFF] to-[#C4B5FD]" iconColor="text-brand-primary"
+          cardBgColor="bg-gradient-to-br from-purple-50/50 via-white to-purple-50/30"
+          active={tab === 'register' && f.get('tingkat') === 'Belum'} onClick={() => pickSummary({ tingkat: 'Belum' })}
+        />
+        <StatCard
+          icon={<Clock size={20} />} title="Interval Tidak Sesuai" value={ringkasan?.interval_kurang ?? '-'}
+          bgColor="bg-gradient-to-br from-[#F0F9FF] via-[#E3F2FF] to-[#93C5FD]" iconColor="text-[#2563EB]"
+          cardBgColor="bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30"
+          active={tab === 'register' && f.get('interval') === 'kurang'} onClick={() => pickSummary({ interval: 'kurang' })}
+        />
       </div>
 
-      <div className="bg-white rounded-[20px] p-4 md:p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
         <div className="flex gap-2 mb-4 border-b border-gray-100">
           {[
             ['register', 'Register Alat'],
@@ -224,26 +290,66 @@ export default function RegisterRisiko() {
 
         {tab === 'register' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
-              <div className="relative md:col-span-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Cari no. inventaris / nama alat..."
-                  className="w-full pl-9 pr-3 h-[36px] rounded-lg bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none text-xs"
-                  value={filters.search}
-                  onChange={(e) => setFilter('search', e.target.value)}
+            <FilterBar
+              search={
+                <Input
+                  name="search"
+                  size="sm"
+                  placeholder="Cari No. Inventaris / Nama Alat..."
+                  value={f.search}
+                  onChange={(e) => { f.setSearch(e.target.value); setSelectedUnits([]); }}
+                  icon={<Search className="w-3.5 h-3.5" />}
+                  className="!bg-white"
                 />
-              </div>
-              <Select size="sm" value={filters.tingkat} onChange={(e) => setFilter('tingkat', e.target.value)} placeholder="Semua Tingkat" placeholderDisabled={false}
-                options={[{ value: 'Tinggi', label: 'Tinggi' }, { value: 'Sedang', label: 'Sedang' }, { value: 'Rendah', label: 'Rendah' }, { value: 'Belum', label: 'Belum dinilai' }]} />
+              }
+              actions={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="!rounded-lg whitespace-nowrap border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
+                >
+                  Reset Filter
+                </Button>
+              }
+              gridClassName={isAdminDivisi ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}
+            >
+              <SearchableSelect
+                name="tingkat"
+                size="sm"
+                value={f.get('tingkat')}
+                onChange={(e) => setFilter('tingkat', e.target.value)}
+                options={[
+                  { label: 'Semua Tingkat', value: '' },
+                  { label: 'Tinggi', value: 'Tinggi' },
+                  { label: 'Sedang', value: 'Sedang' },
+                  { label: 'Rendah', value: 'Rendah' },
+                  { label: 'Belum dinilai', value: 'Belum' },
+                ]}
+                placeholder="Semua Tingkat"
+                searchPlaceholder="Cari tingkat..."
+              />
               {!isAdminDivisi && (
-                <Select size="sm" value={filters.divisi_id} onChange={(e) => setFilter('divisi_id', e.target.value)} placeholder="Semua Divisi" placeholderDisabled={false}
-                  options={divisions.map((d) => ({ value: d.id_divisi, label: d.nama_divisi }))} />
+                <SearchableSelect
+                  name="divisi_id"
+                  size="sm"
+                  value={f.get('divisi_id')}
+                  onChange={(e) => setFilter('divisi_id', e.target.value)}
+                  options={[{ label: 'Semua Divisi', value: '' }, ...divisions.map((d) => ({ label: d.nama_divisi, value: d.id_divisi }))]}
+                  placeholder="Semua Divisi"
+                  searchPlaceholder="Cari divisi..."
+                />
               )}
-              <Select size="sm" value={filters.ruangan_id} onChange={(e) => setFilter('ruangan_id', e.target.value)} placeholder="Semua Ruangan" placeholderDisabled={false}
-                options={rooms.map((r) => ({ value: r.id_ruangan || r.id, label: r.nama_ruangan }))} />
-            </div>
+              <SearchableSelect
+                name="ruangan_id"
+                size="sm"
+                value={f.get('ruangan_id')}
+                onChange={(e) => setFilter('ruangan_id', e.target.value)}
+                options={[{ label: 'Semua Ruangan', value: '' }, ...rooms.map((r) => ({ label: r.nama_ruangan, value: r.id_ruangan || r.id }))]}
+                placeholder="Semua Ruangan"
+                searchPlaceholder="Cari ruangan..."
+              />
+            </FilterBar>
 
             {canManage && (selectedUnits.length > 0 || (ringkasan?.interval_kurang ?? 0) > 0) && (
               <div className="flex flex-wrap items-center gap-2 mb-3 p-3 rounded-xl bg-orange-50 border border-orange-100">
@@ -252,74 +358,22 @@ export default function RegisterRisiko() {
                   {ringkasan?.interval_kurang ?? 0} alat memiliki interval di bawah pedoman (Tinggi minimal 2x/tahun, Sedang/Rendah 1x/tahun).
                 </span>
                 {selectedUnits.length > 0 && (
-                  <Button className="py-1.5 px-3 text-xs" onClick={() => setConfirm({ semua: false })} disabled={terapkanMutation.isPending}>
+                  <Button size="sm" onClick={() => setConfirm({ semua: false })} disabled={terapkanMutation.isPending}>
                     Terapkan ke {selectedUnits.length} terpilih
                   </Button>
                 )}
-                <Button variant="ghost" className="py-1.5 px-3 text-xs" onClick={() => setConfirm({ semua: true })} disabled={terapkanMutation.isPending}>
+                <Button variant="outline" size="sm" onClick={() => setConfirm({ semua: true })} disabled={terapkanMutation.isPending}>
                   Terapkan ke semua yang tidak sesuai
                 </Button>
               </div>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-bg-light border-b border-gray-100">
-                    {canManage && (
-                      <th className={`${TH} w-8`}>
-                        <input type="checkbox" aria-label="Pilih semua yang tidak sesuai" checked={allSelected} disabled={selectableIds.length === 0}
-                          onChange={() => setSelectedUnits(allSelected ? [] : selectableIds)} />
-                      </th>
-                    )}
-                    <th className={TH}>No. Inventaris</th>
-                    <th className={TH}>Nama Alat</th>
-                    <th className={TH}>Ruangan</th>
-                    <th className={TH}>Divisi</th>
-                    <th className={TH}>Risiko</th>
-                    <th className={TH}>Interval PM</th>
-                    <th className={TH}>Berlaku Hingga</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {isLoading ? (
-                    <TableSkeleton rows={8} columns={canManage ? 8 : 7} />
-                  ) : rows.length === 0 ? (
-                    <tr><td colSpan={canManage ? 8 : 7} className="py-12 text-center text-sm text-gray-400">Tidak ada alat yang cocok dengan filter.</td></tr>
-                  ) : rows.map((r) => (
-                    <tr key={r.id} className="hover:bg-gray-50/50">
-                      {canManage && (
-                        <td className="py-1.5 px-3">
-                          {r.interval_kurang && (
-                            <input type="checkbox" aria-label={`Pilih ${r.no_inventaris}`} checked={selectedUnits.includes(r.id)} onChange={() => toggleUnit(r.id)} />
-                          )}
-                        </td>
-                      )}
-                      <td className="py-1.5 px-3 text-xs font-semibold">{r.no_inventaris || '-'}</td>
-                      <td className="py-1.5 px-3 text-xs">{r.nama_alat || '-'}</td>
-                      <td className="py-1.5 px-3 text-xs text-gray-600">{r.ruangan || '-'}</td>
-                      <td className="py-1.5 px-3 text-xs text-gray-600">{r.divisi || '-'}</td>
-                      <td className="py-1.5 px-3"><RisikoBadge tingkat={r.tingkat_risiko} skor={r.skor_risiko} size="sm" /></td>
-                      <td className="py-1.5 px-3 text-xs">
-                        {r.interval_kurang ? (
-                          <span className="inline-flex items-center gap-1 text-orange-700 font-semibold" title="Di bawah minimum pedoman">
-                            <AlertTriangle size={12} />
-                            {r.interval_maintenance > 0 ? `${r.interval_maintenance}x` : 'Belum diatur'} (min {r.interval_rekomendasi}x)
-                          </span>
-                        ) : (
-                          <span className="text-gray-600">{r.interval_maintenance > 0 ? `${r.interval_maintenance}x / tahun` : '-'}</span>
-                        )}
-                      </td>
-                      <td className="py-1.5 px-3 text-xs text-gray-600">{r.kadaluwarsa ? formatDateShort(r.kadaluwarsa) : '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-6">
-              <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} onPageChange={pagination.goToPage} totalData={pagination.totalItems} size="sm" />
-            </div>
+            <DataTable
+              table={table}
+              isLoading={isLoading}
+              skeletonRows={8}
+              empty={{ title: 'Tidak ada alat yang cocok dengan filter.' }}
+            />
           </>
         )}
 
@@ -330,43 +384,18 @@ export default function RegisterRisiko() {
                 Jenis alat yang belum punya skor risiko. Pilih beberapa jenis yang tingkat risikonya sama, lalu beri skor sekaligus.
               </p>
               {canManage && (
-                <Button className="py-1.5 px-3 text-xs flex items-center gap-1.5" disabled={selectedJenis.length === 0} onClick={nilaiModal.open}>
-                  <ClipboardCheck size={14} />
+                <Button size="sm" className="gap-1.5" disabled={selectedJenis.length === 0} onClick={nilaiModal.open}>
+                  <ClipboardCheck className="w-3.5 h-3.5" />
                   Nilai {selectedJenis.length || ''} terpilih
                 </Button>
               )}
             </div>
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-bg-light border-b border-gray-100">
-                    {canManage && (
-                      <th className={`${TH} w-8`}>
-                        <input type="checkbox" aria-label="Pilih semua" checked={allJenisSelected} disabled={belumDinilai.length === 0}
-                          onChange={() => setSelectedJenis(allJenisSelected ? [] : belumDinilai.map((n) => n.id))} />
-                      </th>
-                    )}
-                    <th className={TH}>Nama Alat</th>
-                    <th className={TH}>Kategori</th>
-                    <th className={TH}>Divisi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {belumDinilai.length === 0 ? (
-                    <tr><td colSpan="4" className="py-12 text-center text-sm text-gray-400">Semua jenis alat sudah dinilai.</td></tr>
-                  ) : belumDinilai.map((n) => (
-                    <tr key={n.id} className="hover:bg-gray-50/50">
-                      {canManage && (
-                        <td className="py-1.5 px-3"><input type="checkbox" aria-label={`Pilih ${n.nama_nama_alat}`} checked={selectedJenis.includes(n.id)} onChange={() => toggleJenis(n.id)} /></td>
-                      )}
-                      <td className="py-1.5 px-3 text-xs font-semibold">{n.nama_nama_alat}</td>
-                      <td className="py-1.5 px-3 text-xs text-gray-600">{n.kategori_alat?.nama_kategori || '-'}</td>
-                      <td className="py-1.5 px-3 text-xs text-gray-600">{n.divisi?.nama_divisi || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={belumColumns}
+              data={belumDinilai}
+              getRowId={(n) => n.id}
+              empty={{ title: 'Semua jenis alat sudah dinilai.' }}
+            />
           </>
         )}
       </div>
@@ -384,13 +413,48 @@ export default function RegisterRisiko() {
       >
         <form id="form-nilai-massal" onSubmit={handleNilai} className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-text-dark flex items-center gap-2"><Wrench size={14} /> Skor Fennig-Koh</span>
+            <span className="text-sm font-bold text-text-dark flex items-center gap-2"><Wrench className="w-3.5 h-3.5" /> Skor Fennig-Koh</span>
             <RisikoBadge tingkat={risiko?.tingkat} skor={risiko?.total} />
           </div>
-          <Select label="Fungsi Alat" value={skor.skor_fungsi} onChange={setSkorField('skor_fungsi')} options={SKOR_FUNGSI} placeholder="Pilih skor" required />
-          <Select label="Risiko Klinis (bila alat gagal)" value={skor.skor_risiko_klinis} onChange={setSkorField('skor_risiko_klinis')} options={SKOR_RISIKO_KLINIS} placeholder="Pilih skor" required />
-          <Select label="Persyaratan Pemeliharaan" value={skor.skor_pemeliharaan} onChange={setSkorField('skor_pemeliharaan')} options={SKOR_PEMELIHARAAN} placeholder="Pilih skor" required />
-          <Select label="Kelas Risiko Kemenkes (opsional)" value={skor.kelas_amdd} onChange={setSkorField('kelas_amdd')} options={KELAS_AMDD} placeholder="Tidak diisi" placeholderDisabled={false} />
+          <SearchableSelect
+            label="Fungsi Alat"
+            name="skor_fungsi"
+            options={SKOR_FUNGSI}
+            value={skor.skor_fungsi}
+            onChange={setSkorField('skor_fungsi')}
+            placeholder="Pilih skor"
+            searchPlaceholder="Cari skor..."
+            required
+          />
+          <SearchableSelect
+            label="Risiko Klinis (bila alat gagal)"
+            name="skor_risiko_klinis"
+            options={SKOR_RISIKO_KLINIS}
+            value={skor.skor_risiko_klinis}
+            onChange={setSkorField('skor_risiko_klinis')}
+            placeholder="Pilih skor"
+            searchPlaceholder="Cari skor..."
+            required
+          />
+          <SearchableSelect
+            label="Persyaratan Pemeliharaan"
+            name="skor_pemeliharaan"
+            options={SKOR_PEMELIHARAAN}
+            value={skor.skor_pemeliharaan}
+            onChange={setSkorField('skor_pemeliharaan')}
+            placeholder="Pilih skor"
+            searchPlaceholder="Cari skor..."
+            required
+          />
+          <SearchableSelect
+            label="Kelas Risiko Kemenkes (opsional)"
+            name="kelas_amdd"
+            options={[{ label: 'Tidak diisi', value: '' }, ...KELAS_AMDD]}
+            value={skor.kelas_amdd}
+            onChange={setSkorField('kelas_amdd')}
+            placeholder="Tidak diisi"
+            searchPlaceholder="Cari skor..."
+          />
         </form>
       </Modal>
     </div>

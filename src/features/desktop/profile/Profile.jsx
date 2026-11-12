@@ -62,7 +62,7 @@ export default function Profile() {
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Keamanan</h2>
           <Button
             onClick={() => setPasswordModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-all text-sm font-medium shadow-sm"
+            className="gap-2 !rounded-lg"
           >
             <Lock size={16} />
             <span>Ganti Password</span>

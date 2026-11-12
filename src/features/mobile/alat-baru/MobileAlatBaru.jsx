@@ -51,7 +51,7 @@ export default function MobileAlatBaru() {
           <p className="text-sm text-text-gray mb-4">
             {error?.response?.data?.message || 'Gagal memuat data alat baru'}
           </p>
-          <Button onClick={() => refetch()} className="mx-auto">Coba Lagi</Button>
+          <Button size="md" onClick={() => refetch()} className="mx-auto">Coba Lagi</Button>
         </div>
       </div>
     );
@@ -62,7 +62,7 @@ export default function MobileAlatBaru() {
       {/* Header with Add Button */}
       <div className="flex items-center justify-between py-3">
         <h1 className="text-xl font-bold text-text-dark">Alat Baru</h1>
-        <Button
+        <Button size="md"
           onClick={() => navigate('/mobile/alat-baru/add')}
           className="flex items-center gap-2 bg-brand-primary text-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all"
         >

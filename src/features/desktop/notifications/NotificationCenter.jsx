@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, Trash2, Check, CheckCheck, Search, Info } from 'lucide-react';
 import {
-  usePagination,
-  useDebounce,
   useToast,
   useNotifications,
   useMarkAsRead,
@@ -11,17 +9,33 @@ import {
   useDeleteAllNotifications,
   usePageTitle,
 } from '../../../hooks';
-import Pagination from '../../../components/Pagination';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
+import Button from '../../../components/Button';
+import Input from '../../../components/Input';
+import FilterBar from '../../../components/FilterBar';
+import SegmentTabs from '../../../components/SegmentTabs';
+import TablePagination from '../../../components/TablePagination';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import { parseDate } from '../../../utils/format';
 import { formatDistanceToNow } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 
 const FILTER_OPTIONS = [
-  { value: 'all', label: 'Semua' },
+  { value: '', label: 'Semua' },
   { value: 'unread', label: 'Belum Dibaca' },
   { value: 'read', label: 'Sudah Dibaca' }
 ];
+
+// API notifikasi hanya mendukung page dan per_page, jadi filter dan pencarian dijalankan TanStack
+// di sisi klien pada halaman yang sedang ditampilkan (paginasi tetap dari server).
+const COLUMNS = [
+  {
+    id: 'status',
+    header: 'Status',
+    filterFn: (row, _columnId, value) => (value === 'unread' ? !row.original.is_read : !!row.original.is_read),
+  },
+];
+const matchSearch = (notif, text) => !!notif.isi?.toLowerCase().includes(text);
 
 /** Waktu relatif ("5 menit yang lalu"); '-' bila tanggal kosong atau tidak valid. */
 const formatRelativeTime = (value) => {
@@ -35,28 +49,31 @@ const getErrorMessage = (error, fallback) => error?.response?.data?.message || f
 const NotificationCenter = () => {
   usePageTitle('Pusat Notifikasi');
   const { showToast } = useToast();
-  const [filter, setFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearch = useDebounce(searchQuery, 300);
-  const pagination = usePagination(20);
+  // Mengubah filter/pencarian tidak memindahkan halaman: keduanya hanya menyaring halaman yang sedang tampil.
+  const tableState = useTableState({ pageSize: 20, resetPageOnFilter: false });
+  const { pageIndex, pageSize } = tableState.state.pagination;
   // { kind: 'single', id } atau { kind: 'all' }; null = dialog tertutup.
   const [confirmAction, setConfirmAction] = useState(null);
 
-  const { data, isLoading } = useNotifications(pagination.currentPage, pagination.perPage);
+  const { data, isLoading } = useNotifications(pageIndex + 1, pageSize);
   const notifications = data?.data || [];
   const meta = data?.meta;
+
+  const table = useDataTable({
+    columns: COLUMNS,
+    data: notifications,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    matchSearch,
+    getRowId: (notif) => notif.id_notifikasi,
+  });
+  const f = getTableFilters(table);
 
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
   const deleteAllMutation = useDeleteAllNotifications();
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) {
-      setMetadata(meta);
-    }
-  }, [meta, setMetadata]);
 
   const handleMarkAsRead = async (id) => {
     try {
@@ -96,83 +113,65 @@ const NotificationCenter = () => {
     }
   };
 
-  // API notifikasi hanya mendukung page dan per_page, jadi filter dan pencarian
-  // dijalankan di sisi klien pada halaman yang sedang ditampilkan.
-  const normalizedSearch = debouncedSearch.trim().toLowerCase();
-  const filteredNotifications = notifications.filter(notif => {
-    const matchesFilter = filter === 'all' ||
-      (filter === 'unread' && !notif.is_read) ||
-      (filter === 'read' && notif.is_read);
-
-    const matchesSearch = !normalizedSearch ||
-      notif.isi?.toLowerCase().includes(normalizedSearch);
-
-    return matchesFilter && matchesSearch;
-  });
-
-  const isClientFiltering = filter !== 'all' || normalizedSearch !== '';
+  const status = f.get('status');
+  const filteredNotifications = table.getRowModel().rows.map((row) => row.original);
+  const isClientFiltering = status !== '' || f.search.trim() !== '';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pusat Notifikasi</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-xl font-bold text-text-dark">Pusat Notifikasi</h1>
+          <p className="text-text-gray text-xs mt-1">
             Kelola semua notifikasi Anda
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
+        <div className="grid grid-cols-1 sm:flex gap-2 w-full md:w-auto">
+          <Button
             onClick={handleMarkAllAsRead}
             disabled={markAllAsReadMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white shadow-lg bg-brand-primary rounded-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+            className="gap-2 w-full md:w-auto"
           >
             <CheckCheck className="w-4 h-4" />
             Tandai Semua Dibaca
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             onClick={() => setConfirmAction({ kind: 'all' })}
             disabled={deleteAllMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white shadow-lg bg-danger-500 rounded-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+            className="gap-2 w-full md:w-auto"
           >
             <Trash2 className="w-4 h-4" />
             Hapus Semua
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          className="mb-0"
+          search={
+            <Input
+              name="search"
+              size="sm"
               placeholder="Cari notifikasi..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="flex gap-2">
-            {FILTER_OPTIONS.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setFilter(value)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === value
-                  ? 'bg-brand-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+          }
+          actions={
+            <SegmentTabs
+              ariaLabel="Status notifikasi"
+              tabs={FILTER_OPTIONS}
+              value={status}
+              onChange={(value) => f.set('status', value)}
+            />
+          }
+        />
 
         {isClientFiltering && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
@@ -183,80 +182,80 @@ const NotificationCenter = () => {
       </div>
 
       {/* Notifications List */}
-      <div className="bg-white rounded-lg shadow-sm divide-y divide-gray-200">
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-sm text-gray-600">Memuat notifikasi...</p>
-          </div>
-        ) : filteredNotifications.length === 0 ? (
-          <div className="p-8 text-center">
-            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">
-              {isClientFiltering && notifications.length > 0
-                ? 'Tidak ada notifikasi yang cocok di halaman ini'
-                : 'Tidak ada notifikasi'}
-            </p>
-          </div>
-        ) : (
-          filteredNotifications.map((notif) => (
-            <div
-              key={notif.id_notifikasi}
-              className={`p-4 hover:bg-gray-50 transition-colors ${!notif.is_read ? 'bg-blue-50' : ''
-                }`}
-            >
-              <div className="flex items-start gap-3">
-                {/* Icon */}
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${!notif.is_read ? 'bg-blue-100' : 'bg-gray-100'
-                  }`}>
-                  <Bell className={`w-5 h-5 ${!notif.is_read ? 'text-blue-600' : 'text-gray-600'}`} />
-                </div>
+      <div className="bg-white rounded-xl shadow-sm">
+        <div className="divide-y divide-gray-100">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-sm text-gray-600">Memuat notifikasi...</p>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="p-8 text-center">
+              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">
+                {isClientFiltering && notifications.length > 0
+                  ? 'Tidak ada notifikasi yang cocok di halaman ini'
+                  : 'Tidak ada notifikasi'}
+              </p>
+            </div>
+          ) : (
+            filteredNotifications.map((notif) => (
+              <div
+                key={notif.id_notifikasi}
+                className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors ${!notif.is_read ? 'bg-blue-50' : ''
+                  }`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${!notif.is_read ? 'bg-blue-100' : 'bg-gray-100'
+                    }`}>
+                    <Bell className={`w-5 h-5 ${!notif.is_read ? 'text-blue-600' : 'text-gray-600'}`} />
+                  </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm ${!notif.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-                    {notif.isi}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatRelativeTime(notif.created_date || notif.created_at)}
-                  </p>
-                </div>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm ${!notif.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                      {notif.isi}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatRelativeTime(notif.created_date || notif.created_at)}
+                    </p>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  {!notif.is_read && (
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    {!notif.is_read && (
+                      <button
+                        onClick={() => handleMarkAsRead(notif.id_notifikasi)}
+                        disabled={markAsReadMutation.isPending && markAsReadMutation.variables === notif.id_notifikasi}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
+                        title="Tandai sudah dibaca"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleMarkAsRead(notif.id_notifikasi)}
-                      disabled={markAsReadMutation.isPending && markAsReadMutation.variables === notif.id_notifikasi}
-                      className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
-                      title="Tandai sudah dibaca"
+                      onClick={() => setConfirmAction({ kind: 'single', id: notif.id_notifikasi })}
+                      disabled={deleteNotificationMutation.isPending && deleteNotificationMutation.variables === notif.id_notifikasi}
+                      className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50"
+                      title="Hapus"
                     >
-                      <Check className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                  <button
-                    onClick={() => setConfirmAction({ kind: 'single', id: notif.id_notifikasi })}
-                    disabled={deleteNotificationMutation.isPending && deleteNotificationMutation.variables === notif.id_notifikasi}
-                    className="p-3 bg-danger-500 text-white rounded-2xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                    title="Hapus"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {data && (
+          <div className="p-3 sm:p-4 border-t border-gray-100">
+            <TablePagination table={table} />
+          </div>
         )}
       </div>
-
-      {/* Pagination */}
-      <Pagination
-        size="sm"
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        onPageChange={pagination.goToPage}
-        totalData={pagination.totalItems}
-      />
 
       <ConfirmDialog
         isOpen={!!confirmAction}

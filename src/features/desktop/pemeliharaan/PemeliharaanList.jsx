@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Search, Trash2, Edit2, Calendar } from 'lucide-react';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusBadge from '../../../components/StatusBadge';
+import ServisBadge from '../../../components/ServisBadge';
 import {
   usePemeliharaan,
   useDeletePemeliharaan,
   useMasterRuangan,
   useAuth,
   useToast,
-  usePagination,
-  useFilters,
-  useDebounce,
   useModal,
   usePageTitle,
 } from '../../../hooks';
 import Button from '../../../components/Button';
-import Pagination from '../../../components/Pagination';
+import Input from '../../../components/Input';
+import FilterBar from '../../../components/FilterBar';
+import DateRangePicker from '../../../components/DateRangePicker';
+import DataTable from '../../../components/DataTable';
+import { indexColumn } from '../../../utils/tableColumns';
 import SearchableSelect from '../../../components/SearchableSelect';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
-import TableSkeleton from '../../../components/TableSkeleton';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import AddPemeliharaanModal from './AddPemeliharaanModal';
 import EditPemeliharaanModal from './EditPemeliharaanModal';
@@ -43,6 +45,14 @@ const COLUMN_DEFS = [
   { key: 'actions', label: 'Aksi', defaultVisible: true, alwaysVisible: true }
 ];
 
+// Filter diatur lewat state TanStack. Peta: id filter -> parameter query server (array = rentang [awal, akhir]).
+const FILTER_MAP = {
+  ruangan: 'ruangan_id',
+  teknisi: 'teknisi_id',
+  tanggal: ['start_date', 'end_date'],
+  pihakKetiga: 'pihak_ketiga',
+};
+
 export default function PemeliharaanList() {
   usePageTitle('Daftar Pemeliharaan');
   const { user } = useAuth();
@@ -64,32 +74,20 @@ export default function PemeliharaanList() {
   // Jadwal/teknisi pemeliharaan yang sudah selesai tidak dapat diubah lagi.
   const canEdit = (item) => canWrite && item.status !== 'Selesai';
 
-  const { visibleColumns, toggleColumn, showAll, hideAll, isVisible } = useColumnToggle(
+  const { visibleColumns, toggleColumn, showAll, hideAll } = useColumnToggle(
     COLUMN_DEFS,
     'pemeliharaan_columns'
   );
 
-  const pagination = usePagination(10);
-  const { filters, updateFilter, resetFilters } = useFilters({
-    search: '',
-    ruangan_id: '',
-    teknisi_id: '',
-    start_date: '',
-    end_date: ''
-  });
-  const debouncedSearch = useDebounce(filters.search, 500);
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
+  const { params } = tableState;
 
   const addModal = useModal();
   const editModal = useModal();
 
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const { data: pemeliharaanData, isLoading, refetch } = usePemeliharaan({
-    ...filters,
-    search: debouncedSearch,
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-  });
+  const { data: pemeliharaanData, isLoading, refetch } = usePemeliharaan(params);
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
 
@@ -99,13 +97,6 @@ export default function PemeliharaanList() {
 
   const data = pemeliharaanData?.data || [];
   const meta = pemeliharaanData?.meta;
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) {
-      setMetadata(meta);
-    }
-  }, [meta, setMetadata]);
 
   const ruanganOptions = (ruanganData?.data || []);
 
@@ -120,18 +111,63 @@ export default function PemeliharaanList() {
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    updateFilter(key, value);
-    pagination.reset();
-  };
+  // id kolom = key di COLUMN_DEFS, supaya ColumnToggle tetap mengendalikan visibilitas.
+  const columns = [
+    indexColumn(),
+    { id: 'no_pemeliharaan', header: 'No. Pemeliharaan', cell: ({ row: { original: item } }) => (
+      <span className="px-2 py-0.5 rounded-md bg-purple-50 text-brand-primary text-[10px] font-bold">{item.no_pemeliharaan || '-'}</span>
+    ) },
+    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi_nama || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'ruangan', header: 'Ruangan', cell: ({ row }) => row.original.ruangan_nama || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'gedung', header: 'Gedung', cell: ({ row }) => row.original.gedung || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat_nama || '-', meta: { cellClassName: 'font-medium text-text-dark' } },
+    { id: 'no_inventaris', header: 'No. Inv', cell: ({ row }) => (
+      <span className="px-2 py-0.5 rounded-md bg-brand-primary-50 text-brand-primary text-[10px] font-bold">{row.original.no_inventaris || '-'}</span>
+    ) },
+    { id: 'tanggal_jadwal', header: 'Jadwal', cell: ({ row }) => formatDateShort(row.original.jadwal_pemeliharaan), meta: { cellClassName: 'font-medium text-text-dark' } },
+    { id: 'teknisi', header: 'Teknisi', cell: ({ row: { original: item } }) => (
+      item.teknisi_nama && item.teknisi_nama !== '-'
+        ? <span className="font-medium text-brand-primary">{item.teknisi_nama}</span>
+        : <span className="text-gray-400 text-[10px] italic">Belum ada</span>
+    ) },
+    { id: 'status', header: 'Status', cell: ({ row }) => (
+      <div className="flex flex-col items-start gap-1">
+        <StatusBadge status={row.original.status} />
+        <ServisBadge jumlah={row.original.jumlah_servis} />
+      </div>
+    ) },
+    { id: 'kondisi_alat', header: 'Kondisi', cell: ({ row: { original: item } }) => (
+      item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : '-'
+    ), meta: { cellClassName: 'text-gray-600' } },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-2">
+        {canEdit(item) && (
+          <button onClick={() => editModal.open(item)} className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all" title="Edit">
+            <Edit2 size={16} />
+          </button>
+        )}
+        {canDelete(item) && (
+          <button onClick={() => setDeleteTarget(item)} disabled={deleteMutation.isPending} className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50" title="Hapus">
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+    ) },
+  ];
 
-  const handleResetFilters = () => {
-    resetFilters();
-    pagination.reset();
-  };
+  const table = useDataTable({
+    columns,
+    data,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    columnVisibility: visibleColumns,
+    getRowId: (item) => item.id_pemeliharaan,
+  });
 
-  // Jumlah kolom yang tampil, dipakai untuk colSpan skeleton dan keadaan kosong.
-  const visibleColumnCount = Math.max(1, COLUMN_DEFS.filter(col => isVisible(col.key)).length);
+  // Filter lewat state TanStack. Nilai kosong menghapus filter; mengubah filter kembali ke halaman 1.
+  const f = getTableFilters(table);
+  const [startDate, endDate] = f.getRange('tanggal');
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -143,7 +179,7 @@ export default function PemeliharaanList() {
         {canWrite && (
           <Button
             onClick={() => addModal.open()}
-            size="md"
+            size="sm"
             className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
           >
             <Plus className="w-4 h-4" />
@@ -152,237 +188,102 @@ export default function PemeliharaanList() {
         )}
       </div>
 
-      <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Cari pemeliharaan..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            <SearchableSelect
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
               size="sm"
-              name="ruangan_id"
-              value={filters.ruangan_id}
-              onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
-              options={[
-                { label: 'Semua Ruangan', value: '' },
-                ...ruanganOptions.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }))
-              ]}
-              placeholder="Semua Ruangan"
-              searchPlaceholder="Cari ruangan..."
+              placeholder="Cari pemeliharaan..."
+              icon={<Search className="w-3.5 h-3.5" />}
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              className="!bg-white"
             />
-
-            <SearchableSelect
-              size="sm"
-              name="teknisi_id"
-              value={filters.teknisi_id}
-              onChange={(e) => handleFilterChange('teknisi_id', e.target.value)}
-              options={[
-                { label: 'Semua Teknisi', value: '' },
-                ...teknisiList.map(t => ({ label: t.nama_lengkap, value: t.id_user }))
-              ]}
-              placeholder="Semua Teknisi"
-              searchPlaceholder="Cari teknisi..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="date"
-                  value={filters.start_date}
-                  onChange={(e) => handleFilterChange('start_date', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-gray-600 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="date"
-                  value={filters.end_date}
-                  onChange={(e) => handleFilterChange('end_date', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-gray-600 text-sm"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
+          }
+          actions={
+            <>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleResetFilters}
-                className="w-full border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
+                onClick={f.reset}
+                className="!rounded-lg whitespace-nowrap border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
               >
                 Reset Filter
               </Button>
               <ColumnToggle
-                size="sm"
                 columns={COLUMN_DEFS}
                 visibleColumns={visibleColumns}
                 onToggle={toggleColumn}
                 onShowAll={showAll}
                 onHideAll={hideAll}
+                size="sm"
+                className="!rounded-lg"
               />
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
-            <thead className="bg-bg-light border-b border-gray-100">
-              <tr>
-                {isVisible('index') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No</th>}
-                {isVisible('no_pemeliharaan') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Pemeliharaan</th>}
-                {isVisible('divisi') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Divisi</th>}
-                {isVisible('ruangan') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Ruangan</th>}
-                {isVisible('gedung') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Gedung</th>}
-                {isVisible('alat') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>}
-                {isVisible('no_inventaris') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Inv</th>}
-                {isVisible('tanggal_jadwal') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Jadwal</th>}
-                {isVisible('teknisi') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Teknisi</th>}
-                {isVisible('status') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>}
-                {isVisible('kondisi_alat') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi</th>}
-                {isVisible('actions') && <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Aksi</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-sm">
-              {isLoading ? (
-                <TableSkeleton columns={visibleColumnCount} rows={10} />
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan={visibleColumnCount} className="py-12 text-center">
-                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="font-bold text-gray-600">Tidak ada data pemeliharaan</p>
-                    <p className="text-sm text-gray-400 mt-1">Belum ada jadwal pemeliharaan</p>
-                  </td>
-                </tr>
-              ) : (
-                data.map((item, index) => (
-                  <tr key={item.id_pemeliharaan} className="hover:bg-gray-50/50 transition-colors">
-                    {isVisible('index') && (
-                      <td className="py-3 px-4 font-bold text-text-dark">
-                        {(pagination.currentPage - 1) * pagination.perPage + index + 1}
-                      </td>
-                    )}
-                    {isVisible('no_pemeliharaan') && (
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-brand-primary text-[10px] font-bold">
-                          {item.no_pemeliharaan || '-'}
-                        </span>
-                      </td>
-                    )}
-                    {isVisible('divisi') && (
-                      <td className="py-3 px-4 text-gray-600 text-xs">
-                        {item.divisi_nama || '-'}
-                      </td>
-                    )}
-                    {isVisible('ruangan') && (
-                      <td className="py-3 px-4 text-gray-600 text-xs">
-                        {item.ruangan_nama || '-'}
-                      </td>
-                    )}
-                    {isVisible('gedung') && (
-                      <td className="py-3 px-4 text-gray-600 text-xs">
-                        {item.gedung || '-'}
-                      </td>
-                    )}
-                    {isVisible('alat') && (
-                      <td className="py-3 px-4 font-medium text-text-dark text-xs">
-                        {item.nama_alat_nama || '-'}
-                      </td>
-                    )}
-                    {isVisible('no_inventaris') && (
-                      <td className="py-3 px-4 text-xs">
-                        <span className="px-2 py-0.5 rounded-md bg-brand-primary-50 text-brand-primary text-[10px] font-bold">
-                          {item.no_inventaris || '-'}
-                        </span>
-                      </td>
-                    )}
-                    {isVisible('tanggal_jadwal') && (
-                      <td className="py-3 px-4 text-text-dark font-medium text-xs">
-                        {formatDateShort(item.jadwal_pemeliharaan)}
-                      </td>
-                    )}
-                    {isVisible('teknisi') && (
-                      <td className="py-3 px-4">
-                        {item.teknisi_nama && item.teknisi_nama !== '-' ? (
-                          <span className="font-medium text-brand-primary text-xs">{item.teknisi_nama}</span>
-                        ) : (
-                          <span className="text-gray-400 text-[10px] italic">Belum ada</span>
-                        )}
-                      </td>
-                    )}
-                    {isVisible('status') && (
-                      <td className="py-3 px-4">
-                        <StatusBadge status={item.status} />
-                      </td>
-                    )}
-                    {isVisible('kondisi_alat') && (
-                      <td className="py-3 px-4 text-gray-600">
-                        {item.kondisi_alat ? (
-                          <KondisiBadge kondisi={item.kondisi_alat} size="sm" />
-                        ) : '-'}
-                      </td>
-                    )}
-                    {isVisible('actions') && (
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {canEdit(item) && (
-                            <button
-                              onClick={() => editModal.open(item)}
-                              className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                              title="Edit"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                          )}
-                          {canDelete(item) && (
-                            <button
-                              onClick={() => setDeleteTarget(item)}
-                              disabled={deleteMutation.isPending}
-                              className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                              title="Hapus"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-6">
-          <Pagination
+            </>
+          }
+          gridClassName="grid-cols-2 md:grid-cols-3"
+        >
+          <SearchableSelect
             size="sm"
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={pagination.goToPage}
-            totalData={pagination.totalItems}
+            name="ruangan_id"
+            value={f.get('ruangan')}
+            onChange={(e) => f.set('ruangan', e.target.value)}
+            options={[
+              { label: 'Semua Ruangan', value: '' },
+              ...ruanganOptions.map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }))
+            ]}
+            placeholder="Semua Ruangan"
+            searchPlaceholder="Cari ruangan..."
           />
-        </div>
+
+          <SearchableSelect
+            size="sm"
+            name="teknisi_id"
+            value={f.get('teknisi')}
+            onChange={(e) => f.set('teknisi', e.target.value)}
+            options={[
+              { label: 'Semua Teknisi', value: '' },
+              ...teknisiList.map(t => ({ label: t.nama_lengkap, value: t.id_user }))
+            ]}
+            placeholder="Semua Teknisi"
+            searchPlaceholder="Cari teknisi..."
+          />
+
+          <SearchableSelect
+            size="sm"
+            name="pihak_ketiga"
+            value={f.get('pihakKetiga')}
+            onChange={(e) => f.set('pihakKetiga', e.target.value)}
+            options={[{ label: 'Semua Servis', value: '' }, { label: 'Ada Laporan Pihak Ketiga', value: '1' }]}
+            placeholder="Semua Servis"
+            searchPlaceholder="Cari..."
+          />
+
+          {/* Rentang tanggal: satu filter (start_date, end_date) */}
+          <div className="col-span-2 md:col-span-1">
+            <DateRangePicker
+              size="sm"
+              startDate={startDate}
+              endDate={endDate}
+              onChange={({ startDate: start, endDate: end }) => f.set('tanggal', start || end ? [start, end] : '')}
+              className="!bg-white"
+            />
+          </div>
+        </FilterBar>
+
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          skeletonRows={10}
+          empty={{ icon: Calendar, title: 'Tidak ada data pemeliharaan', description: 'Belum ada jadwal pemeliharaan' }}
+        />
       </div>
 
       <AddPemeliharaanModal
         isOpen={addModal.isOpen}
         onClose={addModal.close}
-        onSuccess={() => { pagination.reset(); refetch(); }}
+        onSuccess={() => { table.setPageIndex(0); refetch(); }}
       />
 
       <EditPemeliharaanModal

@@ -116,7 +116,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
           {/* Actions */}
           <div className="pt-2 flex gap-3">
-            <Button
+            <Button size="md"
               variant="outline"
               className="flex-1 py-2.5 rounded-xl border-gray-200"
               onClick={onClose}
@@ -124,7 +124,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             >
               Batal
             </Button>
-            <Button
+            <Button size="md"
               variant="primary"
               className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-primary to-brand-primary-light"
               type="submit"

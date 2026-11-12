@@ -10,6 +10,7 @@ import { usePageTitle, useToast, useAuth } from '../../../hooks';
 import { ROLES, isRole } from '../../auth/constants';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
+import DateRangePicker from '../../../components/DateRangePicker';
 import SearchableSelect from '../../../components/SearchableSelect';
 
 // Kategori alat "Software" (id 23): tidak punya ruangan fisik, sama dengan aturan di backend.
@@ -696,24 +697,17 @@ export default function InventarisForm() {
 
               {formData.perlu_kalibrasi && (
                 <>
-                  <div className="animate-fade-in-down">
-                    <Input
-                      label="Awal Kalibrasi"
-                      name="awal_kalibrasi"
-                      type="date"
+                  <div className="animate-fade-in-down md:col-span-2">
+                    <DateRangePicker
+                      label="Awal Kalibrasi – Kadaluwarsa"
                       size="sm"
-                      value={formData.awal_kalibrasi}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="animate-fade-in-down">
-                    <Input
-                      label="Kadaluwarsa"
-                      name="kadaluwarsa"
-                      type="date"
-                      size="sm"
-                      value={formData.kadaluwarsa}
-                      onChange={handleChange}
+                      partial
+                      placeholder="Pilih awal kalibrasi & kadaluwarsa"
+                      startDate={formData.awal_kalibrasi}
+                      endDate={formData.kadaluwarsa}
+                      onChange={({ startDate, endDate }) =>
+                        setFormData((prev) => ({ ...prev, awal_kalibrasi: startDate, kadaluwarsa: endDate }))
+                      }
                     />
                   </div>
                 </>

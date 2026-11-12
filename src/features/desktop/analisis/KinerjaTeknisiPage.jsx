@@ -5,8 +5,27 @@ import {
 } from 'recharts';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
+import DataTable from '../../../components/DataTable';
 import { useAnalisisKinerja } from '../../../hooks/queries/useAnalisisQueries';
 import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
+
+const kinerjaColumns = [
+  { id: 'nama_teknisi', header: 'Nama Teknisi', meta: { cellClassName: 'font-semibold text-gray-800' }, cell: ({ row }) => row.original.nama_teknisi },
+  { id: 'aktif', header: 'Tugas Aktif', meta: { align: 'center' }, cell: ({ row: { original: teknisi } }) => {
+    const totalAktif = Number(teknisi.aduan_aktif || 0) + Number(teknisi.pemeliharaan_aktif || 0);
+    return (
+      <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${totalAktif > 5 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-gray-100 text-gray-600'}`}>
+        {totalAktif}
+      </span>
+    );
+  } },
+  { id: 'selesai', header: 'Tugas Selesai', meta: { align: 'center' }, cell: ({ row }) => (
+    <span className="text-gray-700 font-semibold">{row.original.total_tugas_selesai}</span>
+  ) },
+  { id: 'sla', header: 'Rata-rata SLA', meta: { align: 'right' }, cell: ({ row }) => (
+    <span className="text-gray-600">{row.original.avg_resolution_days} Hari</span>
+  ) },
+];
 
 export default function KinerjaTeknisiPage() {
   usePageTitle('Analisis Kinerja Teknisi');
@@ -25,15 +44,15 @@ export default function KinerjaTeknisiPage() {
   const leaderboard = data.leaderboard || [];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 animate-fade-in pb-12">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
             <User className="text-brand-primary" />
             Analisis Kinerja Teknisi
           </h2>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-text-gray text-xs mt-1">
             Mengevaluasi kecepatan respon (SLA), jumlah beban kerja, dan tingkat penyelesaian perbaikan.
           </p>
         </div>
@@ -78,7 +97,7 @@ export default function KinerjaTeknisiPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Leaderboard Chart */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
           <h3 className="font-bold text-gray-800 text-lg mb-6">Top Performer (Tugas Selesai Terbanyak)</h3>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -108,40 +127,15 @@ export default function KinerjaTeknisiPage() {
         </div>
 
         {/* Detailed Workload Table */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col">
           <h3 className="font-bold text-gray-800 text-lg mb-6">Detail Beban Kerja & SLA Teknisi</h3>
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs">Nama Teknisi</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs text-center">Tugas Aktif</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs text-center">Tugas Selesai</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs text-right">Rata-rata SLA</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {leaderboard.map((teknisi) => {
-                  const totalAktif = Number(teknisi.aduan_aktif || 0) + Number(teknisi.pemeliharaan_aktif || 0);
-                  return (
-                    <tr key={teknisi.id_user} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-gray-800">{teknisi.nama_teknisi}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${totalAktif > 5 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-gray-100 text-gray-600'}`}>
-                          {totalAktif}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="text-gray-700 font-semibold">{teknisi.total_tugas_selesai}</span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className="text-gray-600">{teknisi.avg_resolution_days} Hari</span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div className="flex-1">
+            <DataTable
+              columns={kinerjaColumns}
+              data={leaderboard}
+              getRowId={(teknisi) => teknisi.id_user}
+              tableClassName="text-sm"
+            />
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import StatusBadge from '../../../components/StatusBadge';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 
 export default function DetailReportAduan() {
   usePageTitle('Detail Laporan Aduan');
@@ -50,7 +51,7 @@ export default function DetailReportAduan() {
         <button
           type="button"
           onClick={() => navigate('/report/aduan')}
-          className="px-6 py-2 bg-brand-primary text-white rounded-xl hover:bg-brand-primary/90 transition-colors"
+          className="inline-flex items-center justify-center h-[36px] px-4 bg-brand-primary text-white text-xs font-semibold rounded-xl hover:bg-brand-primary/90 transition-colors"
         >
           Kembali ke Daftar
         </button>
@@ -85,7 +86,7 @@ export default function DetailReportAduan() {
         <button
           type="button"
           onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-sm"
+          className="flex items-center gap-2 h-[36px] px-4 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-xs"
         >
           <Download size={16} />
           Export PDF
@@ -266,6 +267,11 @@ export default function DetailReportAduan() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Laporan servis pihak ketiga (vendor) */}
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <ServisPihakKetigaPanel jenis="aduan" indukId={data.id_aduan ?? id} status={data.status_aduan} />
       </div>
 
       {/* Image Preview Modal */}

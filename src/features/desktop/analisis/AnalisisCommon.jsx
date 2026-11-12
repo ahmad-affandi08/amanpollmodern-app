@@ -22,7 +22,7 @@ export function AnalisisError({ message = 'Gagal memuat data analisis.', onRetry
         type="button"
         onClick={onRetry}
         disabled={retrying}
-        className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors text-sm font-semibold disabled:opacity-60"
+        className="flex items-center gap-2 h-[36px] px-4 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors text-xs font-semibold disabled:opacity-60"
       >
         <RefreshCw size={16} className={retrying ? 'animate-spin' : ''} />
         Coba Lagi
@@ -38,7 +38,7 @@ export function RefreshButton({ onClick, isFetching }) {
       type="button"
       onClick={onClick}
       disabled={isFetching}
-      className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-semibold disabled:opacity-60"
+      className="flex items-center gap-2 h-[36px] px-4 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg border border-gray-200 transition-colors text-xs font-semibold disabled:opacity-60"
     >
       <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
       {isFetching ? 'Menyegarkan...' : 'Segarkan Data'}

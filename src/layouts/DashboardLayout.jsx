@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
   Wallet, Users, QrCode, LogOut, Menu, X, ChevronDown, ChevronRight,
   User as UserIcon, Layers, Tag, Server, PlusCircle, Settings, Phone,
-  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck, ShieldAlert
+  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck, ShieldAlert, Archive
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
 import { ACCESS, getRoleId } from '../features/auth/constants';
@@ -98,6 +98,7 @@ export default function DashboardLayout({ children }) {
         { icon: Layers, label: 'Master Kategori', path: '/inventaris/kategori', roles: ACCESS.masterKategori },
         { icon: Tag, label: 'Master Nama Alat', path: '/inventaris/nama-alat', roles: ACCESS.masterNamaAlat },
         { icon: Server, label: 'Data Alat', path: '/inventaris/data', roles: ACCESS.inventarisView },
+        { icon: Archive, label: 'Riwayat Alat Rusak Berat', path: '/inventaris/riwayat-rusak-berat', roles: ACCESS.inventarisArsip },
         { icon: PlusCircle, label: 'Pengajuan Alat Baru', path: '/alat-baru', roles: ACCESS.alatBaru },
       ].filter(child => hasAccess(child.roles))
     },
@@ -551,7 +552,8 @@ export default function DashboardLayout({ children }) {
         </header>
 
         {/* Scrollable Main Content */}
-        <main className="flex-1 px-8 pb-8">
+        {/* Padding mengikuti header (px-4 → md:px-6); lebar penuh 32px baru di layar lebar. */}
+        <main className="flex-1 px-4 pb-6 md:px-6 lg:px-8 lg:pb-8">
           <div className="w-full h-full">
             {children}
           </div>

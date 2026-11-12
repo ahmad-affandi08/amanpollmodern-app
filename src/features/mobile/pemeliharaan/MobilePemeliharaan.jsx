@@ -13,6 +13,7 @@ import noImage from '../../../assets/img/no_image.png';
 import SignatureModal from './components/SignatureModal';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import StatusBadge from '../../../components/StatusBadge';
+import ServisBadge from '../../../components/ServisBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
 import useInfiniteScroll from '../useInfiniteScroll';
 
@@ -248,6 +249,7 @@ export default function MobilePemeliharaan() {
               <div className="flex justify-between items-center gap-2">
                 <div className="flex flex-wrap gap-1">
                   <StatusBadge status={item.status} size="sm" />
+                  <ServisBadge jumlah={item.jumlah_servis} />
 
                   {(item.status === 'Selesai' || item.status === 'Tindakan Lanjutan') && item.status_ttd_teknisi && item.status_ttd_teknisi !== 'Sudah TTD' && (
                     <button

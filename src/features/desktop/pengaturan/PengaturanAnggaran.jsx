@@ -7,6 +7,7 @@ import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
 import ConfirmDialog from '../../../components/Alert/Alert';
+import DataTable from '../../../components/DataTable';
 import { toNumber } from './useAnggaranAnalysis';
 
 const DEFAULT_RAB = 5;
@@ -88,13 +89,30 @@ export default function PengaturanAnggaran() {
     }
   };
 
+  const inflasiColumns = [
+    { id: 'tahun', header: 'Tahun', meta: { cellClassName: 'font-medium text-gray-800' }, cell: ({ row }) => row.original.tahun },
+    { id: 'tingkat_inflasi', header: 'Tingkat Inflasi', meta: { cellClassName: 'font-bold text-brand-primary' }, cell: ({ row }) => (
+      `${(toNumber(row.original.tingkat_inflasi) * 100).toLocaleString('id-ID', { minimumFractionDigits: 2 })}%`
+    ) },
+    { id: 'aksi', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <button
+        type="button"
+        onClick={() => setDeleteId(item.id)}
+        aria-label={`Hapus inflasi tahun ${item.tahun}`}
+        className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+      >
+        <Trash2 size={14} />
+      </button>
+    ) },
+  ];
+
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-lg font-bold text-text-dark flex items-center gap-2">
+        <h1 className="text-xl font-bold text-text-dark flex items-center gap-2">
           Pengaturan Anggaran
         </h1>
-        <p className="text-text-gray text-xs mt-0.5">Kelola persentase RAB dan data inflasi tahunan</p>
+        <p className="text-text-gray text-xs mt-1">Kelola persentase RAB dan data inflasi tahunan</p>
       </div>
 
       {isLoading ? (
@@ -116,7 +134,7 @@ export default function PengaturanAnggaran() {
           </div>
         </div>
       ) : isError && !data ? (
-        <div className="bg-white rounded-xl p-8 shadow-sm text-center space-y-3">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm text-center space-y-3">
           <p className="text-sm text-red-500">Gagal memuat data anggaran.</p>
           <Button type="button" onClick={() => refetch()} className="mx-auto">Coba Lagi</Button>
         </div>
@@ -125,7 +143,7 @@ export default function PengaturanAnggaran() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-4">
 
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+            <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm text-center">
               <div className="flex items-center justify-center gap-1.5 mb-1.5 text-brand-primary">
                 <TrendingUp size={20} />
                 <h3 className="font-bold text-sm text-gray-800">Persentase RAB</h3>
@@ -158,7 +176,7 @@ export default function PengaturanAnggaran() {
               </form>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm text-gray-800">Tambah Data Inflasi</h3>
               </div>
@@ -201,7 +219,7 @@ export default function PengaturanAnggaran() {
           </div>
 
           <div className="md:col-span-2">
-            <div className="bg-white rounded-xl p-4 shadow-sm h-full">
+            <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm h-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm text-gray-800">Riwayat Inflasi Tahunan</h3>
                 <div className="bg-purple-50 text-brand-primary px-3 py-1 rounded-lg text-xs font-medium">
@@ -209,43 +227,14 @@ export default function PengaturanAnggaran() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px] rounded-lg border border-gray-100 custom-scrollbar relative">
-                <table className="w-full text-left border-collapse relative">
-                  <thead className="sticky top-0 z-10 shadow-sm">
-                    <tr className="bg-bg-light border-b border-gray-100">
-                      <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider bg-bg-light">Tahun</th>
-                      <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider bg-bg-light">Tingkat Inflasi</th>
-                      <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right bg-bg-light">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {inflasiList.length === 0 ? (
-                      <tr>
-                        <td colSpan="3" className="py-6 text-center text-gray-400 text-xs">Belum ada data inflasi</td>
-                      </tr>
-                    ) : (
-                      inflasiList.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="py-2.5 px-4 font-medium text-gray-800 text-xs">{item.tahun}</td>
-                          <td className="py-2.5 px-4 font-bold text-brand-primary text-xs">
-                            {(toNumber(item.tingkat_inflasi) * 100).toLocaleString('id-ID', { minimumFractionDigits: 2 })}%
-                          </td>
-                          <td className="py-2.5 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setDeleteId(item.id)}
-                              aria-label={`Hapus inflasi tahun ${item.tahun}`}
-                              className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={inflasiColumns}
+                data={inflasiList}
+                getRowId={(item) => item.id}
+                empty={{ title: 'Belum ada data inflasi' }}
+                stickyHeader
+                containerClassName="overflow-y-auto max-h-[500px] custom-scrollbar relative"
+              />
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import { apiUrl } from '../../../config';
 import { formatDate } from '../../../utils/format';
 import noImage from '../../../assets/img/no_image.png';
 import StatusBadge from '../../../components/StatusBadge';
+import DateRangePicker from '../../../components/DateRangePicker';
 import useInfiniteScroll from '../useInfiniteScroll';
 
 export default function MobilePemeliharaanHistory() {
@@ -86,25 +87,14 @@ export default function MobilePemeliharaanHistory() {
         </select>
 
         {/* Date Range */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="relative">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-            />
-          </div>
-          <div className="relative">
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              min={startDate}
-              className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-            />
-          </div>
-        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={({ startDate: s, endDate: e }) => {
+            setStartDate(s);
+            setEndDate(e);
+          }}
+        />
 
         {/* Reset Button */}
         <button

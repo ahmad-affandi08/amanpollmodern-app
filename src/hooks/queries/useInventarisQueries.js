@@ -105,3 +105,30 @@ export const useDeleteInventaris = () => {
     },
   });
 };
+
+
+export const useInventarisArsip = (filters = {}) => {
+  return useQuery({
+    queryKey: queryKeys.inventaris.arsip(filters),
+    queryFn: async () => {
+      const res = await InventarisApi.getArsip(filters);
+      return { data: res.data || [], meta: res.meta };
+    },
+    placeholderData: keepPreviousData,
+  });
+};
+
+
+/** Gudangkan / hapus dari daftar aset / aktifkan kembali. Mengubah daftar, riwayat, dan dashboard. */
+export const useUbahStatusAset = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => InventarisApi.ubahStatus(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventaris.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventaris.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+};

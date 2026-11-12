@@ -10,8 +10,6 @@ import {
   useMasterDivisi,
   useMasterRuangan,
   useToast,
-  usePagination,
-  useDebounce,
   useModal,
   usePageTitle,
   useAuth,
@@ -21,8 +19,10 @@ import Modal from '../../../../components/Modal';
 import Input from '../../../../components/Input';
 import Select from '../../../../components/Select';
 import SearchableSelect from '../../../../components/SearchableSelect';
-import Pagination from '../../../../components/Pagination';
-import TableSkeleton from '../../../../components/TableSkeleton';
+import DataTable from '../../../../components/DataTable';
+import FilterBar from '../../../../components/FilterBar';
+import { indexColumn } from '../../../../utils/tableColumns';
+import { useTableState, useDataTable, getTableFilters } from '../../../../hooks/utils/useServerTable';
 import ConfirmDialog from '../../../../components/Alert/Alert';
 import MasterApi from '../../../../api/MasterApi';
 import { getStatusClassesWithBorder } from '../../../../utils/status';
@@ -49,15 +49,17 @@ const needsDivisi = (kategoriId) =>
   [ROLES.ADMIN_DIVISI, ROLES.TEKNISI].includes(Number(kategoriId));
 const needsRuangan = (kategoriId) => Number(kategoriId) === ROLES.USER_RUANGAN;
 
+// Hanya pencarian (parameter `search`); tidak ada filter kolom.
+const FILTER_MAP = {};
+
 export default function MasterUser() {
   usePageTitle('Master User');
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id_user;
   const isSelf = (item) => currentUserId != null && Number(item.id_user) === Number(currentUserId);
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
-  const pagination = usePagination(10);
+  // Pencarian & pagination ada di state TanStack; `params` (search, page, per_page) dikirim ke server.
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP, searchDelay: 500 });
   const modal = useModal();
 
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -65,11 +67,7 @@ export default function MasterUser() {
 
   const [kategoriOptions, setKategoriOptions] = useState([]);
 
-  const { data: usersData, isLoading } = useMasterUsers({
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-    search: debouncedSearch
-  });
+  const { data: usersData, isLoading } = useMasterUsers(tableState.params);
 
   const { data: divisiData } = useMasterDivisi({ all: 1 });
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
@@ -80,11 +78,6 @@ export default function MasterUser() {
 
   const data = usersData?.data || [];
   const meta = usersData?.meta;
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) setMetadata(meta);
-  }, [meta, setMetadata]);
 
   useEffect(() => {
     const fetchKategori = async () => {
@@ -162,7 +155,7 @@ export default function MasterUser() {
         showToast('User berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(payload);
-        pagination.reset();
+        tableState.handlers.onPaginationChange((p) => ({ ...p, pageIndex: 0 }));
         showToast('User berhasil ditambahkan', 'success');
       }
       modal.close();
@@ -214,12 +207,66 @@ export default function MasterUser() {
     });
   };
 
+  const columns = [
+    indexColumn(),
+    { id: 'role', header: 'Kategori User', cell: ({ row }) => row.original.role },
+    { id: 'nama_lengkap', header: 'Nama', cell: ({ row }) => row.original.nama_lengkap, meta: { cellClassName: 'font-bold' } },
+    { id: 'ruangan', header: 'Bagian/Ruang', cell: ({ row: { original: item } }) => (item.ruangan_nama !== '-' ? item.ruangan_nama : '-') },
+    { id: 'divisi', header: 'Divisi', cell: ({ row: { original: item } }) => (item.divisi_nama !== '-' ? item.divisi_nama : '-') },
+    { id: 'username', header: 'Username', cell: ({ row }) => row.original.username },
+    { id: 'wa', header: 'No WA', cell: ({ row }) => row.original.wa || '-' },
+    { id: 'email', header: 'Email', cell: ({ row }) => row.original.email },
+    { id: 'status', header: 'Status', meta: { align: 'center' }, cell: ({ row: { original: item } }) => (
+      <button
+        type="button"
+        onClick={() => handleToggleStatus(item)}
+        disabled={isSelf(item) && item.active}
+        title={isSelf(item) && item.active ? 'Anda tidak dapat menonaktifkan akun sendiri' : undefined}
+        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${getStatusClassesWithBorder(item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF)}`}
+      >
+        {item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF}
+      </button>
+    ) },
+    { id: 'actions', header: 'Aksi', meta: { align: 'center' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => openEditModal(item)}
+          aria-label={`Ubah user ${item.nama_lengkap}`}
+          className="p-2 bg-brand-primary text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <Edit2 size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDelete(item)}
+          aria-label={`Hapus user ${item.nama_lengkap}`}
+          title={isSelf(item) ? 'Anda tidak dapat menghapus akun sendiri' : undefined}
+          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+          disabled={deleteMutation.isPending || isSelf(item)}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    ) },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    getRowId: (item) => item.id_user,
+  });
+  const f = getTableFilters(table);
+
   return (
-    <div className="space-y-4 animate-fade-in font-body">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="space-y-6 animate-fade-in font-body">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold text-text-dark">Master User</h1>
-          <p className="text-text-gray text-xs mt-0.5">Kelola data pengguna aplikasi.</p>
+          <h1 className="text-xl font-bold text-text-dark">Master User</h1>
+          <p className="text-text-gray text-xs mt-1">Kelola data pengguna aplikasi.</p>
         </div>
         <Button
           onClick={openAddModal}
@@ -230,107 +277,25 @@ export default function MasterUser() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 bg-bg-light p-3 rounded-xl border border-gray-100">
-          <div className="flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
+              size="sm"
               placeholder="Cari nama atau username..."
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                pagination.reset();
-              }}
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-          </div>
-        </div>
+          }
+        />
 
-        <div className="overflow-x-auto rounded-lg border border-gray-100 mb-3">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-              <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">No</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Kategori User</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Nama</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Bagian/Ruang</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Divisi</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Username</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">No WA</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Email</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-center">Status</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-xs">
-              {isLoading ? (
-                <TableSkeleton rows={5} columns={10} />
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan="10" className="py-8 text-center">
-                    <Users size={24} className="mx-auto text-gray-400 mb-2" />
-                    <p className="font-bold text-gray-600 text-xs">Belum ada data user</p>
-                  </td>
-                </tr>
-              ) : (
-                data.map((item, index) => (
-                  <tr key={item.id_user} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2.5 px-4 font-medium">
-                      {(pagination.currentPage - 1) * pagination.perPage + index + 1}
-                    </td>
-                    <td className="py-2.5 px-4">{item.role}</td>
-                    <td className="py-2.5 px-4 font-bold">{item.nama_lengkap}</td>
-                    <td className="py-2.5 px-4">{item.ruangan_nama !== '-' ? item.ruangan_nama : '-'}</td>
-                    <td className="py-2.5 px-4">{item.divisi_nama !== '-' ? item.divisi_nama : '-'}</td>
-                    <td className="py-2.5 px-4">{item.username}</td>
-                    <td className="py-2.5 px-4">{item.wa || '-'}</td>
-                    <td className="py-2.5 px-4">{item.email}</td>
-                    <td className="py-2.5 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(item)}
-                        disabled={isSelf(item) && item.active}
-                        title={isSelf(item) && item.active ? 'Anda tidak dapat menonaktifkan akun sendiri' : undefined}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${getStatusClassesWithBorder(item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF)}`}
-                      >
-                        {item.active ? STATUS_AKTIF : STATUS_TIDAK_AKTIF}
-                      </button>
-                    </td>
-                    <td className="py-2.5 px-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(item)}
-                          aria-label={`Ubah user ${item.nama_lengkap}`}
-                          className="p-2 bg-brand-primary text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item)}
-                          aria-label={`Hapus user ${item.nama_lengkap}`}
-                          title={isSelf(item) ? 'Anda tidak dapat menghapus akun sendiri' : undefined}
-                          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                          disabled={deleteMutation.isPending || isSelf(item)}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.goToPage}
-          totalData={pagination.totalItems}
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          empty={{ icon: Users, title: 'Belum ada data user' }}
         />
       </div>
 

@@ -3,6 +3,7 @@ export * from './queries/useNotificationQueries';
 export * from './queries/useAduanQueries';
 export * from './queries/useInventarisQueries';
 export * from './queries/usePemeliharaanQueries';
+export * from './queries/useServisPihakKetigaQueries';
 export * from './queries/useMasterDataQueries';
 export * from './queries/useDashboardQueries';
 export * from './queries/useReportQueries';

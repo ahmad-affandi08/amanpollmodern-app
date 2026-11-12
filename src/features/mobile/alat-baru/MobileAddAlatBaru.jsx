@@ -247,7 +247,7 @@ export default function MobileAddAlatBaru() {
         </div>
 
         {/* Submit Button */}
-        <Button
+        <Button size="md"
           type="submit"
           disabled={createMutation.isPending}
           className="w-full bg-brand-primary text-white py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"

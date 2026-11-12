@@ -10,7 +10,9 @@ import UpdateLocationModal from './components/UpdateLocationModal';
 import KalibrasiHistoryList from '../../../components/KalibrasiHistoryList';
 import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 import { canManageKalibrasi } from '../../../utils/kalibrasi';
+import { isNonAktif } from '../../../utils/statusAset';
 
 
 const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
@@ -136,14 +138,26 @@ export default function MobileInventarisDetail() {
           </div>
         </div>
 
+        {/* Alat yang digudangkan/dihapus dari daftar aset: hanya untuk dilihat (mis. hasil scan QR) */}
+        {isNonAktif(inventaris) && (
+          <div className="px-5 mt-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+              Alat ini <b>{inventaris.status_aset?.toLowerCase()}</b>
+              {inventaris.tanggal_status ? <> sejak {formatDate(inventaris.tanggal_status)}</> : null}
+              {inventaris.status_log?.[0]?.alasan ? <>. Alasan: {inventaris.status_log[0].alasan}</> : null}
+              . Tidak dapat dipindah atau dilaporkan.
+            </div>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="px-5 mt-4">
-          <div className="flex bg-gray-100/80 p-1 rounded-2xl backdrop-blur-sm">
-            {['info', 'aduan', 'pemeliharaan', 'kalibrasi'].map((tab) => (
+          <div className="flex bg-gray-100/80 p-1 rounded-2xl backdrop-blur-sm overflow-x-auto scrollbar-hide">
+            {['info', 'aduan', 'pemeliharaan', 'kalibrasi', 'servis'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-300 capitalize ${activeTab === tab
+                className={`flex-1 min-w-fit whitespace-nowrap py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-300 capitalize ${activeTab === tab
                   ? 'bg-white text-brand-primary shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
                   }`}
@@ -163,12 +177,12 @@ export default function MobileInventarisDetail() {
               <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-text-dark text-lg">Lokasi Saat Ini</h3>
-                  <button
+                  {!isNonAktif(inventaris) && <button
                     onClick={() => setLocationModalOpen(true)}
                     className="text-xs font-bold text-brand-primary bg-brand-primary/10 px-4 py-2 rounded-xl hover:bg-brand-primary/20 transition-colors"
                   >
                     Pindah
-                  </button>
+                  </button>}
                 </div>
 
                 <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
@@ -384,6 +398,11 @@ export default function MobileInventarisDetail() {
                 ))
               )}
             </div>
+          )}
+
+          {/* TAB: SERVIS PIHAK KETIGA (gabungan aduan dan pemeliharaan, hanya baca) */}
+          {activeTab === 'servis' && (
+            <ServisPihakKetigaPanel jenis="inventaris" indukId={inventaris.id} tanpaJudul />
           )}
 
           {/* TAB: KALIBRASI */}

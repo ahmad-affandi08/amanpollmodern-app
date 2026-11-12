@@ -7,6 +7,7 @@ import SignaturePad from '../../../components/SignaturePad';
 import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
 import Input from '../../../components/Input';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 
 const SELECT_CLASS =
   'w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white';
@@ -227,6 +228,11 @@ function FormBody({ id, data }) {
         </div>
       )}
 
+      {/* Laporan vendor: di luar <form> agar tidak ikut tersubmit */}
+      <div className="mb-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={id} status={previous?.status} />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Checklist: hanya untuk pemeriksaan pertama; pengisian bersifat opsional */}
         {categories.map((category) => (
@@ -414,8 +420,8 @@ function FormBody({ id, data }) {
           />
           <p className="text-xs text-gray-500 mt-1">
             {formData.status === 'Selesai'
-              ? 'Masukkan total biaya asli pemeliharaan. Isi 0 jika tidak ada biaya.'
-              : 'Masukkan perkiraan biaya pemeliharaan. Isi 0 jika tidak ada estimasi.'}
+              ? 'Masukkan total biaya asli pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.'
+              : 'Masukkan perkiraan biaya pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
           </p>
         </div>
 

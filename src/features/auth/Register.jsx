@@ -286,7 +286,7 @@ export default function Register() {
                   <ThickInput label="Username" name="username" placeholder="Buat username unik (min. 5 huruf/angka)" value={form.username} onChange={handleChange} required minLength={5} pattern="[A-Za-z0-9]+" title="Hanya huruf dan angka, minimal 5 karakter" />
 
                   <div className="mt-6">
-                    <Button
+                    <Button size="md"
                       type="button"
                       onClick={handleNext}
                       className="w-full bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
@@ -335,7 +335,7 @@ export default function Register() {
                     >
                       Kembali
                     </button>
-                    <Button
+                    <Button size="md"
                       type="submit"
                       loading={loading}
                       className="w-2/3 bg-gray-900 hover:bg-gray-900 text-white font-bold text-lg py-3 rounded-[16px] shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"

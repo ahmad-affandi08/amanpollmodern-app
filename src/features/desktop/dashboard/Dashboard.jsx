@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -6,13 +6,22 @@ import {
 import {
   Package, DollarSign, Activity, CheckCircle2, AlertCircle, Plus, QrCode, FileText, ShieldAlert
 } from 'lucide-react';
-import { useDashboardStats, useMasterDivisi, useFilters, useAuth, usePageTitle } from '../../../hooks';
+import { useDashboardStats, useMasterDivisi, useAuth, usePageTitle } from '../../../hooks';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import { useNavigate, Link } from 'react-router-dom';
 import StatusBadge from '../../../components/StatusBadge';
+import StatCard from '../../../components/StatCard';
+import Select from '../../../components/Select';
 import { getStatusHex } from '../../../utils/status';
 import { formatDateShort, formatNumber, rupiah } from '../../../utils/format';
 import { ACCESS, ROLES, hasRole, isRole, isReadOnlyRole, canManageInventaris } from '../../auth/constants';
 import { getActivityIcon, getActivityColor } from '../activities/activityMeta';
+
+// Filter dasbor diatur lewat state TanStack. Peta: id filter -> parameter query server (urutan = urutan kunci lama).
+const FILTER_MAP = { tahun: 'tahun_filter', divisi: 'divisi_id', ruangan: 'ruangan_filter' };
+// Dasbor tidak punya baris/kolom: instance TanStack hanya memegang state filter.
+const NO_COLUMNS = [];
+const NO_ROWS = [];
 
 const COLORS = ['#6C5DD3', '#FF754C', '#FFAF4E', '#3F8CFF', '#A0D7E7', '#F0C782'];
 
@@ -37,15 +46,19 @@ export default function Dashboard() {
   usePageTitle('Dashboard');
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { filters, updateFilter } = useFilters({
-    tahun_filter: '',
-    divisi_id: '',
-    ruangan_filter: ''
-  });
+  const tableState = useTableState({ filterMap: FILTER_MAP });
+  const table = useDataTable({ columns: NO_COLUMNS, data: NO_ROWS, tableState });
+  const f = getTableFilters(table);
+  const { filters } = tableState;
+  // Hanya tiga kunci filter yang dikirim (tanpa `search`), sama dengan sebelumnya.
+  const dashboardFilters = useMemo(
+    () => ({ tahun_filter: filters.tahun_filter, divisi_id: filters.divisi_id, ruangan_filter: filters.ruangan_filter }),
+    [filters]
+  );
 
   const isAdminDivisi = isRole(user, ROLES.ADMIN_DIVISI);
 
-  const { data, isLoading } = useDashboardStats(filters);
+  const { data, isLoading } = useDashboardStats(dashboardFilters);
   const { data: divisiData } = useMasterDivisi({ all: 1 });
 
   const divisions = divisiData?.data || divisiData || [];
@@ -76,12 +89,12 @@ export default function Dashboard() {
         </div>
 
         {/* Filter Skeleton */}
-        <div className="h-16 bg-gray-100 rounded-2xl w-full"></div>
+        <div className="h-9 bg-gray-100 rounded-xl w-full"></div>
 
         {/* Stats Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-[24px] p-6 h-32 border border-gray-100">
+            <div key={i} className="bg-white rounded-xl p-3 sm:p-4 h-32 border border-gray-100">
               <div className="flex justify-between mb-4">
                 <div className="h-12 w-12 bg-gray-200 rounded-2xl"></div>
                 <div className="h-6 w-16 bg-gray-100 rounded-lg"></div>
@@ -97,14 +110,14 @@ export default function Dashboard() {
         {/* Main Content Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[24px] p-6 h-[400px] border border-gray-100"></div>
+            <div className="bg-white rounded-xl p-3 sm:p-4 h-[400px] border border-gray-100"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-[24px] p-6 h-[300px] border border-gray-100"></div>
-              <div className="bg-white rounded-[24px] p-6 h-[300px] border border-gray-100"></div>
+              <div className="bg-white rounded-xl p-3 sm:p-4 h-[300px] border border-gray-100"></div>
+              <div className="bg-white rounded-xl p-3 sm:p-4 h-[300px] border border-gray-100"></div>
             </div>
           </div>
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-[24px] p-6 h-full min-h-[500px] border border-gray-100"></div>
+            <div className="bg-white rounded-xl p-3 sm:p-4 h-full min-h-[500px] border border-gray-100"></div>
           </div>
         </div>
       </div>
@@ -131,7 +144,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-dark">Ringkasan Dashboard</h1>
           <p className="text-[#808191] text-xs mt-1">
@@ -139,35 +152,40 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Simple Filter Row */}
-        <div className="flex bg-white rounded-lg p-0.5 border border-gray-100">
-          <select
-            value={filters.tahun_filter}
-            onChange={(e) => updateFilter('tahun_filter', e.target.value)}
-            className="bg-transparent border-none text-xs font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-md py-1.5 pl-2.5 pr-6"
-          >
-            <option value="">Semua Tahun</option>
-            {[...Array(5)].map((_, i) => {
-              const year = new Date().getFullYear() - i;
-              return <option key={year} value={year}>{year}</option>
-            })}
-          </select>
+        {/* Filter tahun & divisi (state TanStack) */}
+        <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex">
+          <div className="md:w-40">
+            <Select
+              size="sm"
+              aria-label="Filter tahun"
+              value={f.get('tahun')}
+              onChange={(e) => f.set('tahun', e.target.value)}
+              options={[
+                { label: 'Semua Tahun', value: '' },
+                ...[...Array(5)].map((_, i) => {
+                  const year = String(new Date().getFullYear() - i);
+                  return { label: year, value: year };
+                }),
+              ]}
+              className="!bg-white"
+            />
+          </div>
 
           {/* Hide divisi filter for Admin Divisi */}
           {!isAdminDivisi && (
-            <>
-              <div className="w-px bg-gray-200 my-1.5 mx-0.5"></div>
-              <select
-                value={filters.divisi_id}
-                onChange={(e) => updateFilter('divisi_id', e.target.value)}
-                className="bg-transparent border-none text-xs font-semibold text-text-dark focus:ring-0 cursor-pointer hover:bg-gray-50 rounded-md py-1.5 pl-2.5 pr-6 max-w-[150px]"
-              >
-                <option value="">Semua Divisi</option>
-                {divisions.map((d) => (
-                  <option key={d.id_divisi} value={d.id_divisi}>{d.nama_divisi}</option>
-                ))}
-              </select>
-            </>
+            <div className="md:w-52">
+              <Select
+                size="sm"
+                aria-label="Filter divisi"
+                value={f.get('divisi')}
+                onChange={(e) => f.set('divisi', e.target.value)}
+                options={[
+                  { label: 'Semua Divisi', value: '' },
+                  ...divisions.map((d) => ({ label: d.nama_divisi, value: String(d.id_divisi) })),
+                ]}
+                className="!bg-white"
+              />
+            </div>
           )}
         </div>
       </div>
@@ -225,7 +243,7 @@ export default function Dashboard() {
         {/* Left Column: Both Charts Stacked */}
         <div className="lg:col-span-2 space-y-4">
           {/* Aduan Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Aduan & Perbaikan</h3>
@@ -268,7 +286,7 @@ export default function Dashboard() {
           </div>
 
           {/* Pemeliharaan Chart */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-bold text-lg text-text-dark">Statistik Pemeliharaan</h3>
@@ -312,7 +330,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column: Activity Feed */}
-        <div className="lg:col-span-1 bg-white rounded-2xl p-4  border border-gray-100 h-full flex flex-col">
+        <div className="lg:col-span-1 bg-white rounded-xl p-3 sm:p-4 shadow-sm h-full flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-base text-text-dark">Aktivitas Terbaru</h3>
             <Link to="/activities" className="text-brand-primary text-sm font-semibold hover:underline">Lihat Semua</Link>
@@ -355,7 +373,7 @@ export default function Dashboard() {
       {/* Bottom Section: Categories, Quick Actions, Conditions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 1. Category Distribution (Radial/Donut) */}
-        <div className="bg-white rounded-2xl p-4  border border-gray-100 flex flex-col">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col">
           <h3 className="font-bold text-text-dark mb-4 text-sm">Distribusi Kategori</h3>
           <div className="flex-1 relative min-h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -392,7 +410,7 @@ export default function Dashboard() {
         </div>
 
         {/* 2. Quick Actions (Dark Card) */}
-        <div className="bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-brand-primary/20 rounded-2xl p-4 text-white flex flex-col justify-between shadow-xl shadow-brand-primary/20">
+        <div className="bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-brand-primary/20 rounded-xl p-3 sm:p-4 text-white flex flex-col justify-between shadow-xl shadow-brand-primary/20">
           <div>
             <h3 className="font-bold text-base">Aksi Cepat</h3>
             <p className="text-indigo-100 text-xs mt-1">Akses cepat menu yang sering digunakan.</p>
@@ -416,7 +434,7 @@ export default function Dashboard() {
         </div>
 
         {/* 3. Asset Conditions (Progress Bars) */}
-        <div className="bg-white rounded-2xl p-4  border border-gray-100 flex flex-col">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col">
           <h3 className="font-bold text-text-dark mb-4 text-sm">Kondisi Aset</h3>
           <div className="space-y-5">
             {(charts.kondisi || []).length === 0 && (
@@ -458,25 +476,6 @@ function ChartLegend({ series }) {
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusHex(status) }}></span> {status}
         </div>
       ))}
-    </div>
-  );
-}
-
-function StatCard({ icon, title, value, subValue, bgColor, iconColor, cardBgColor }) {
-  return (
-    <div className={`${cardBgColor || 'bg-gradient-to-br from-white via-white to-gray-50/30'} rounded-2xl p-4 shadow-lg shadow-gray-200/50 border border-gray-100/50 hover:shadow-xl hover:shadow-gray-300/30 transition-all duration-300 backdrop-blur-sm`}>
-      <div className="flex justify-between items-start mb-4">
-        <div className={`${bgColor} ${iconColor} p-2.5 rounded-xl shadow-inner border border-white/60`}>
-          {icon}
-        </div>
-      </div>
-      <div>
-        <p className="text-[#92929D] text-xs font-medium mb-1">{title}</p>
-        <h4 className="text-2xl font-bold text-[#11142D] tracking-tight">{value}</h4>
-        {subValue && (
-          <p className="text-[10px] text-gray-400 mt-1 font-mono tracking-wide">{subValue}</p>
-        )}
-      </div>
     </div>
   );
 }

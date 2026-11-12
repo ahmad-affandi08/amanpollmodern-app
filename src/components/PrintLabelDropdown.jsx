@@ -10,11 +10,13 @@ const LABEL_OPTIONS = [
 /**
  * PrintLabelDropdown — styled dropdown for selecting label size
  * @param {'button' | 'icon'} variant — 'button' for header, 'icon' for table row
+ * @param {'sm' | 'md'} size — hanya untuk variant 'button'; 'sm' (default) = tinggi 36px, sama dengan dropdown/input size sm
  */
 export default function PrintLabelDropdown({
   onSelect,
   isPrinting = false,
   variant = 'button',
+  size = 'sm',
   disabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,7 +86,7 @@ export default function PrintLabelDropdown({
         type="button"
         onClick={() => !isPrinting && setIsOpen(!isOpen)}
         disabled={isPrinting}
-        className={`flex items-center justify-center gap-2 w-full md:w-auto px-4 py-2 text-sm font-semibold rounded-xl border-2 transition-all duration-300 cursor-pointer
+        className={`flex items-center justify-center gap-2 w-full md:w-auto font-semibold rounded-xl border-2 transition-all duration-300 cursor-pointer ${size === 'sm' ? 'h-[36px] px-3 text-xs' : 'px-4 py-2 text-sm'}
           ${isPrinting
             ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
             : 'border-brand-primary text-brand-primary hover:bg-brand-primary/10'

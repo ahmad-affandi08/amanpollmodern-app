@@ -7,6 +7,7 @@ import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
 import { apiUrl } from '../../../config';
 import { rupiah, formatPercent } from '../../../utils/format';
+import DataTable from '../../../components/DataTable';
 import { toNumber } from './useAnggaranAnalysis';
 
 // Persentase dari pecahan (0.035 -> "3,50%"). Belum ada padanannya di utils/format.
@@ -47,14 +48,21 @@ export default function DetailAnggaranPemeliharaan() {
 
   const firstProjection = data.projections && data.projections.length > 0 ? data.projections[0] : null;
 
+  const proyeksiColumns = [
+    { id: 'tahun', header: 'Tahun', meta: { cellClassName: 'font-bold text-gray-900' }, cell: ({ row }) => row.original.tahun },
+    { id: 'inflasi', header: 'Inflasi', meta: { align: 'center', cellClassName: 'text-gray-600' }, cell: ({ row }) => formatPercent(row.original.inflasi) },
+    { id: 'aic', header: 'Nilai AIC', meta: { align: 'right', cellClassName: 'font-mono text-gray-700' }, cell: ({ row }) => rupiah(row.original.aic) },
+    { id: 'rab', header: 'Anggaran Pemeliharaan (RAB)', meta: { align: 'right', cellClassName: 'font-mono font-bold text-brand-primary' }, cell: ({ row }) => rupiah(row.original.rab) },
+  ];
+
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <Link to="/anggaran/pemeliharaan" className="text-gray-500 hover:text-brand-primary flex items-center gap-1.5 mb-1.5 text-xs">
             <ArrowLeft size={14} /> Kembali ke Daftar
           </Link>
-          <h1 className="text-base md:text-lg font-bold text-text-dark">
+          <h1 className="text-xl font-bold text-text-dark">
             Laporan Proyeksi Biaya - {data.nama_alat}
           </h1>
         </div>
@@ -70,7 +78,7 @@ export default function DetailAnggaranPemeliharaan() {
         </a>
       </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
         <h3 className="font-bold text-sm text-gray-800 mb-3 flex items-center gap-1.5 border-b border-gray-100 pb-2">
           <Box size={16} className="text-gray-600" />
           Detail Informasi Aset
@@ -100,54 +108,37 @@ export default function DetailAnggaranPemeliharaan() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-xl p-4 shadow-sm h-fit">
+        <div className="lg:col-span-2 bg-white rounded-xl p-3 sm:p-4 shadow-sm h-fit">
           <h3 className="font-bold text-sm text-gray-800 mb-3 flex items-center gap-1.5 border-b border-gray-100 pb-2">
             <ChartLine size={16} className="text-gray-600" />
             Proyeksi Biaya Tahunan
           </h3>
           <p className="text-xs text-gray-500 mb-3">Tabel berikut menunjukkan perkiraan biaya investasi (AIC) dan rencana anggaran biaya pemeliharaan (RAB) tahunan.</p>
 
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-bg-light">
-                <tr>
-                  <th className="px-3 py-2 font-semibold text-gray-600">Tahun</th>
-                  <th className="px-3 py-2 font-semibold text-gray-600 text-center">Inflasi</th>
-                  <th className="px-3 py-2 font-semibold text-gray-600 text-right">Nilai AIC</th>
-                  <th className="px-3 py-2 font-semibold text-gray-600 text-right">Anggaran Pemeliharaan (RAB)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {data.projections && data.projections.length > 0 ? (
-                  data.projections.map((proj) => (
-                    <tr key={proj.tahun} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 font-bold text-gray-900">{proj.tahun}</td>
-                      <td className="px-3 py-2 text-center text-gray-600">{formatPercent(proj.inflasi)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-gray-700">{rupiah(proj.aic)}</td>
-                      <td className="px-3 py-2 text-right font-mono font-bold text-brand-primary">{rupiah(proj.rab)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="4" className="px-3 py-6 text-center text-gray-400">Data proyeksi tidak tersedia</td></tr>
-                )}
-              </tbody>
-              <tfoot className="bg-gray-50 font-bold border-t border-gray-100">
-                <tr>
+          <DataTable
+            columns={proyeksiColumns}
+            data={data.projections || []}
+            getRowId={(proj) => proj.tahun}
+            empty={{ title: 'Data proyeksi tidak tersedia' }}
+            tableClassName="text-xs"
+            footer={(
+              <>
+                <tr className="bg-gray-50 font-bold border-t border-gray-100">
                   <td colSpan="3" className="px-3 py-2 text-right text-gray-600">Jumlah Total Proyeksi AIC</td>
                   <td className="px-3 py-2 text-right text-gray-900">{rupiah(data.total_projected_aic || 0)}</td>
                 </tr>
-                <tr className="bg-purple-50">
+                <tr className="bg-purple-50 font-bold">
                   <td colSpan="3" className="px-3 py-2 text-right text-brand-primary">Jumlah Total Proyeksi RAB</td>
                   <td className="px-3 py-2 text-right text-brand-primary">{rupiah(data.total_projected_rab || 0)}</td>
                 </tr>
-              </tfoot>
-            </table>
-          </div>
+              </>
+            )}
+          />
         </div>
 
         <div className="space-y-4">
           {firstProjection && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-cyan-500">
+            <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-cyan-500">
               <h3 className="font-bold text-sm text-cyan-700 mb-3 flex items-center gap-1.5">
                 <Calculator size={16} />
                 Contoh Perhitungan
@@ -183,7 +174,7 @@ export default function DetailAnggaranPemeliharaan() {
             </div>
           )}
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-500">
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-yellow-500">
             <h3 className="font-bold text-sm text-yellow-700 mb-3 flex items-center gap-1.5">
               <Coins size={16} />
               Proyeksi Nilai Pengganti

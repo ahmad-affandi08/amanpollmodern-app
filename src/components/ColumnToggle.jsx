@@ -15,7 +15,8 @@ export default function ColumnToggle({
   onToggle,
   onShowAll,
   onHideAll,
-  size = 'md'
+  size = 'sm',
+  className = ''
 }) {
   const sizeClasses = {
     sm: "px-3 py-1.5 text-xs h-[36px]",
@@ -55,7 +56,7 @@ export default function ColumnToggle({
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 w-full bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium justify-center text-brand-primary ${sizeClasses[size]}`}
+        className={`flex items-center gap-2 w-full bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium justify-center text-brand-primary ${sizeClasses[size]} ${className}`}
       >
         <Columns3 size={iconSizes[size]} />
         <span>Kolom</span>

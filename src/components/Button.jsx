@@ -3,7 +3,8 @@ import React from 'react';
 export default function Button({
   children,
   variant = 'primary',
-  size = 'md',
+  // 'sm' = 36px, sama dengan Input/Select/SearchableSelect size sm. 'md' dan 'lg' hanya untuk tombol besar yang disengaja (login, mobile).
+  size = 'sm',
   className = '',
   loading = false,
   disabled = false,

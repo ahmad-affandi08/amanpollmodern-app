@@ -217,7 +217,7 @@ export default function Scanner() {
                   <button
                     onClick={toggleCamera}
                     disabled={switching}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-lg transition-all shadow-sm text-sm disabled:opacity-60"
+                    className="flex items-center gap-1.5 h-[36px] px-4 bg-bg-light hover:bg-gray-200 text-text-dark font-semibold rounded-lg transition-all shadow-sm text-xs disabled:opacity-60"
                   >
                     <SwitchCamera size={16} />
                     Ganti Kamera

@@ -8,6 +8,7 @@ import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 
 export default function MobilePemeliharaanDetail() {
   usePageTitle('Detail Pemeliharaan');
@@ -330,6 +331,11 @@ export default function MobilePemeliharaanDetail() {
           </div>
         </div>
       )}
+
+      {/* Laporan servis pihak ketiga (vendor) */}
+      <div className="mb-4 bg-white rounded-2xl p-4 border border-gray-100">
+        <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={id} status={pemeliharaan.status} />
+      </div>
 
       {/* Action Buttons */}
       <div className="space-y-3">

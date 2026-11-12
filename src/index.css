@@ -176,3 +176,29 @@ option {
 .animate-fade-in {
    animation: fadeIn 0.2s ease-out forwards;
 }
+
+/* =========================================
+   ROW EXPAND (panel detail baris tabel)
+   Tinggi dianimasikan lewat grid-template-rows 0fr -> 1fr; menutup memakai transisi di komponennya.
+   ========================================= */
+@keyframes rowExpand {
+   from {
+      grid-template-rows: 0fr;
+      opacity: 0;
+   }
+
+   to {
+      grid-template-rows: 1fr;
+      opacity: 1;
+   }
+}
+
+.animate-row-expand {
+   animation: rowExpand 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+   .animate-row-expand {
+      animation: none;
+   }
+}

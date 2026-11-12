@@ -1,14 +1,32 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
+const numberId = new Intl.NumberFormat('id-ID');
+
+function NavButton({ onClick, disabled, label, className, children }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} aria-label={label} title={label} className={className}>
+      {children}
+    </button>
+  );
+}
+
 /**
- * Reusable Pagination Component
- * Supports both client-side and server-side pagination logic.
- * 
- * @param {number} currentPage - The current active page (1-based index)
- * @param {number} totalPages - Total number of pages
- * @param {function} onPageChange - Callback function when page changes (receives new page number)
- * @param {boolean} showFirstLast - Show first/last page buttons (default: true)
+ * Pagination (client-side maupun server-side).
+ *
+ * Responsif terhadap lebar kontainernya (container query), bukan lebar layar, karena sidebar
+ * mengurangi ruang tabel:
+ *   lebar  (≥ 36rem): info jumlah data di kiri, kontrol halaman di kanan
+ *   sedang (≥ 28rem): kontrol halaman di bawah info, tombol angka ditampilkan
+ *   sempit (< 28rem): kontrol ringkas «  ‹  1 / 108  ›  » dengan area sentuh 40px
+ *
+ * @param {number} currentPage   halaman aktif (mulai dari 1)
+ * @param {number} totalPages    jumlah halaman
+ * @param {function} onPageChange callback (nomor halaman baru)
+ * @param {boolean} showFirstLast tombol halaman pertama/terakhir (default true)
+ * @param {number} totalData     total data; bila ada, info jumlah data ditampilkan
+ * @param {number} perPage       baris per halaman; bila ada, info menjadi "Menampilkan 1–10 dari 1.076 data"
+ * @param {'sm'|'md'|'lg'} size
  */
 export default function Pagination({
   currentPage,
@@ -17,25 +35,22 @@ export default function Pagination({
   showFirstLast = true,
   className = '',
   totalData,
+  perPage,
   size = 'md'
 }) {
+  // Area sentuh 40px di kontainer sempit, mengecil di kontainer lebar.
   const sizeClasses = {
-    sm: "min-w-[32px] h-8 px-2 text-xs",
-    md: "min-w-[36px] h-9 px-3 text-sm",
-    lg: "min-w-[40px] h-10 px-4 text-base",
+    sm: 'h-10 min-w-10 @md:h-8 @md:min-w-8 text-xs',
+    md: 'h-10 min-w-10 @md:h-9 @md:min-w-9 text-sm',
+    lg: 'h-11 min-w-11 @md:h-10 @md:min-w-10 text-base',
   };
+  const iconSizes = { sm: 14, md: 16, lg: 18 };
 
-  const iconSizes = {
-    sm: 14,
-    md: 18,
-    lg: 20,
-  };
+  const hasTotal = totalData !== undefined && totalData !== null;
 
-
-  if (totalPages <= 1 && (totalData === undefined || totalData === null)) {
+  if (totalPages <= 1 && !hasTotal) {
     return null;
   }
-
 
   const getPageNumbers = () => {
     const pages = [];
@@ -71,100 +86,96 @@ export default function Pagination({
   };
 
   const showPaginationButtons = totalPages > 1;
+  const isFirst = currentPage <= 1;
+  const isLast = currentPage >= totalPages;
+
+  const btn = `${sizeClasses[size]} inline-flex items-center justify-center rounded-lg border font-semibold transition-colors
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40`;
+  const btnIdle = 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-text-dark';
+  const btnDisabled = 'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-600';
+
+  const navCls = `${btn} ${btnIdle} ${btnDisabled}`;
+
+  // "Menampilkan 1–10 dari 1.076 data" bila perPage diketahui, selain itu "Total 1.076 data".
+  let info = null;
+  if (hasTotal) {
+    if (totalData === 0) {
+      info = <>Tidak ada data</>;
+    } else if (perPage) {
+      const from = (currentPage - 1) * perPage + 1;
+      const to = Math.min(currentPage * perPage, totalData);
+      info = (
+        <>
+          Menampilkan <b className="font-bold text-text-dark">{numberId.format(from)}–{numberId.format(to)}</b>{' '}
+          dari <b className="font-bold text-text-dark">{numberId.format(totalData)}</b> data
+        </>
+      );
+    } else {
+      info = (
+        <>
+          Total <b className="font-bold text-text-dark">{numberId.format(totalData)}</b> data
+        </>
+      );
+    }
+  }
 
   return (
-    <div className={`relative w-full flex items-center justify-center gap-2 mt-6 ${className}`}>
-      {showPaginationButtons && (
-        <>
-          {/* First Page */}
-          {showFirstLast && (
-            <button
-              onClick={() => onPageChange(1)}
-              disabled={currentPage === 1}
-              className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              title="Halaman pertama"
+    <nav aria-label="Navigasi halaman" className={`@container w-full ${className}`}>
+      <div className="flex flex-col items-center gap-3 @xl:flex-row @xl:justify-between">
+        {info && <p className="text-xs text-text-gray font-medium text-center @xl:text-left">{info}</p>}
+
+        {showPaginationButtons && (
+          <div className="flex items-center gap-1.5">
+            {showFirstLast && (
+              <NavButton onClick={() => onPageChange(1)} disabled={isFirst} label="Halaman pertama" className={navCls}>
+                <ChevronsLeft size={iconSizes[size]} />
+              </NavButton>
+            )}
+            <NavButton onClick={() => onPageChange(currentPage - 1)} disabled={isFirst} label="Sebelumnya" className={navCls}>
+              <ChevronLeft size={iconSizes[size]} />
+            </NavButton>
+
+            {/* Kontainer sempit: penunjuk ringkas */}
+            <span
+              className="@md:hidden px-3 text-sm font-semibold text-text-dark tabular-nums"
+              aria-live="polite"
             >
-              <ChevronsLeft size={iconSizes[size]} />
-            </button>
-          )}
+              {numberId.format(currentPage)} <span className="text-text-gray font-medium">/ {numberId.format(totalPages)}</span>
+            </span>
 
-          {/* Previous */}
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            title="Sebelumnya"
-          >
-            <ChevronLeft size={iconSizes[size]} />
-          </button>
+            {/* Kontainer sedang & lebar: tombol angka */}
+            <div className="hidden @md:flex items-center gap-1.5">
+              {getPageNumbers().map((page, index) =>
+                page === '...' ? (
+                  <span key={`gap-${index}`} className="px-1 text-text-gray select-none" aria-hidden="true">…</span>
+                ) : (
+                  <button
+                    type="button"
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    aria-label={`Halaman ${page}`}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                    className={`${btn} px-2 tabular-nums ${currentPage === page
+                      ? 'border-brand-primary bg-brand-primary text-white shadow-sm shadow-brand-primary/25'
+                      : btnIdle}`}
+                  >
+                    {numberId.format(page)}
+                  </button>
+                )
+              )}
+            </div>
 
-          {/* Page Numbers */}
-          <div className="flex items-center gap-1">
-            {getPageNumbers().map((page, index) => {
-
-
-              const isVisibleOnMobile =
-                page === '...' ||
-                page === currentPage ||
-                page === currentPage - 1 ||
-                page === currentPage + 1 ||
-                page === 1 ||
-                page === totalPages;
-
-              return (
-                <React.Fragment key={index}>
-                  {page === '...' ? (
-                    <span className={`px-2 text-gray-400 ${!isVisibleOnMobile ? 'hidden sm:block' : ''}`}>...</span>
-                  ) : (
-                    <button
-                      onClick={() => onPageChange(page)}
-                      className={`
-                          ${sizeClasses[size]} rounded-lg font-bold transition-all
-                          ${!isVisibleOnMobile ? 'hidden sm:block' : ''}
-                          ${currentPage === page
-                          ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30 scale-105'
-                          : 'text-gray-600 hover:bg-gray-100'
-                        }
-                        `}
-                    >
-                      {page}
-                    </button>
-                  )}
-                </React.Fragment>
-              );
-            })}
+            <NavButton onClick={() => onPageChange(currentPage + 1)} disabled={isLast} label="Berikutnya" className={navCls}>
+              <ChevronRight size={iconSizes[size]} />
+            </NavButton>
+            {showFirstLast && (
+              <NavButton onClick={() => onPageChange(totalPages)} disabled={isLast} label="Halaman terakhir" className={navCls}>
+                <ChevronsRight size={iconSizes[size]} />
+              </NavButton>
+            )}
           </div>
-
-          {/* Next */}
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            title="Berikutnya"
-          >
-            <ChevronRight size={iconSizes[size]} />
-          </button>
-
-          {/* Last Page */}
-          {showFirstLast && (
-            <button
-              onClick={() => onPageChange(totalPages)}
-              disabled={currentPage >= totalPages}
-              className="hidden sm:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              title="Halaman terakhir"
-            >
-              <ChevronsRight size={iconSizes[size]} />
-            </button>
-          )}
-        </>
-      )}
-
-      {/* Total Data Info */}
-      {(totalData !== undefined && totalData !== null) && (
-        <div className={`text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 ${showPaginationButtons ? 'absolute right-0 top-1/2 -translate-y-1/2' : ''}`}>
-          Total Data: <span className="text-gray-900 font-bold">{totalData}</span>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </nav>
   );
 }

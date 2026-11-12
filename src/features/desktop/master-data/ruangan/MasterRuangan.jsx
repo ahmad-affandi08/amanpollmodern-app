@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Edit2, Trash2, Plus, Search, DoorOpen } from 'lucide-react';
 import {
   useMasterRuangan,
@@ -6,25 +6,27 @@ import {
   useUpdateRuangan,
   useDeleteRuangan,
   useToast,
-  usePagination,
-  useDebounce,
   useModal,
   usePageTitle,
 } from '../../../../hooks';
 import Button from '../../../../components/Button';
 import Modal from '../../../../components/Modal';
 import Input from '../../../../components/Input';
-import Pagination from '../../../../components/Pagination';
-import TableSkeleton from '../../../../components/TableSkeleton';
+import DataTable from '../../../../components/DataTable';
+import FilterBar from '../../../../components/FilterBar';
+import { indexColumn } from '../../../../utils/tableColumns';
+import { useTableState, useDataTable, getTableFilters } from '../../../../hooks/utils/useServerTable';
 import ConfirmDialog from '../../../../components/Alert/Alert';
 import useConfirmAction from '../useConfirmAction';
+
+// Hanya pencarian (parameter `search`); tidak ada filter kolom.
+const FILTER_MAP = {};
 
 export default function MasterRuangan() {
   usePageTitle('Master Ruangan');
   const { showToast } = useToast();
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
-  const pagination = usePagination(10);
+  // Pencarian & pagination ada di state TanStack; `params` (search, page, per_page) dikirim ke server.
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP, searchDelay: 500 });
   const modal = useModal();
 
   const [formData, setFormData] = useState({
@@ -34,11 +36,7 @@ export default function MasterRuangan() {
 
   const { askConfirm, dialogProps } = useConfirmAction();
 
-  const { data: ruanganData, isLoading } = useMasterRuangan({
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-    search: debouncedSearch
-  });
+  const { data: ruanganData, isLoading } = useMasterRuangan(tableState.params);
 
   const createMutation = useCreateRuangan();
   const updateMutation = useUpdateRuangan();
@@ -46,11 +44,6 @@ export default function MasterRuangan() {
 
   const data = ruanganData?.data || [];
   const meta = ruanganData?.meta;
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) setMetadata(meta);
-  }, [meta, setMetadata]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +56,7 @@ export default function MasterRuangan() {
         showToast('Ruangan berhasil diperbarui', 'success');
       } else {
         await createMutation.mutateAsync(formData);
-        pagination.reset();
+        tableState.handlers.onPaginationChange((p) => ({ ...p, pageIndex: 0 }));
         showToast('Ruangan berhasil ditambahkan', 'success');
       }
       modal.close();
@@ -102,12 +95,45 @@ export default function MasterRuangan() {
     });
   };
 
+  const columns = [
+    indexColumn(),
+    { id: 'kode_ruangan', header: 'Kode', cell: ({ row }) => row.original.kode_ruangan || '-', meta: { cellClassName: 'font-mono text-sm font-bold text-text-gray' } },
+    { id: 'nama_ruangan', header: 'Nama Ruangan', cell: ({ row }) => row.original.nama_ruangan, meta: { headerClassName: 'w-full', cellClassName: 'font-bold text-text-dark' } },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => openEditModal(item)}
+          className="p-2 bg-brand-primary text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
+        >
+          <Edit2 size={14} />
+        </button>
+        <button
+          onClick={() => handleDelete(item)}
+          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    ) },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    getRowId: (item) => item.id_ruangan,
+  });
+  const f = getTableFilters(table);
+
   return (
-    <div className="space-y-4 animate-fade-in font-body">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="space-y-6 animate-fade-in font-body">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold text-text-dark">Master Ruangan</h1>
-          <p className="text-text-gray text-xs mt-0.5">Kelola data ruangan/bagian di RSUD.</p>
+          <h1 className="text-xl font-bold text-text-dark">Master Ruangan</h1>
+          <p className="text-text-gray text-xs mt-1">Kelola data ruangan/bagian di RSUD.</p>
         </div>
         <Button
           onClick={openAddModal}
@@ -118,82 +144,25 @@ export default function MasterRuangan() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 bg-bg-light p-3 rounded-xl border border-gray-100">
-          <div className="flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
+              size="sm"
               placeholder="Cari ruangan atau kode..."
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                pagination.reset();
-              }}
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-          </div>
-        </div>
+          }
+        />
 
-        <div className="overflow-x-auto rounded-lg border border-gray-100 mb-3">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-bg-light border-b border-gray-100">
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">No</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase">Kode</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase w-full">Nama Ruangan</th>
-                <th className="py-2.5 px-4 text-[10px] font-bold text-text-gray uppercase text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-xs">
-              {isLoading ? (
-                <TableSkeleton rows={5} columns={4} />
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="py-8 text-center">
-                    <DoorOpen size={24} className="mx-auto text-gray-400 mb-2" />
-                    <p className="font-bold text-gray-600 text-xs">Belum ada data ruangan</p>
-                  </td>
-                </tr>
-              ) : (
-                data.map((item, index) => (
-                  <tr key={item.id_ruangan} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2.5 px-4 font-medium">
-                      {(pagination.currentPage - 1) * pagination.perPage + index + 1}
-                    </td>
-                    <td className="py-2.5 px-4 font-mono text-sm font-bold text-text-gray">
-                      {item.kode_ruangan || '-'}
-                    </td>
-                    <td className="py-2.5 px-4 font-bold text-text-dark">{item.nama_ruangan}</td>
-                    <td className="py-2.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="p-2 bg-brand-primary text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item)}
-                          className="p-2 bg-danger-500 text-white rounded-xl shadow-md hover:-translate-y-0.5 transition-all"
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.goToPage}
-          totalData={pagination.totalItems}
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          empty={{ icon: DoorOpen, title: 'Belum ada data ruangan' }}
         />
       </div>
 

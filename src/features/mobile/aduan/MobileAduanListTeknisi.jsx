@@ -9,6 +9,7 @@ import {
 } from '../../../hooks';
 import { formatDateTime } from '../../../utils/format';
 import StatusBadge from '../../../components/StatusBadge';
+import ServisBadge from '../../../components/ServisBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import useInfiniteScroll from '../useInfiniteScroll';
@@ -199,7 +200,10 @@ export default function MobileAduanListTeknisi() {
               className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"
             >
               <div className="flex justify-between items-start mb-2">
-                <StatusBadge status={item.status_aduan} size="sm" />
+                <div className="flex flex-wrap items-center gap-1">
+                  <StatusBadge status={item.status_aduan} size="sm" />
+                  <ServisBadge jumlah={item.jumlah_servis} />
+                </div>
                 <span className="text-[10px] text-gray-400">{formatDateTime(item.create_date)}</span>
               </div>
 

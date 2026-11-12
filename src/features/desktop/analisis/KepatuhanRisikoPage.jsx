@@ -4,6 +4,7 @@ import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle } from '../../../hooks';
+import DataTable from '../../../components/DataTable';
 import { useAnalisisRisiko } from '../../../hooks/queries/useAnalisisQueries';
 import RisikoBadge from '../../../components/RisikoBadge';
 import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
@@ -15,6 +16,18 @@ const KALIBRASI_STYLE = {
   'Belum diset': 'text-gray-400',
   Valid: 'text-emerald-600',
 };
+
+const terlambatColumns = [
+  { id: 'no_inventaris', header: 'No. Inventaris', meta: { cellClassName: 'font-semibold' }, cell: ({ row: { original: a } }) => (
+    <Link to={`/inventaris/detail/${a.id}`} className="text-brand-primary hover:underline">{a.no_inventaris || '-'}</Link>
+  ) },
+  { id: 'nama_alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat },
+  { id: 'risiko', header: 'Risiko', cell: ({ row }) => <RisikoBadge tingkat={row.original.tingkat} size="sm" /> },
+  { id: 'pm', header: 'PM', cell: ({ row: { original: a } }) => `${a.realisasi_pm} / ${a.target_pm}` },
+  { id: 'kalibrasi', header: 'Kalibrasi', meta: { cellClassName: 'text-xs' }, cell: ({ row: { original: a } }) => (
+    <span className={KALIBRASI_STYLE[a.kalibrasi] || ''}>{a.kalibrasi}</span>
+  ) },
+];
 
 export default function KepatuhanRisikoPage() {
   usePageTitle('Analisis Kepatuhan PM per Risiko');
@@ -31,14 +44,14 @@ export default function KepatuhanRisikoPage() {
   const chartData = data.tingkat.map((t) => ({ name: t.tingkat, Target: t.target_pm, Terlaksana: t.realisasi_pm }));
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-6 animate-fade-in pb-12">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
             <ShieldAlert className="text-brand-primary" />
             Kepatuhan PM per Tingkat Risiko
           </h2>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-text-gray text-xs mt-1">
             Tahun {data.tahun}: target pemeliharaan preventif sesuai pedoman (Tinggi 2x, Sedang dan Rendah 1x per tahun) dibanding yang sudah selesai.
           </p>
         </div>
@@ -81,7 +94,7 @@ export default function KepatuhanRisikoPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
         <h3 className="font-bold text-gray-800 text-lg mb-4">Target vs Terlaksana</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -98,7 +111,7 @@ export default function KepatuhanRisikoPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
         <h3 className="font-bold text-gray-800 text-lg">Alat Belum Memenuhi Target PM</h3>
         <p className="text-xs text-gray-500 mb-4">
           {data.jumlah_terlambat > 0
@@ -106,32 +119,12 @@ export default function KepatuhanRisikoPage() {
             : 'Semua alat yang sudah dinilai memenuhi target PM tahun ini.'}
         </p>
         {data.terlambat.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-gray-100">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-bg-light border-b border-gray-100 text-xs font-bold text-[#808191] uppercase">
-                  <th className="py-2 px-3">No. Inventaris</th>
-                  <th className="py-2 px-3">Nama Alat</th>
-                  <th className="py-2 px-3">Risiko</th>
-                  <th className="py-2 px-3">PM</th>
-                  <th className="py-2 px-3">Kalibrasi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {data.terlambat.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50/50 text-xs">
-                    <td className="py-1.5 px-3 font-semibold">
-                      <Link to={`/inventaris/detail/${a.id}`} className="text-brand-primary hover:underline">{a.no_inventaris || '-'}</Link>
-                    </td>
-                    <td className="py-1.5 px-3">{a.nama_alat}</td>
-                    <td className="py-1.5 px-3"><RisikoBadge tingkat={a.tingkat} size="sm" /></td>
-                    <td className="py-1.5 px-3">{a.realisasi_pm} / {a.target_pm}</td>
-                    <td className={`py-1.5 px-3 ${KALIBRASI_STYLE[a.kalibrasi] || ''}`}>{a.kalibrasi}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={terlambatColumns}
+            data={data.terlambat}
+            getRowId={(a) => a.id}
+            tableClassName="text-xs"
+          />
         )}
       </div>
     </div>

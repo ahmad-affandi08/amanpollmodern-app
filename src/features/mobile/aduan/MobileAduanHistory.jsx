@@ -6,6 +6,7 @@ import { ROLES, isRole } from '../../auth/constants';
 import { apiUrl } from '../../../config';
 import { formatDateTime } from '../../../utils/format';
 import StatusBadge from '../../../components/StatusBadge';
+import DateRangePicker from '../../../components/DateRangePicker';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import useInfiniteScroll from '../useInfiniteScroll';
@@ -113,27 +114,16 @@ export default function MobileAduanHistory() {
       {isTeknisi && (
         <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4 space-y-3">
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Dari Tanggal</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Sampai Tanggal</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                min={startDate}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-              />
-            </div>
-          </div>
+          <DateRangePicker
+            label="Rentang Tanggal"
+            size="sm"
+            startDate={startDate}
+            endDate={endDate}
+            onChange={({ startDate: s, endDate: e }) => {
+              setStartDate(s);
+              setEndDate(e);
+            }}
+          />
 
           <button
             type="button"

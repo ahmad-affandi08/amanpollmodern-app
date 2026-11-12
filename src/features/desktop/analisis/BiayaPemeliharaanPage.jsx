@@ -6,8 +6,16 @@ import {
 import { useToast } from '../../../components/Alert/useToast';
 import { rupiah, formatNumber } from '../../../utils/format';
 import { usePageTitle } from '../../../hooks';
+import DataTable from '../../../components/DataTable';
 import { useAnalisisBiaya } from '../../../hooks/queries/useAnalisisQueries';
 import { AnalisisLoading, AnalisisError, RefreshButton } from './AnalisisCommon';
+
+const topBiayaColumns = [
+  { id: 'tanggal', header: 'Tanggal', meta: { cellClassName: 'text-gray-500' }, cell: ({ row }) => row.original.tanggal },
+  { id: 'no_aduan', header: 'No. Aduan', meta: { cellClassName: 'font-mono text-gray-600' }, cell: ({ row }) => row.original.no_aduan },
+  { id: 'nama_alat', header: 'Alat', meta: { cellClassName: 'font-semibold text-gray-800 max-w-[200px] truncate' }, cell: ({ row }) => row.original.nama_alat },
+  { id: 'biaya', header: 'Biaya', meta: { align: 'right' }, cell: ({ row }) => <span className="text-red-600 font-bold">{rupiah(row.original.biaya)}</span> },
+];
 
 export default function BiayaPemeliharaanPage() {
   usePageTitle('Analisis Biaya Pemeliharaan');
@@ -24,15 +32,15 @@ export default function BiayaPemeliharaanPage() {
   if (!data) return <AnalisisError message="Gagal mengambil data biaya." onRetry={() => refetch()} retrying={isFetching} />;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 animate-fade-in pb-12">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-text-dark flex items-center gap-2">
             <DollarSign className="text-brand-primary" />
             Analisis Biaya Pemeliharaan
           </h2>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-text-gray text-xs mt-1">
             Mengevaluasi Total Cost of Ownership (TCO) dan melacak pengeluaran perbaikan alat.
           </p>
         </div>
@@ -77,7 +85,7 @@ export default function BiayaPemeliharaanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Trend Area Chart */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
           <h3 className="font-bold text-gray-800 text-lg mb-6">Tren Pengeluaran Biaya Perbaikan</h3>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -116,31 +124,15 @@ export default function BiayaPemeliharaanPage() {
         </div>
 
         {/* Detailed Table / Top Expensive Repairs */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col">
+        <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm flex flex-col">
           <h3 className="font-bold text-gray-800 text-lg mb-6">Top 10 Biaya Perbaikan Termahal</h3>
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs">Tanggal</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs">No. Aduan</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs">Alat</th>
-                  <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs text-right">Biaya</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {(data.top_biaya || []).map((item) => (
-                  <tr key={item.no_aduan} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-4 text-gray-500">{item.tanggal}</td>
-                    <td className="py-3 px-4 font-mono text-gray-600">{item.no_aduan}</td>
-                    <td className="py-3 px-4 font-semibold text-gray-800 max-w-[200px] truncate">{item.nama_alat}</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="text-red-600 font-bold">{rupiah(item.biaya)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex-1">
+            <DataTable
+              columns={topBiayaColumns}
+              data={data.top_biaya || []}
+              getRowId={(item) => item.no_aduan}
+              tableClassName="text-sm"
+            />
           </div>
         </div>
       </div>

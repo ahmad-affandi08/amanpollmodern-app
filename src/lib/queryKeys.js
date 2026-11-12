@@ -16,8 +16,15 @@ export const queryKeys = {
     list: (filters) => [...queryKeys.inventaris.lists(), filters],
     details: () => [...queryKeys.inventaris.all, 'detail'],
     detail: (id) => [...queryKeys.inventaris.details(), id],
+    arsip: (filters) => [...queryKeys.inventaris.all, 'arsip', filters],
   },
 
+
+  // Laporan servis pihak ketiga milik aduan/pemeliharaan/alat.
+  servis: {
+    all: ['servis-pihak-ketiga'],
+    list: (jenis, id) => [...queryKeys.servis.all, jenis, id],
+  },
 
   pemeliharaan: {
     all: ['pemeliharaan'],

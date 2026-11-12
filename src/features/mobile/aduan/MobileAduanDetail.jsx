@@ -12,6 +12,7 @@ import StatusBadge from '../../../components/StatusBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 
 export default function MobileAduanDetail() {
   usePageTitle('Detail Aduan');
@@ -304,6 +305,11 @@ export default function MobileAduanDetail() {
           )}
         </div>
       )}
+
+      {/* Laporan servis pihak ketiga (vendor) */}
+      <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+        <ServisPihakKetigaPanel jenis="aduan" indukId={aduan.id_aduan} status={aduan.status_aduan} />
+      </div>
 
       {/* Export PDF Button (Only if Selesai) */}
       {aduan.status_aduan === 'Selesai' && (

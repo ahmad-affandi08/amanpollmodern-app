@@ -41,6 +41,24 @@ const InventarisApi = {
   },
 
 
+  /** Menggudangkan, menghapus dari daftar aset, atau mengaktifkan kembali (multipart: ada dokumen SK/BA). */
+  ubahStatus: async (id, data) => {
+    const headers = data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
+    const response = await axiosClient.post(`/inventaris/${id}/status`, data, { headers });
+    return response.data;
+  },
+
+  /** Daftar alat yang digudangkan/dihapus dari daftar aset. */
+  getArsip: async (params = {}) => {
+    const response = await axiosClient.get('/inventaris-arsip', { params });
+    return response.data;
+  },
+
+  exportArsip: async (params = {}) => {
+    const response = await axiosClient.get('/inventaris-arsip/export', { params, responseType: 'blob' });
+    return response.data;
+  },
+
   getKalibrasi: async (id) => {
     const response = await axiosClient.get(`/inventaris/${id}/kalibrasi`);
     return response.data;

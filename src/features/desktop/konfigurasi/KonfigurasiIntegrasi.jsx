@@ -225,7 +225,7 @@ const KonfigurasiIntegrasi = () => {
                   <button
                     onClick={handleSave}
                     disabled={saveMutation.isPending || missingRequired}
-                    className="flex-1 py-2.5 bg-brand-primary text-white rounded-lg font-bold hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-brand-primary/20 flex items-center justify-center gap-1.5 text-sm"
+                    className="flex-1 h-[36px] bg-brand-primary text-white rounded-lg font-bold hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-brand-primary/20 flex items-center justify-center gap-1.5 text-xs"
                   >
                     {saveMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                     Simpan &amp; Aktifkan
@@ -234,7 +234,7 @@ const KonfigurasiIntegrasi = () => {
                   <button
                     onClick={handleTest}
                     disabled={testMutation.isPending || missingRequired}
-                    className="px-5 py-2.5 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg font-bold hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-sm"
+                    className="h-[36px] px-4 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg font-bold hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 text-xs"
                   >
                     {testMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <TestTube size={16} />}
                     Tes Koneksi

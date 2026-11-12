@@ -9,6 +9,7 @@ import SignaturePad from '../../../components/SignaturePad';
 import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import axiosClient from '../../../api/axiosClient';
+import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 
 export default function MobileAduanFormTeknisi() {
   usePageTitle('Form Pemeriksaan');
@@ -300,6 +301,11 @@ export default function MobileAduanFormTeknisi() {
         </div>
       )}
 
+      {/* Laporan vendor: di luar <form> agar tidak ikut tersubmit; boleh ditambah sebelum atau sesudah pemeriksaan */}
+      <div className="mb-3 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+        <ServisPihakKetigaPanel jenis="aduan" indukId={aduan.id_aduan} status={aduan.status_aduan} />
+      </div>
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Tindakan Teknisi */}
@@ -405,8 +411,8 @@ export default function MobileAduanFormTeknisi() {
           />
           <small className="text-xs text-gray-500 mt-1 block">
             {formData.status_aduan === 'Selesai' 
-              ? 'Masukkan total biaya asli perbaikan. Isi 0 jika tidak ada biaya.' 
-              : 'Masukkan perkiraan biaya perbaikan. Isi 0 jika tidak ada estimasi.'}
+              ? 'Masukkan total biaya asli perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.' 
+              : 'Masukkan perkiraan biaya perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
           </small>
         </div>
 

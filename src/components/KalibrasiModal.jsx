@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import Input from './Input';
+import DateRangePicker from './DateRangePicker';
 import Button from './Button';
 import { useToast } from './Alert/useToast';
 import { useAddKalibrasi } from '../hooks/queries/useInventarisQueries';
@@ -84,24 +85,16 @@ export default function KalibrasiModal({ isOpen, onClose, inventarisId, onSucces
       }
     >
       <form id="kalibrasi-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Tanggal Kalibrasi"
-            name="tanggal_kalibrasi"
-            type="date"
-            value={form.tanggal_kalibrasi}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            label="Berlaku Hingga"
-            name="kadaluwarsa"
-            type="date"
-            min={form.tanggal_kalibrasi || undefined}
-            value={form.kadaluwarsa}
-            onChange={handleChange}
-          />
-        </div>
+        <DateRangePicker
+          label="Tanggal Kalibrasi – Berlaku Hingga"
+          partial
+          placeholder="Pilih tanggal kalibrasi & masa berlaku"
+          startDate={form.tanggal_kalibrasi}
+          endDate={form.kadaluwarsa}
+          onChange={({ startDate, endDate }) =>
+            setForm((prev) => ({ ...prev, tanggal_kalibrasi: startDate, kadaluwarsa: endDate }))
+          }
+        />
 
         <Input
           label="Lembaga / Vendor Kalibrasi"

@@ -1,45 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAlatBaru, useApproveAlatBaru, useDeleteAlatBaru } from '../../../hooks/queries/useAlatBaruQueries';
-import { useToast, useFilters, useDebounce, usePagination } from '../../../hooks';
+import { useToast } from '../../../hooks';
 import usePageTitle from '../../../hooks/utils/usePageTitle';
-import Pagination from '../../../components/Pagination';
-import TableSkeleton from '../../../components/TableSkeleton';
+import DataTable from '../../../components/DataTable';
+import FilterBar from '../../../components/FilterBar';
+import Input from '../../../components/Input';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import RisikoBadge from '../../../components/RisikoBadge';
-import { CheckCircle, Trash2, Eye, Construction, Search, AlertCircle } from 'lucide-react';
+import { CheckCircle, Trash2, Eye, Construction, Search } from 'lucide-react';
 import AlatBaruDetailModal from './components/AlatBaruDetailModal';
 import noImage from '../../../assets/img/no_image.png';
 import { formatDateShort } from '../../../utils/format';
+
+// Hanya pencarian (globalFilter); tidak ada filter kolom.
+const FILTER_MAP = {};
 
 export default function AlatBaruList() {
   usePageTitle('Pengajuan Alat Baru');
   const { showToast } = useToast();
 
 
-  const pagination = usePagination(10);
-  const { filters, updateFilter } = useFilters({
-    search: '',
-  });
-  const debouncedSearch = useDebounce(filters.search, 500);
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
+  const { params } = tableState;
 
 
   // `useAlatBaru` mengembalikan satu halaman: { data: baris[], meta }.
-  const { data, isLoading, isError, isPlaceholderData } = useAlatBaru({
-    search: debouncedSearch,
-    page: pagination.currentPage,
-    per_page: pagination.perPage
-  });
+  const { data, isLoading, isError, isPlaceholderData } = useAlatBaru(params);
 
   const items = data?.data ?? [];
   const meta = data?.meta;
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) {
-      setMetadata(meta);
-    }
-  }, [meta, setMetadata]);
 
   const approveMutation = useApproveAlatBaru();
   const deleteMutation = useDeleteAlatBaru();
@@ -88,10 +79,88 @@ export default function AlatBaruList() {
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    updateFilter(key, value);
-    pagination.reset();
-  };
+  const columns = [
+    { id: 'foto', header: 'Foto', cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-center">
+        {item.img_alat_baru_url ? (
+          <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}>
+            <img
+              src={item.img_alat_baru_url}
+              alt={item.nama_alat?.nama_nama_alat || 'Foto alat'}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.src = noImage; }}
+              onClick={() => setImagePreview({
+                isOpen: true,
+                imageUrl: item.img_alat_baru_url,
+                altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || ''}`
+              })}
+            />
+          </div>
+        ) : (
+          <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
+            <img
+              src={noImage}
+              alt="Tidak ada foto"
+              className="w-full h-full object-cover opacity-50"
+            />
+          </div>
+        )}
+      </div>
+    ) },
+    { id: 'nama_alat', header: 'Nama Alat', cell: ({ row: { original: item } }) => (
+      <>
+        <div className="text-xs font-bold text-text-dark">{item.nama_alat?.nama_nama_alat || '-'}</div>
+        <div className="text-[10px] text-text-gray">{item.merk} - {item.model}</div>
+        <div className="mt-1">
+          <RisikoBadge tingkat={item.nama_alat?.tingkat_risiko} skor={item.nama_alat?.skor_risiko} size="sm" />
+        </div>
+      </>
+    ) },
+    { id: 'ruangan', header: 'Ruangan', cell: ({ row }) => (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700">
+        {row.original.ruangan?.nama_ruangan || '-'}
+      </span>
+    ) },
+    { id: 'tgl_pengajuan', header: 'Tgl Pengajuan', cell: ({ row }) => formatDateShort(row.original.create_date), meta: { cellClassName: 'text-xs text-text-gray' } },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => handleDetail(item)}
+          className="p-2 bg-blue-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+          title="Lihat Detail"
+        >
+          <Eye size={16} />
+        </button>
+        <button
+          onClick={() => handleApproveClick(item)}
+          disabled={approveMutation.isPending || deleteMutation.isPending || !item.nama_alat?.tingkat_risiko}
+          className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+          title={item.nama_alat?.tingkat_risiko ? 'Setujui' : 'Nilai risiko jenis alat ini dulu di menu Register Risiko'}
+        >
+          <CheckCircle size={16} />
+        </button>
+        <button
+          onClick={() => handleDeleteClick(item.id)}
+          disabled={approveMutation.isPending || deleteMutation.isPending}
+          className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+          title="Hapus"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    ) },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: items,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    getRowId: (item) => item.id,
+  });
+
+  const f = getTableFilters(table);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -99,144 +168,32 @@ export default function AlatBaruList() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-dark">Pengajuan Alat Baru</h1>
-          <p className="text-[#808191] text-xs mt-1">Daftar alat yang diajukan oleh user ruangan</p>
+          <p className="text-text-gray text-xs mt-1">Daftar alat yang diajukan oleh user ruangan</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        {/* Filters */}
-        <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative col-span-1 md:col-span-2 lg:col-span-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#808191] w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Cari nama alat..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
+            <Input
+              name="search"
+              size="sm"
+              placeholder="Cari nama alat..."
+              icon={<Search className="w-3.5 h-3.5" />}
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              className="!bg-white"
+            />
+          }
+        />
 
-        {/* Table */}
-        <div className={`overflow-x-auto rounded-xl border border-gray-100 transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-bg-light border-b border-gray-100">
-              <tr>
-                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Foto</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Nama Alat</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Ruangan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider">Tgl Pengajuan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-[#808191] uppercase tracking-wider text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <TableSkeleton columns={5} rows={5} />
-              ) : isError ? (
-                <tr>
-                  <td colSpan="5" className="py-12 text-center">
-                    <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="font-bold text-gray-600">Gagal memuat data pengajuan</p>
-                    <p className="text-sm text-gray-400 mt-1">Periksa koneksi Anda lalu muat ulang halaman</p>
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="py-12 text-center">
-                    <Construction size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="font-bold text-gray-600">Tidak ada pengajuan alat baru</p>
-                    <p className="text-sm text-gray-400 mt-1">Belum ada data yang masuk / ditemukan</p>
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-center">
-                        {item.img_alat_baru_url ? (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}>
-                            <img
-                              src={item.img_alat_baru_url}
-                              alt={item.nama_alat?.nama_nama_alat || 'Foto alat'}
-                              className="w-full h-full object-cover"
-                              onError={(e) => { e.target.src = noImage; }}
-                              onClick={() => setImagePreview({
-                                isOpen: true,
-                                imageUrl: item.img_alat_baru_url,
-                                altText: `Foto Alat - ${item.nama_alat?.nama_nama_alat || ''}`
-                              })}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
-                            <img
-                              src={noImage}
-                              alt="Tidak ada foto"
-                              className="w-full h-full object-cover opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-xs font-bold text-text-dark">{item.nama_alat?.nama_nama_alat || '-'}</div>
-                      <div className="text-[10px] text-text-gray">{item.merk} - {item.model}</div>
-                      <div className="mt-1">
-                        <RisikoBadge tingkat={item.nama_alat?.tingkat_risiko} skor={item.nama_alat?.skor_risiko} size="sm" />
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700">
-                        {item.ruangan?.nama_ruangan || '-'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-xs text-text-gray">
-                      {formatDateShort(item.create_date)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleDetail(item)}
-                          className="p-2 bg-blue-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                          title="Lihat Detail"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleApproveClick(item)}
-                          disabled={approveMutation.isPending || deleteMutation.isPending || !item.nama_alat?.tingkat_risiko}
-                          className="p-2 bg-green-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                          title={item.nama_alat?.tingkat_risiko ? 'Setujui' : 'Nilai risiko jenis alat ini dulu di menu Register Risiko'}
-                        >
-                          <CheckCircle size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(item.id)}
-                          disabled={approveMutation.isPending || deleteMutation.isPending}
-                          className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                          title="Hapus"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          size="sm"
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.goToPage}
-          totalData={pagination.totalItems}
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          error={isError ? { title: 'Gagal memuat data pengajuan', description: 'Periksa koneksi Anda lalu muat ulang halaman' } : undefined}
+          skeletonRows={5}
+          containerClassName={`transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}
+          empty={{ icon: Construction, title: 'Tidak ada pengajuan alat baru', description: 'Belum ada data yang masuk / ditemukan' }}
         />
       </div>
 

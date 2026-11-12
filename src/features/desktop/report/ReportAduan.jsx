@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, Eye, Trash2, FileText, AlertCircle, Edit } from 'lucide-react';
+import { Search, Download, Eye, Trash2, FileText, AlertCircle, Edit, Wrench } from 'lucide-react';
 import {
   useReportAduan,
   useDeleteAduan,
@@ -8,18 +8,18 @@ import {
   useMasterDivisi,
   useAuth,
   useToast,
-  usePagination,
-  useFilters,
-  useDebounce,
   usePageTitle,
   useModal,
 } from '../../../hooks';
 import Button from '../../../components/Button';
+import Input from '../../../components/Input';
 import Select from '../../../components/Select';
 import SearchableSelect from '../../../components/SearchableSelect';
-import Input from '../../../components/Input';
-import Pagination from '../../../components/Pagination';
-import TableSkeleton from '../../../components/TableSkeleton';
+import DateRangePicker from '../../../components/DateRangePicker';
+import DataTable from '../../../components/DataTable';
+import FilterBar from '../../../components/FilterBar';
+import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
+import { indexColumn } from '../../../utils/tableColumns';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -27,11 +27,23 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusBadge from '../../../components/StatusBadge';
+import ServisBadge from '../../../components/ServisBadge';
 import { apiUrl } from '../../../config';
 import { formatDateTime, formatDateShort, formatTime } from '../../../utils/format';
 import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
 import useConfirmAction from '../master-data/useConfirmAction';
 import useTeknisiOptions from './useTeknisiOptions';
+
+// Filter diatur lewat state TanStack. Peta: id filter -> parameter query server.
+const FILTER_MAP = {
+  ruangan: 'ruangan_id',
+  divisi: 'divisi_id',
+  teknisi: 'teknisi_id',
+  status: 'status_aduan',
+  kondisi_alat: 'kondisi_alat',
+  pihakKetiga: 'pihak_ketiga',
+  periode: ['start_date', 'end_date'],
+};
 
 export default function ReportAduan() {
   usePageTitle('Laporan Aduan');
@@ -46,26 +58,10 @@ export default function ReportAduan() {
   const [selectedImage, setSelectedImage] = useState(null);
   const imagePreviewModal = useModal();
 
-  const pagination = usePagination(10);
-  const { filters, updateFilter, resetFilters } = useFilters({
-    search: '',
-    ruangan_id: '',
-    divisi_id: '',
-    teknisi_id: '',
-    status_aduan: '',
-    kondisi_alat: '',
-    start_date: '',
-    end_date: ''
-  });
-  const debouncedSearch = useDebounce(filters.search, 500);
+  const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
+  const { filters, params } = tableState;
 
-
-  const { data: aduanData, isLoading } = useReportAduan({
-    ...filters,
-    search: debouncedSearch,
-    page: pagination.currentPage,
-    per_page: pagination.perPage,
-  });
+  const { data: aduanData, isLoading } = useReportAduan(params);
 
   const { data: ruanganData } = useMasterRuangan({ all: 1 });
   const { data: divisiData } = useMasterDivisi({ all: 1 });
@@ -75,12 +71,6 @@ export default function ReportAduan() {
 
   const data = aduanData?.data || [];
   const meta = aduanData?.meta;
-
-  const { setMetadata } = pagination;
-  useEffect(() => {
-    if (meta) setMetadata(meta);
-  }, [meta, setMetadata]);
-
 
   const ruanganOptions = (ruanganData?.data || []).map(r => ({ label: r.nama_ruangan, value: r.id_ruangan }));
   const divisiOptions = (divisiData?.data || []).map(d => ({ label: d.nama_divisi, value: d.id_divisi }));
@@ -110,30 +100,133 @@ export default function ReportAduan() {
     });
   };
 
-  const handleFilterChange = (key, value) => {
-    updateFilter(key, value);
-    pagination.reset();
-  };
-
-  const handleResetFilters = () => {
-    resetFilters();
-    pagination.reset();
-  };
-
   // Unduhan lewat tautan (rute export di server tidak memakai middleware api.auth,
   // sesi dibawa cookie), jadi autentikasi tidak diubah.
   const handleExport = () => {
-    window.open(apiUrl('/aduan/export-excel', {
-      search: filters.search,
-      ruangan_id: filters.ruangan_id,
-      divisi_id: filters.divisi_id,
-      teknisi_id: filters.teknisi_id,
-      status_aduan: filters.status_aduan,
-      kondisi_alat: filters.kondisi_alat,
-      start_date: filters.start_date,
-      end_date: filters.end_date,
-    }), '_blank');
+    window.open(apiUrl('/aduan/export-excel', filters), '_blank');
   };
+
+  const columns = [
+    indexColumn(),
+    { id: 'no_aduan', header: 'No. Aduan', cell: ({ row }) => (
+      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-brand-primary-50 text-brand-primary">
+        {row.original.no_aduan || '-'}
+      </span>
+    ) },
+    { id: 'tanggal_aduan', header: 'Tanggal Aduan', cell: ({ row }) => formatDateTime(row.original.create_date), meta: { cellClassName: 'text-gray-600' } },
+    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi_nama || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'ruangan', header: 'Nama Ruangan', cell: ({ row }) => row.original.ruangan_nama || '-', meta: { cellClassName: 'text-gray-600 font-medium' } },
+    { id: 'gedung', header: 'Gedung', cell: ({ row }) => row.original.gedung || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'no_inventaris', header: 'No Inventaris', cell: ({ row }) => row.original.no_inventaris || '-', meta: { cellClassName: 'text-gray-600 font-mono text-[10px]' } },
+    { id: 'alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat_nama || '-', meta: { cellClassName: 'text-text-dark font-medium' } },
+    { id: 'keluhan', header: 'Keluhan Kerusakan', cell: ({ row: { original: item } }) => (
+      <span title={item.keluhan}>{item.keluhan}</span>
+    ), meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
+    { id: 'foto', header: 'Foto', cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-center">
+        {item.img_keluhan ? (
+          <div
+            className="w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
+            style={{ minWidth: '64px', minHeight: '64px', width: '64px', height: '64px' }}
+          >
+            <LazyLoadImage
+              src={item.img_keluhan}
+              alt="Foto Keluhan"
+              effect="blur"
+              className="object-cover"
+              style={{ width: '64px', height: '64px', display: 'block' }}
+              placeholderSrc={noImage}
+              onError={(e) => { e.target.src = noImage; }}
+              onClick={() => {
+                setSelectedImage(item.img_keluhan);
+                imagePreviewModal.open();
+              }}
+            />
+          </div>
+        ) : (
+          <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
+            <img
+              src={noImage}
+              alt="No Image"
+              className="w-full h-full object-cover opacity-50"
+            />
+          </div>
+        )}
+      </div>
+    ) },
+    { id: 'pelapor', header: 'Nama Pelapor', cell: ({ row }) => row.original.nama_pengadu || '-', meta: { cellClassName: 'text-gray-600' } },
+    { id: 'tanggal_pemeriksaan', header: 'Tanggal Pemeriksaan', cell: ({ row: { original: item } }) => (
+      item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
+    ), meta: { cellClassName: 'text-gray-600' } },
+    { id: 'jam_pemeriksaan', header: 'Jam Pemeriksaan', cell: ({ row: { original: item } }) => (
+      item.tanggal_pemeriksaan ? formatTime(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
+    ), meta: { cellClassName: 'text-gray-600' } },
+    { id: 'teknisi', header: 'Teknisi', cell: ({ row }) => row.original.teknisi_nama || 'Belum Ditentukan', meta: { cellClassName: 'text-brand-primary font-medium' } },
+    { id: 'tindakan_teknisi', header: 'Tindakan Teknisi', cell: ({ row }) => row.original.tindakan_teknisi || 'Belum Ditentukan', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
+    { id: 'rekomendasi', header: 'Rekomendasi', cell: ({ row }) => row.original.rekomendasi || '-', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
+    { id: 'kondisi_alat', header: 'Kondisi Alat', cell: ({ row: { original: item } }) => (
+      item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>
+    ) },
+    { id: 'status', header: 'Status', cell: ({ row }) => (
+      <div className="flex flex-col items-start gap-1">
+        <StatusBadge status={row.original.status_aduan} size="sm" />
+        <ServisBadge jumlah={row.original.jumlah_servis} />
+      </div>
+    ) },
+    { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
+      <div className="flex items-center justify-end gap-2 text-xs">
+        {/* Detail Button - Show for Sedang Dikerjakan, Selesai, Tindakan Lanjutan, or Rusak Berat */}
+        {(item.status_aduan === 'Sedang Dikerjakan' || item.status_aduan === 'Selesai' || item.status_aduan === 'Tindakan Lanjutan' || item.kondisi_alat === 'Rusak Berat') && (
+          <button
+            onClick={() => navigate(`/report/aduan/${item.id_aduan}`)}
+            className="p-2 bg-[#4FD1C5] text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+            title="Detail"
+          >
+            <Eye size={16} />
+          </button>
+        )}
+
+        {/* Disposisi Button - Show for Pimpinan only */}
+        {isPimpinan && (
+          item.status_aduan === 'Tindakan Lanjutan' ||
+          item.kondisi_alat === 'Rusak Berat' ||
+          (item.status_aduan === 'Selesai' && item.kondisi_alat !== 'Baik')
+        ) && (
+            <button
+              onClick={() => window.open(`/mobile/aduan/${item.id_aduan}/disposisi`, '_blank')}
+              className="p-2 bg-success-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
+              title="Isi Disposisi"
+            >
+              <Edit size={16} />
+            </button>
+          )}
+
+        {/* Delete Button - Show only for unassigned aduan (no teknisi) and NOT Pimpinan */}
+        {!isPimpinan && !item.teknisi_id && (
+          <button
+            onClick={() => handleDelete(item.id_aduan)}
+            disabled={deleteMutation.isPending}
+            className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
+            title="Hapus"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+    ) },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data,
+    tableState,
+    pageCount: meta?.last_page,
+    rowCount: meta?.total,
+    getRowId: (item) => item.id_aduan,
+  });
+
+  const f = getTableFilters(table);
+  const [startDate, endDate] = f.getRange('periode');
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -145,7 +238,7 @@ export default function ReportAduan() {
         </div>
         <Button
           onClick={handleExport}
-          size="md"
+          size="sm"
           className="flex items-center gap-2 shadow-lg shadow-brand-primary/20"
         >
           <Download className="w-4 h-4" />
@@ -153,256 +246,99 @@ export default function ReportAduan() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
-        {/* Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Cari laporan..."
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-bg-light border-none focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-sm"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <SearchableSelect
-              size="sm"
-              name="ruangan_id"
-              value={filters.ruangan_id}
-              onChange={(e) => handleFilterChange('ruangan_id', e.target.value)}
-              options={[{ label: 'Semua Ruangan', value: '' }, ...ruanganOptions]}
-              placeholder="Semua Ruangan"
-              searchPlaceholder="Cari ruangan..."
-            />
-
-            {/* Hide divisi filter for Admin Divisi */}
-            {!isAdminDivisi && (
-              <SearchableSelect
-                size="sm"
-                name="divisi_id"
-                value={filters.divisi_id}
-                onChange={(e) => handleFilterChange('divisi_id', e.target.value)}
-                options={[{ label: 'Semua Divisi', value: '' }, ...divisiOptions]}
-                placeholder="Semua Divisi"
-                searchPlaceholder="Cari divisi..."
-              />
-            )}
-
-            <SearchableSelect
-              size="sm"
-              name="teknisi_id"
-              value={filters.teknisi_id}
-              onChange={(e) => handleFilterChange('teknisi_id', e.target.value)}
-              options={[{ label: 'Semua Teknisi', value: '' }, ...teknisiOptions]}
-              placeholder="Semua Teknisi"
-              searchPlaceholder="Cari teknisi..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Select
-              size="sm"
-              value={filters.status_aduan}
-              onChange={(e) => handleFilterChange('status_aduan', e.target.value)}
-              options={[{ label: 'Semua Status', value: '' }, ...statusOptions]}
-              icon={<AlertCircle className="w-4 h-4" />}
-              className="bg-bg-light border-none"
-            />
+      <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+        <FilterBar
+          search={
             <Input
+              name="search"
               size="sm"
-              type="date"
-              value={filters.start_date}
-              onChange={(e) => handleFilterChange('start_date', e.target.value)}
-              className="bg-bg-light border-none"
+              placeholder="Cari laporan..."
+              value={f.search}
+              onChange={(e) => f.setSearch(e.target.value)}
+              icon={<Search className="w-3.5 h-3.5" />}
+              className="!bg-white"
             />
-            <Input
-              size="sm"
-              type="date"
-              value={filters.end_date}
-              onChange={(e) => handleFilterChange('end_date', e.target.value)}
-              className="bg-bg-light border-none"
-            />
+          }
+          actions={
             <Button
               variant="outline"
               size="sm"
-              onClick={handleResetFilters}
-              className="border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary h-8 text-xs"
+              onClick={f.reset}
+              className="!rounded-lg whitespace-nowrap border-dashed border-gray-300 hover:border-brand-primary hover:text-brand-primary"
             >
               Reset Filter
             </Button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
-            <thead className="bg-bg-light border-b border-gray-100">
-              <tr>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No. Aduan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal Aduan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Divisi</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Ruangan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Gedung</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">No Inventaris</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Alat</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Keluhan Kerusakan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Foto</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Nama Pelapor</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tanggal Pemeriksaan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Jam Pemeriksaan</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Teknisi</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Tindakan Teknisi</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Rekomendasi</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Kondisi Alat</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-[10px] font-bold text-text-gray uppercase tracking-wider text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-sm">
-              {isLoading ? (
-                <TableSkeleton columns={18} rows={10} />
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan="18" className="py-12 text-center">
-                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="font-bold text-gray-600">Tidak ada data laporan</p>
-                    <p className="text-sm text-gray-400 mt-1">Silakan sesuaikan filter pencarian</p>
-                  </td>
-                </tr>
-              ) : (
-                data.map((item, index) => (
-                  <tr key={item.id_aduan} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-4 font-bold text-text-dark text-xs">
-                      {(pagination.currentPage - 1) * pagination.perPage + index + 1}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-brand-primary-50 text-brand-primary">
-                        {item.no_aduan || '-'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">
-                      {formatDateTime(item.create_date)}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">{item.divisi_nama || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 font-medium text-xs">{item.ruangan_nama || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">{item.gedung || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 font-mono text-[10px]">{item.no_inventaris || '-'}</td>
-                    <td className="py-3 px-4 text-text-dark font-medium text-xs">{item.nama_alat_nama || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs" title={item.keluhan}>{item.keluhan}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-center">
-                        {item.img_keluhan ? (
-                          <div
-                            className="w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
-                            style={{ minWidth: '64px', minHeight: '64px', width: '64px', height: '64px' }}
-                          >
-                            <LazyLoadImage
-                              src={item.img_keluhan}
-                              alt="Foto Keluhan"
-                              effect="blur"
-                              className="object-cover"
-                              style={{ width: '64px', height: '64px', display: 'block' }}
-                              placeholderSrc={noImage}
-                              onError={(e) => { e.target.src = noImage; }}
-                              onClick={() => {
-                                setSelectedImage(item.img_keluhan);
-                                imagePreviewModal.open();
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
-                            <img
-                              src={noImage}
-                              alt="No Image"
-                              className="w-full h-full object-cover opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">{item.nama_pengadu || '-'}</td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 text-xs">
-                      {item.tanggal_pemeriksaan ? formatTime(item.tanggal_pemeriksaan) : 'Belum Ditentukan'}
-                    </td>
-                    <td className="py-3 px-4 text-brand-primary font-medium text-xs">
-                      {item.teknisi_nama || 'Belum Ditentukan'}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.tindakan_teknisi || 'Belum Ditentukan'}</td>
-                    <td className="py-3 px-4 text-gray-600 max-w-[200px] truncate text-xs">{item.rekomendasi || '-'}</td>
-                    <td className="py-3 px-4">
-                      {item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>}
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={item.status_aduan} size="sm" />
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2 text-xs">
-                        {/* Detail Button - Show for Sedang Dikerjakan, Selesai, Tindakan Lanjutan, or Rusak Berat */}
-                        {(item.status_aduan === 'Sedang Dikerjakan' || item.status_aduan === 'Selesai' || item.status_aduan === 'Tindakan Lanjutan' || item.kondisi_alat === 'Rusak Berat') && (
-                          <button
-                            onClick={() => navigate(`/report/aduan/${item.id_aduan}`)}
-                            className="p-2 bg-[#4FD1C5] text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                            title="Detail"
-                          >
-                            <Eye size={16} />
-                          </button>
-                        )}
-
-                        {/* Disposisi Button - Show for Pimpinan only */}
-                        {isPimpinan && (
-                          item.status_aduan === 'Tindakan Lanjutan' ||
-                          item.kondisi_alat === 'Rusak Berat' ||
-                          (item.status_aduan === 'Selesai' && item.kondisi_alat !== 'Baik')
-                        ) && (
-                            <button
-                              onClick={() => window.open(`/mobile/aduan/${item.id_aduan}/disposisi`, '_blank')}
-                              className="p-2 bg-success-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
-                              title="Isi Disposisi"
-                            >
-                              <Edit size={16} />
-                            </button>
-                          )}
-
-                        {/* Delete Button - Show only for unassigned aduan (no teknisi) and NOT Pimpinan */}
-                        {!isPimpinan && !item.teknisi_id && (
-                          <button
-                            onClick={() => handleDelete(item.id_aduan)}
-                            disabled={deleteMutation.isPending}
-                            className="p-2 bg-danger-500 text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50"
-                            title="Hapus"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-6">
-          <Pagination
+          }
+          gridClassName="grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+        >
+          <SearchableSelect
             size="sm"
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={pagination.goToPage}
-            totalData={pagination.totalItems}
+            name="ruangan_id"
+            value={f.get('ruangan')}
+            onChange={(e) => f.set('ruangan', e.target.value)}
+            options={[{ label: 'Semua Ruangan', value: '' }, ...ruanganOptions]}
+            placeholder="Semua Ruangan"
+            searchPlaceholder="Cari ruangan..."
           />
-        </div>
+
+          {/* Hide divisi filter for Admin Divisi */}
+          {!isAdminDivisi && (
+            <SearchableSelect
+              size="sm"
+              name="divisi_id"
+              value={f.get('divisi')}
+              onChange={(e) => f.set('divisi', e.target.value)}
+              options={[{ label: 'Semua Divisi', value: '' }, ...divisiOptions]}
+              placeholder="Semua Divisi"
+              searchPlaceholder="Cari divisi..."
+            />
+          )}
+
+          <SearchableSelect
+            size="sm"
+            name="teknisi_id"
+            value={f.get('teknisi')}
+            onChange={(e) => f.set('teknisi', e.target.value)}
+            options={[{ label: 'Semua Teknisi', value: '' }, ...teknisiOptions]}
+            placeholder="Semua Teknisi"
+            searchPlaceholder="Cari teknisi..."
+          />
+
+          <Select
+            size="sm"
+            value={f.get('status')}
+            onChange={(e) => f.set('status', e.target.value)}
+            options={[{ label: 'Semua Status', value: '' }, ...statusOptions]}
+            icon={<AlertCircle className="w-4 h-4" />}
+            className="!bg-white"
+          />
+
+          <Select
+            size="sm"
+            value={f.get('pihakKetiga')}
+            onChange={(e) => f.set('pihakKetiga', e.target.value)}
+            options={[{ label: 'Semua Servis', value: '' }, { label: 'Ada Laporan Pihak Ketiga', value: '1' }]}
+            icon={<Wrench className="w-4 h-4" />}
+            className="!bg-white"
+          />
+
+          <div className="col-span-2 md:col-span-1">
+            <DateRangePicker
+              size="sm"
+              startDate={startDate}
+              endDate={endDate}
+              onChange={({ startDate: start, endDate: end }) => f.set('periode', start || end ? [start, end] : '')}
+              className="!bg-white"
+            />
+          </div>
+        </FilterBar>
+
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          skeletonRows={10}
+          empty={{ icon: FileText, title: 'Tidak ada data laporan', description: 'Silakan sesuaikan filter pencarian' }}
+        />
       </div>
 
       {/* Image Preview Modal */}
