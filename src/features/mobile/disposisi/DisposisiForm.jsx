@@ -3,6 +3,13 @@ import SignaturePad from '../../../components/SignaturePad';
 import { useToast, useCreateDisposisiAduan, useCreateDisposisiPemeliharaan } from '../../../hooks';
 import { toInputDate } from '../../../utils/format';
 import { DISPOSISI_CONFIG } from './disposisiConfig';
+import DetailSection from '../../../components/detail/DetailSection';
+import DetailField from '../../../components/detail/DetailField';
+import TeksBlok from '../../../components/detail/TeksBlok';
+
+const FIELD =
+  'w-full px-3.5 py-2.5 rounded-xl border-[1.5px] border-gray-200 bg-white text-sm font-medium text-text-dark placeholder:text-[#B0B3C7] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10';
+const LABEL = 'block text-[13px] font-bold text-text-dark mb-1.5';
 
 /**
  * Form disposisi pimpinan (halaman publik, tanpa login).
@@ -47,48 +54,27 @@ export default function DisposisiForm({ jenis, data, token }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <h4 className="text-lg font-bold text-gray-800 mb-4">
-        Disposisi Pimpinan
-      </h4>
-
-      {/* Info {config.title} */}
-      <div className="bg-gray-50 p-3 rounded-lg mb-4 space-y-2">
-        <div>
-          <strong className="text-sm">No. Inventaris:</strong>
-          <br />
-          <span className="text-sm">{data.no_inventaris}</span>
-        </div>
-        <div>
-          <strong className="text-sm">Nama Alat:</strong>
-          <br />
-          <span className="text-sm">{data.nama_alat_nama}</span>
-        </div>
+    <DetailSection judul="Disposisi pimpinan">
+      <dl className="grid grid-cols-2 gap-4">
+        <DetailField label="No. inventaris" value={data.no_inventaris} mono />
+        <DetailField label="Nama alat" value={data.nama_alat_nama} />
+      </dl>
+      <div className="space-y-3 mt-4 pt-4 border-t border-gray-100">
         {config.fields.map((field) => (
-          <div key={field.key}>
-            <hr className="my-2" />
-            <strong className="text-sm">{field.label}:</strong>
-            <br />
-            <span className="text-sm">{data[field.key] || '-'}</span>
-          </div>
+          <TeksBlok key={field.key} label={field.label}>{data[field.key]}</TeksBlok>
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 mt-5 pt-5 border-t border-gray-100">
         {/* Tanggal (hanya baca) */}
         <div>
-          <label className="block text-sm font-semibold mb-1">Tanggal</label>
-          <input
-            type="date"
-            value={toInputDate()}
-            readOnly
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-          />
+          <label className={LABEL}>Tanggal</label>
+          <input type="date" value={toInputDate()} readOnly className={`${FIELD} bg-gray-50`} />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">
-            Isi Disposisi <span className="text-red-500">*</span>
+          <label className={LABEL}>
+            Isi disposisi <span className="text-red-500">*</span>
           </label>
           <textarea
             name="isi_disposisi"
@@ -97,13 +83,13 @@ export default function DisposisiForm({ jenis, data, token }) {
             rows={4}
             required
             placeholder="Masukkan isi disposisi..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`${FIELD} resize-none`}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">
-            Nama Pimpinan <span className="text-red-500">*</span>
+          <label className={LABEL}>
+            Nama pimpinan <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -112,22 +98,20 @@ export default function DisposisiForm({ jenis, data, token }) {
             onChange={handleChange}
             required
             placeholder="Masukkan nama Anda..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={FIELD}
           />
         </div>
 
-        <div>
-          <SignaturePad ref={signaturePadRef} label="Tanda Tangan *" />
-        </div>
+        <SignaturePad ref={signaturePadRef} label="Tanda tangan *" />
 
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 rounded-xl bg-brand-primary text-white text-sm font-bold shadow-lg shadow-brand-primary/25 hover:bg-brand-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Menyimpan...' : 'Simpan Disposisi'}
+          {isPending ? 'Menyimpan...' : 'Simpan disposisi'}
         </button>
       </form>
-    </div>
+    </DetailSection>
   );
 }

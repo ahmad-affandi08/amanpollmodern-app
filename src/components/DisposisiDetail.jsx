@@ -1,4 +1,6 @@
 import { formatDateTime } from '../utils/format';
+import DetailField from './detail/DetailField';
+import TeksBlok from './detail/TeksBlok';
 
 /**
  * Detail disposisi (baca-saja).
@@ -10,44 +12,25 @@ export default function DisposisiDetail({ disposisi }) {
 
   return (
     <div className="space-y-4">
-      <h5 className="text-sm font-bold text-gray-600 uppercase">
-        Detail Disposisi Pimpinan
-      </h5>
+      <h2 className="text-[15px] font-bold text-text-dark">Disposisi pimpinan</h2>
 
-      <div className="space-y-3">
-        {/* Tanggal Disposisi */}
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <small className="text-xs text-gray-500">Tanggal Disposisi</small>
-          <p className="mt-1 font-semibold text-gray-900">
-            {formatDateTime(disposisi.disposisi_tgl)}
-          </p>
-        </div>
+      <dl>
+        <DetailField label="Tanggal disposisi" value={formatDateTime(disposisi.disposisi_tgl)} />
+      </dl>
 
-        {/* Isi Disposisi */}
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <small className="text-xs text-gray-500">Isi Disposisi</small>
-          <p className="mt-1 text-gray-900 whitespace-pre-wrap">
-            {disposisi.disposisi_isi || '-'}
-          </p>
-        </div>
+      <TeksBlok label="Isi disposisi">{disposisi.disposisi_isi}</TeksBlok>
 
-        {/* Nama & Tanda Tangan */}
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <small className="text-xs text-gray-500">
-            Nama & Tanda Tangan Pimpinan
-          </small>
-          <div className="mt-2 flex justify-between items-end">
-            <p className="font-semibold text-gray-900">
-              {disposisi.disposisi_nama || '-'}
-            </p>
-            {disposisi.disposisi_ttd && (
-              <img
-                src={disposisi.disposisi_ttd}
-                alt="Tanda Tangan"
-                className="max-w-[120px] h-auto border border-gray-200 rounded"
-              />
-            )}
-          </div>
+      <div>
+        <p className="text-xs font-semibold text-[#808191] mb-1">Nama dan tanda tangan pimpinan</p>
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-sm font-semibold text-text-dark">{disposisi.disposisi_nama || '-'}</p>
+          {disposisi.disposisi_ttd && (
+            <img
+              src={disposisi.disposisi_ttd}
+              alt="Tanda tangan pimpinan"
+              className="max-w-[120px] h-auto border border-dashed border-gray-300 rounded-lg bg-white p-1"
+            />
+          )}
         </div>
       </div>
     </div>

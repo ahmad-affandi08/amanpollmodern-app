@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft, FileText, Download, User, Calendar, MapPin,
-  Building2, Wrench, CheckCircle, DollarSign, History, Package
-} from 'lucide-react';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle, useAduanDetail } from '../../../hooks';
 import { apiUrl } from '../../../config';
 import { rupiah, formatDate, formatDateTime } from '../../../utils/format';
+import { susunRiwayatAduan, langkahAlurAduan } from '../../../utils/detailRiwayat';
 import StatusBadge from '../../../components/StatusBadge';
-import ImagePreviewModal from '../../../components/ImagePreviewModal';
-import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailHeader from '../../../components/detail/DetailHeader';
+import DetailSection from '../../../components/detail/DetailSection';
+import DetailField from '../../../components/detail/DetailField';
+import DetailPerson from '../../../components/detail/DetailPerson';
+import ExportButton from '../../../components/detail/ExportButton';
+import AlurStatus from '../../../components/detail/AlurStatus';
+import PenangananTimeline from '../../../components/detail/PenangananTimeline';
+import DetailSkeleton from '../../../components/detail/DetailSkeleton';
+import DetailNotFound from '../../../components/detail/DetailNotFound';
+
+const BELUM = 'Belum Ditentukan';
 
 export default function DetailReportAduan() {
   usePageTitle('Detail Laporan Aduan');
@@ -32,249 +39,119 @@ export default function DetailReportAduan() {
     if (isError) showToast('Gagal memuat detail laporan', 'error');
   }, [isError, showToast]);
 
+  const kembali = () => navigate('/report/aduan');
+
   // Tautan unduhan (rute export di server tidak memakai middleware api.auth,
   // sesi dibawa cookie), jadi autentikasi tidak diubah.
   const handleExport = () => {
     window.open(apiUrl(`/report/aduan/export/${id}`), '_blank');
   };
 
-  if (loading) {
-    return <DetailReportSkeleton />;
-  }
+  if (loading) return <DetailSkeleton dua />;
+  if (!data) return <DetailNotFound onBack={kembali} />;
 
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-        <FileText size={64} className="text-gray-300 mb-4" />
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Data Tidak Ditemukan</h3>
-        <p className="text-gray-500 mb-6">Laporan yang Anda cari tidak tersedia.</p>
-        <button
-          type="button"
-          onClick={() => navigate('/report/aduan')}
-          className="inline-flex items-center justify-center h-[36px] px-4 bg-brand-primary text-white text-xs font-semibold rounded-xl hover:bg-brand-primary/90 transition-colors"
-        >
-          Kembali ke Daftar
-        </button>
-      </div>
-    );
-  }
+  const pratinjau = (gambar, alt) => {
+    setPreviewImage(gambar);
+    setPreviewAlt(alt);
+  };
+  const riwayat = susunRiwayatAduan(data);
+  const kondisiTerakhir = data.kondisi_alat && data.kondisi_alat !== BELUM ? data.kondisi_alat : null;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/report/aduan')}
-            aria-label="Kembali ke daftar laporan aduan"
-            className="p-2 hover:bg-white rounded-xl transition-colors hover:shadow-sm group"
-          >
-            <ArrowLeft size={24} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-text-dark">Detail Laporan Aduan</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-500">No Aduan:</span>
-              <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded-md border border-purple-200">
-                {data.no_aduan || '-'}
-              </span>
-              <StatusBadge status={data.status_aduan} size="sm" />
-            </div>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleExport}
-          className="flex items-center gap-2 h-[36px] px-4 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-xs"
-        >
-          <Download size={16} />
-          Export PDF
-        </button>
-      </div>
+    <div className="space-y-5 animate-fade-in pb-10">
+      <DetailHeader
+        judul="Detail Laporan Aduan"
+        nomor={data.no_aduan}
+        status={<StatusBadge status={data.status_aduan} />}
+        onBack={kembali}
+        aksi={<ExportButton onClick={handleExport} />}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left Column - Main Info */}
-        <div className="space-y-4">
-          {/* Device & Complaint Card */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-              <Package className="text-brand-primary" size={18} />
-              <h2 className="text-base font-bold text-gray-800">Informasi Alat & Keluhan</h2>
-            </div>
+      <DetailSection judul="Alur penanganan">
+        <AlurStatus langkah={langkahAlurAduan(data)} />
+      </DetailSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Foto Keluhan</label>
-                {data.img_keluhan ? (
-                  <div
-                    className="relative w-full h-48 rounded-xl overflow-hidden cursor-pointer group border-2 border-gray-100 hover:border-brand-primary transition-all"
-                    onClick={() => {
-                      setPreviewImage(data.img_keluhan);
-                      setPreviewAlt('Foto Keluhan');
-                    }}
-                  >
-                    <img
-                      src={data.img_keluhan}
-                      alt="Foto Keluhan"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => { e.target.src = noImage; }}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 px-3 py-1 rounded-full text-xs font-medium">
-                        Klik untuk memperbesar
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-48 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center">
-                    <p className="text-gray-400 text-xs">Tidak ada foto keluhan</p>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Alat</label>
-                <div className="px-3 py-2 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg text-gray-800 font-bold text-sm">
-                  {data.nama_alat_nama || '-'}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] gap-5 items-start">
+        <div className="space-y-5">
+          <DetailSection judul="Keluhan">
+            <div className="flex flex-col sm:flex-row gap-5">
+              {data.img_keluhan ? (
+                <button
+                  type="button"
+                  onClick={() => pratinjau(data.img_keluhan, 'Foto keluhan')}
+                  aria-label="Perbesar foto keluhan"
+                  className="w-full sm:w-56 h-40 shrink-0 rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
+                >
+                  <img
+                    src={data.img_keluhan}
+                    alt="Foto keluhan"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </button>
+              ) : (
+                <div className="w-full sm:w-56 h-40 shrink-0 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-xs font-semibold text-[#B0B3C7]">
+                  Tidak ada foto
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">No Inventaris</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-mono font-medium text-xs">
-                  {data.no_inventaris || '-'}
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Keluhan Kerusakan</label>
-                <div className="px-3 py-3 bg-orange-50/50 border border-orange-100 rounded-lg text-gray-700 min-h-[80px] whitespace-pre-wrap italic text-sm">
-                  "{data.keluhan || '-'}"
-                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold text-text-dark whitespace-pre-wrap break-words">{data.keluhan || '-'}</p>
+                <p className="text-xs text-[#808191] mt-2">
+                  Dilaporkan oleh {data.nama_pengadu || '-'} · {formatDate(data.create_date)}
+                </p>
               </div>
             </div>
-          </div>
+          </DetailSection>
 
-          {/* Reporter & Location Info */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
-              <MapPin className="text-green-500" size={18} />
-              <h2 className="text-base font-bold text-gray-800">Informasi Pelapor & Lokasi</h2>
-            </div>
+          <DetailSection judul="Alat dan lokasi">
+            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+              <DetailField label="Nama alat" value={data.nama_alat_nama} />
+              <DetailField label="No. inventaris" value={data.no_inventaris} mono />
+              <DetailField label="Divisi" value={data.divisi_nama} />
+              <DetailField label="Ruangan" value={data.ruangan_nama} />
+              {data.gedung && data.gedung !== '-' && <DetailField label="Gedung" value={data.gedung} />}
+            </dl>
+          </DetailSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <InfoCard icon={<User size={14} />} label="Nama Pelapor" value={data.nama_pengadu} />
-              <InfoCard icon={<Calendar size={14} />} label="Tanggal Laporan" value={formatDate(data.create_date)} />
-              <InfoCard icon={<Building2 size={14} />} label="Divisi" value={data.divisi_nama} />
-              <InfoCard icon={<MapPin size={14} />} label="Ruangan" value={data.ruangan_nama} />
-              {data.gedung && <InfoCard icon={<Building2 size={14} />} label="Gedung" value={data.gedung} />}
-            </div>
-          </div>
-
-          {/* Technician Assignment */}
-          {data.teknisi_nama && (
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Wrench className="text-blue-600" size={18} />
-                <h2 className="text-base font-bold text-gray-800">Teknisi Penanggung Jawab</h2>
-              </div>
-              <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-blue-200 shadow-sm">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg">
-                  <User size={18} />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{data.teknisi_nama}</p>
-                  <p className="text-xs text-gray-600">{data.divisi_nama}</p>
-                </div>
-              </div>
-            </div>
+          {riwayat.length > 0 && (
+            <DetailSection judul="Riwayat penanganan">
+              <PenangananTimeline items={riwayat} onPreview={pratinjau} />
+            </DetailSection>
           )}
-
         </div>
 
-        {/* Right Column - Inspection Timeline & Summary */}
-        <div className="space-y-4">
-          {/* Biaya */}
-          {Number(data.biaya) > 0 && (
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200 shadow-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="text-orange-600" size={18} />
-                <h3 className="text-xs font-bold text-gray-700">Biaya Perbaikan</h3>
+        <div className="space-y-5">
+          <DetailSection judul="Penugasan">
+            {data.teknisi_nama ? (
+              <>
+                <DetailPerson nama={data.teknisi_nama} keterangan={data.divisi_nama} />
+                <dl className="mt-4 pt-4 border-t border-gray-100">
+                  <DetailField label="Waktu penugasan" value={data.tanggal_penugasan ? formatDateTime(data.tanggal_penugasan) : 'Tidak tercatat'} />
+                </dl>
+              </>
+            ) : (
+              <p className="text-sm text-[#808191]">Belum ada teknisi yang ditugaskan.</p>
+            )}
+          </DetailSection>
+
+          <DetailSection judul="Ringkasan">
+            <dl className="space-y-4">
+              <DetailField label="Kondisi alat terakhir">
+                {kondisiTerakhir ? <KondisiBadge kondisi={kondisiTerakhir} size="md" /> : '-'}
+              </DetailField>
+              <div className="pt-4 border-t border-gray-100">
+                <dt className="text-xs font-semibold text-[#808191] mb-0.5">Biaya perbaikan</dt>
+                <dd className="text-2xl font-extrabold text-text-dark">{Number(data.biaya) > 0 ? rupiah(data.biaya) : '-'}</dd>
               </div>
-              <p className="text-xl font-bold text-orange-600">{rupiah(data.biaya)}</p>
-            </div>
-          )}
+            </dl>
+          </DetailSection>
 
-          {/* Inspection Timeline */}
-          {((data.history && data.history.length > 0) || data.tindakan_teknisi) && (
-            <div className="space-y-4">
-              {/* TINDAKAN AWAL */}
-              {data.history && data.history.length > 0 && data.history[0] && (
-                <InspectionCard
-                  title={`TINDAKAN AWAL (${data.history[0].status_aduan})`}
-                  icon={<History size={18} className="text-blue-600" />}
-                  bgColor="from-blue-50 to-cyan-50"
-                  borderColor="border-blue-200"
-                  data={{
-                    tindakan: data.history[0].tindakan_teknisi,
-                    rekomendasi: data.history[0].rekomendasi,
-                    kondisi: data.history[0].kondisi_alat,
-                    tanggal: data.history[0].tanggal_pemeriksaan,
-                    ttd_teknisi: data.history[0].ttd_teknisi,
-                    ttd_pengadu: data.history[0].ttd_kepala_ruang,
-                    teknisi_nama: data.teknisi_nama,
-                    pengadu_nama: data.nama_pengadu
-                  }}
-                  onImagePreview={(img, alt) => {
-                    setPreviewImage(img);
-                    setPreviewAlt(alt);
-                  }}
-                />
-              )}
-
-              {/* TINDAKAN LANJUTAN/AKHIR */}
-              {data.tindakan_teknisi && (
-                <InspectionCard
-                  title={data.history && data.history.length > 0 ? 'TINDAKAN LANJUTAN' : 'LAPORAN PENGERJAAN'}
-                  icon={<CheckCircle size={18} className="text-green-600" />}
-                  bgColor="from-green-50 to-emerald-50"
-                  borderColor="border-green-200"
-                  data={{
-                    tindakan: data.tindakan_teknisi,
-                    rekomendasi: data.rekomendasi,
-                    kondisi: data.kondisi_alat,
-                    tanggal: data.tanggal_pemeriksaan,
-                    ttd_teknisi: data.ttd_teknisi,
-                    ttd_pengadu: data.ttd_kepala_ruang,
-                    teknisi_nama: data.teknisi_nama,
-                    pengadu_nama: data.nama_pengadu
-                  }}
-                  onImagePreview={(img, alt) => {
-                    setPreviewImage(img);
-                    setPreviewAlt(alt);
-                  }}
-                />
-              )}
-
-              {/* Kondisi Alat */}
-              {data.kondisi_alat && (
-                <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <h3 className="text-xs font-bold text-gray-700 mb-2">Kondisi Alat Terakhir</h3>
-                  <KondisiBadge kondisi={data.kondisi_alat} size="lg" />
-                </div>
-              )}
-            </div>
-          )}
+          <DetailSection>
+            <ServisPihakKetigaPanel jenis="aduan" indukId={data.id_aduan ?? id} status={data.status_aduan} />
+          </DetailSection>
         </div>
       </div>
 
-      {/* Laporan servis pihak ketiga (vendor) */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <ServisPihakKetigaPanel jenis="aduan" indukId={data.id_aduan ?? id} status={data.status_aduan} />
-      </div>
-
-      {/* Image Preview Modal */}
       <ImagePreviewModal
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
@@ -284,298 +161,3 @@ export default function DetailReportAduan() {
     </div>
   );
 }
-
-
-const InfoCard = ({ icon, label, value }) => (
-  <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
-    <div className="flex items-center gap-1.5 mb-1 text-gray-500">
-      {icon}
-      <span className="text-[10px] font-medium">{label}</span>
-    </div>
-    <p className="text-xs font-bold text-gray-800 truncate">{value || '-'}</p>
-  </div>
-);
-
-const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePreview }) => {
-  return (
-    <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 border ${borderColor} shadow-sm`}>
-      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
-        {icon}
-        <h2 className="text-base font-bold text-gray-800">{title}</h2>
-      </div>
-
-      <div className="space-y-4">
-        {data.tindakan && (
-          <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">Tindakan Teknisi</label>
-            <div className="px-3 py-2 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-xs">
-              {data.tindakan}
-            </div>
-          </div>
-        )}
-
-        {data.rekomendasi && (
-          <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">Rekomendasi</label>
-            <div className="px-3 py-2 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-xs">
-              {data.rekomendasi}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          {data.kondisi && (
-            <div>
-              <label className="block text-[10px] font-bold text-gray-600 mb-1">Kondisi Alat</label>
-              <KondisiBadge kondisi={data.kondisi} />
-            </div>
-          )}
-
-          {data.tanggal && (
-            <div>
-              <label className="block text-[10px] font-bold text-gray-600 mb-1">Tanggal Pemeriksaan</label>
-              <div className="px-3 py-2 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-xs font-semibold">
-                {formatDateTime(data.tanggal)}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Signatures */}
-        {(data.ttd_teknisi || data.ttd_pengadu) && (
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-            {data.ttd_teknisi && (
-              <SignatureCard
-                label="TTD Teknisi"
-                name={data.teknisi_nama}
-                image={data.ttd_teknisi}
-                onPreview={() => onImagePreview(data.ttd_teknisi, 'TTD Teknisi')}
-              />
-            )}
-
-            {data.ttd_pengadu && (
-              <SignatureCard
-                label="TTD Pelapor"
-                name={data.pengadu_nama}
-                image={data.ttd_pengadu}
-                onPreview={() => onImagePreview(data.ttd_pengadu, 'TTD Pelapor')}
-              />
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const SignatureCard = ({ label, name, image, onPreview }) => (
-  <div>
-    <label className="block text-[10px] font-bold text-gray-600 mb-1">{label}</label>
-    <div
-      className="w-full h-20 bg-white border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-brand-primary transition-colors overflow-hidden group"
-      onClick={onPreview}
-    >
-      <img
-        src={image}
-        alt={label}
-        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
-        onError={(e) => { e.target.src = noImage; }}
-      />
-    </div>
-    {name && <p className="text-[10px] text-gray-600 mt-1 text-center font-medium">{name}</p>}
-  </div>
-);
-
-
-const DetailReportSkeleton = () => {
-  return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-          <div>
-            <div className="h-8 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
-            <div className="flex items-center gap-3">
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-40 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-        <div className="h-12 w-40 bg-gray-200 rounded-2xl animate-pulse"></div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column Skeleton */}
-        <div className="space-y-6">
-          {/* Device & Complaint Card Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Image Skeleton */}
-              <div className="md:col-span-2">
-                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="relative w-full h-64 bg-gray-200 rounded-2xl overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* Nama Alat Skeleton */}
-              <div>
-                <div className="h-4 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* No Inventaris Skeleton */}
-              <div>
-                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-12 bg-gray-200 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* Keluhan Skeleton */}
-              <div className="md:col-span-2">
-                <div className="h-4 w-32 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-24 bg-gray-200 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Reporter & Location Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="h-5 w-32 bg-gray-300 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Technician Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-              <div className="w-14 h-14 bg-gray-200 rounded-full animate-pulse"></div>
-              <div className="flex-1">
-                <div className="h-5 w-40 bg-gray-300 rounded mb-2 animate-pulse"></div>
-                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="space-y-6">
-          {/* Biaya Skeleton */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div className="h-10 w-48 bg-gray-300 rounded-lg animate-pulse"></div>
-          </div>
-
-          {/* Inspection Card Skeleton 1 */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-56 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="space-y-4">
-              {/* Tindakan */}
-              <div>
-                <div className="h-3 w-28 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* Rekomendasi */}
-              <div>
-                <div className="h-3 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* Grid Items */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="h-3 w-20 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                  <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                </div>
-                <div>
-                  <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                  <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                </div>
-              </div>
-
-              {/* Signatures */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                {[1, 2].map((i) => (
-                  <div key={i}>
-                    <div className="h-3 w-16 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                    <div className="h-28 bg-gray-100 rounded-xl relative overflow-hidden">
-                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Inspection Card Skeleton 2 */}
-          <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="h-3 w-28 bg-gray-200 rounded mb-2 animate-pulse"></div>
-                <div className="h-20 bg-gray-100 rounded-xl relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Add shimmer keyframe to global styles if not already present */}
-      <style>{`
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-

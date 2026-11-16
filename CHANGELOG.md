@@ -2,6 +2,24 @@
 
 Aturan penomoran dan langkah rilis ada di [VERSIONING.md](VERSIONING.md). Entri terbaru di atas.
 
+## [1.2.0] - 2026-11-16
+
+### Baru
+- **Waktu penugasan teknisi** pada aduan: dicatat saat Admin Divisi memilih (atau mengganti) teknisi, tampil di export Excel,
+  PDF aduan, kolom "Waktu Penugasan" di Laporan Aduan, dan detail aduan (desktop dan mobile).
+  Aduan yang sudah ditugaskan sebelum fitur ini tampil "-" karena waktunya tidak pernah tersimpan.
+
+### Diubah
+- **Tampilan halaman detail dirapikan** (Detail Laporan Aduan dan Pemeliharaan di desktop, detail aduan dan pemeliharaan di mobile,
+  serta form pemeriksaan teknisi): satu warna merek, tanpa gradien, label minimal 12px, tombol Export PDF seragam.
+  Halaman laporan kini punya **alur status** (Dilaporkan, Ditugaskan, Diperiksa, Selesai) dan satu garis waktu riwayat penanganan.
+  Detail pemeliharaan sekarang juga menampilkan keterangan, rekomendasi, dan biaya.
+  Gaya yang sama dipakai di halaman Disposisi, Detail Notifikasi, Detail Inventaris, Detail Anggaran, dan Detail Alat Baru.
+  Foto yang tidak ada kini tampil sebagai penanda netral, bukan ikon hitam raksasa.
+
+### Catatan deploy
+- Jalankan migrasi `2026_11_16_000001_add_tanggal_penugasan_to_aduan` (hanya menambah satu kolom).
+
 ## [1.1.0] - 2026-11-13
 
 ### Baru

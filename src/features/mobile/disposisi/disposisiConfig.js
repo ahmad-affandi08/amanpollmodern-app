@@ -1,8 +1,5 @@
-import { FileText, Wrench, Lightbulb } from 'lucide-react';
-
 /**
- * Konfigurasi per jenis disposisi (aduan / pemeliharaan): label, id, dan blok info
- * yang ditampilkan. Kelas Tailwind ditulis utuh agar ikut ter-build.
+ * Konfigurasi per jenis disposisi (aduan / pemeliharaan): label, id, dan blok info yang ditampilkan.
  */
 export const DISPOSISI_CONFIG = {
   aduan: {
@@ -10,28 +7,9 @@ export const DISPOSISI_CONFIG = {
     idKey: 'id_aduan',
     doneText: 'Aduan ini telah mendapat disposisi dari pimpinan.',
     fields: [
-      {
-        key: 'keluhan',
-        label: 'Keluhan',
-        icon: FileText,
-        always: true,
-        box: 'from-orange-50 to-amber-50 border-orange-100',
-        text: 'text-orange-600',
-      },
-      {
-        key: 'tindakan_teknisi',
-        label: 'Tindakan Teknisi',
-        icon: Wrench,
-        box: 'from-green-50 to-emerald-50 border-green-100',
-        text: 'text-green-600',
-      },
-      {
-        key: 'rekomendasi',
-        label: 'Rekomendasi',
-        icon: Lightbulb,
-        box: 'from-yellow-50 to-amber-50 border-yellow-100',
-        text: 'text-yellow-600',
-      },
+      { key: 'keluhan', label: 'Keluhan', always: true },
+      { key: 'tindakan_teknisi', label: 'Tindakan teknisi' },
+      { key: 'rekomendasi', label: 'Rekomendasi' },
     ],
   },
   pemeliharaan: {
@@ -39,21 +17,8 @@ export const DISPOSISI_CONFIG = {
     idKey: 'id_pemeliharaan',
     doneText: 'Pemeliharaan ini telah mendapat disposisi dari pimpinan.',
     fields: [
-      {
-        key: 'keterangan_pemeliharaan',
-        label: 'Keterangan Pemeliharaan',
-        icon: FileText,
-        always: true,
-        box: 'from-orange-50 to-amber-50 border-orange-100',
-        text: 'text-orange-600',
-      },
-      {
-        key: 'rekomendasi',
-        label: 'Rekomendasi',
-        icon: Lightbulb,
-        box: 'from-yellow-50 to-amber-50 border-yellow-100',
-        text: 'text-yellow-600',
-      },
+      { key: 'keterangan_pemeliharaan', label: 'Keterangan pemeliharaan', always: true },
+      { key: 'rekomendasi', label: 'Rekomendasi' },
     ],
   },
 };

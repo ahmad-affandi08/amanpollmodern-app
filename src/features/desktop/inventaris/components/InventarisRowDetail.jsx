@@ -7,7 +7,7 @@ const EMPTY = '-';
 function Section({ title, rows }) {
   return (
     <section>
-      <h4 className="mb-1 text-[10.5px] font-extrabold uppercase tracking-wider text-brand-primary">{title}</h4>
+      <h4 className="mb-1 text-xs font-bold text-brand-primary">{title}</h4>
       <dl>
         {rows.map(([label, value]) => (
           <div key={label} className="flex h-9 items-center justify-between gap-3 border-b border-gray-100 text-xs text-text-dark last:border-b-0">

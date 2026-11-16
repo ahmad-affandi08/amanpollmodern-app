@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  ArrowLeft, User, Calendar, AlertCircle, Wrench, CheckCircle,
-  FileText, MapPin, Building2, DollarSign, History, Package
-} from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { usePageTitle, useAduanDetail } from '../../../hooks';
 import { apiUrl } from '../../../config';
-import { formatDateTime, formatDate, rupiah } from '../../../utils/format';
+import { formatDateTime, rupiah } from '../../../utils/format';
+import { susunRiwayatAduan } from '../../../utils/detailRiwayat';
 import RisikoBadge from '../../../components/RisikoBadge';
 import StatusBadge from '../../../components/StatusBadge';
-import noImage from '../../../assets/img/no_image.png';
-import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailSection from '../../../components/detail/DetailSection';
+import { DetailRow } from '../../../components/detail/DetailField';
+import DetailPerson from '../../../components/detail/DetailPerson';
+import ExportButton from '../../../components/detail/ExportButton';
+import PenangananTimeline from '../../../components/detail/PenangananTimeline';
+import DetailSkeleton from '../../../components/detail/DetailSkeleton';
+
+const BELUM = 'Belum Ditentukan';
 
 export default function MobileAduanDetail() {
   usePageTitle('Detail Aduan');
@@ -25,24 +30,8 @@ export default function MobileAduanDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-md mx-auto px-4 pb-4">
-        <div className="flex items-center gap-3 py-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded w-40 animate-pulse"></div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse mb-4">
-          <div className="w-full h-48 bg-gray-200 rounded-xl mb-3"></div>
-          <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse">
-              <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            </div>
-          ))}
-        </div>
+      <div className="max-w-md mx-auto px-4 pt-4 pb-4">
+        <DetailSkeleton />
       </div>
     );
   }
@@ -58,275 +47,98 @@ export default function MobileAduanDetail() {
     );
   }
 
+  const pratinjau = (gambar, alt) => {
+    setPreviewImage(gambar);
+    setPreviewAlt(alt);
+  };
+  const riwayat = susunRiwayatAduan(aduan);
+  const kondisi = aduan.kondisi_alat && aduan.kondisi_alat !== BELUM ? aduan.kondisi_alat : null;
+
   return (
-    <div className="max-w-md mx-auto px-4 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3 py-4">
+    <div className="max-w-md mx-auto px-4 pb-24 space-y-4">
+      <div className="flex items-center gap-3 pt-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Kembali"
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-800">Detail Laporan</h1>
+        <h1 className="text-lg font-extrabold text-text-dark">Detail Laporan</h1>
       </div>
 
-      {/* Hero Card - Image + Status */}
-      <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
-        <div className="relative mb-3">
-          <img
-            src={aduan.img_keluhan || noImage}
-            alt="Keluhan"
-            className="w-full h-48 rounded-xl object-cover bg-gray-100 cursor-pointer"
-            onClick={() => {
-              if (aduan.img_keluhan) {
-                setPreviewImage(aduan.img_keluhan);
-                setPreviewAlt('Foto Keluhan');
-              }
-            }}
-            onError={(e) => { e.target.src = noImage; }}
-          />
-          <div className="absolute top-3 right-3">
-            <StatusBadge status={aduan.status_aduan} size="lg" />
-          </div>
+      <DetailSection>
+        {aduan.img_keluhan && (
+          <button
+            type="button"
+            onClick={() => pratinjau(aduan.img_keluhan, 'Foto keluhan')}
+            aria-label="Perbesar foto keluhan"
+            className="w-full h-44 mb-4 rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
+          >
+            <img
+              src={aduan.img_keluhan}
+              alt="Foto keluhan"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          </button>
+        )}
+        <h2 className="text-xl font-extrabold text-text-dark">{aduan.nama_alat_nama}</h2>
+        <p className="font-mono text-xs text-[#808191] mt-0.5 break-all">{aduan.no_inventaris}</p>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <StatusBadge status={aduan.status_aduan} />
+          {kondisi && <KondisiBadge kondisi={kondisi} size="md" />}
+          <span className="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">{aduan.no_aduan || '-'}</span>
         </div>
-        <h2 className="text-lg font-bold text-gray-800 mb-1">{aduan.nama_alat_nama}</h2>
         {aduan.tingkat_risiko === 'Tinggi' && (
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-2">
             <RisikoBadge tingkat="Tinggi" size="sm" />
-            <span className="text-xs text-red-600 font-medium">Alat risiko tinggi: prioritaskan penanganan</span>
+            <span className="text-xs text-red-600 font-semibold">Alat risiko tinggi: prioritaskan penanganan</span>
           </div>
         )}
-        <p className="text-sm text-gray-500 mb-2">{aduan.no_inventaris}</p>
-        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-          <p className="text-xs text-gray-500 mb-1 font-medium">Keluhan:</p>
-          <p className="text-sm text-gray-700 italic">"{aduan.keluhan}"</p>
-        </div>
-      </div>
+      </DetailSection>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <User size={16} className="mx-auto text-indigo-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Pelapor</p>
-          <p className="text-xs font-bold text-gray-800 line-clamp-1">{aduan.nama_pengadu || '-'}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <Calendar size={16} className="mx-auto text-green-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Tanggal</p>
-          <p className="text-xs font-bold text-gray-800">{formatDate(aduan.create_date)}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <Package size={16} className="mx-auto text-purple-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">No Aduan</p>
-          <p className="text-[10px] font-bold text-gray-800 leading-tight break-all">{aduan.no_aduan || '-'}</p>
-        </div>
-      </div>
+      <DetailSection judul="Keluhan">
+        <p className="text-[15px] font-semibold text-text-dark whitespace-pre-wrap break-words">{aduan.keluhan}</p>
+        <dl className="mt-4 pt-4 border-t border-gray-100">
+          <DetailRow label="Pelapor" value={aduan.nama_pengadu} />
+          <DetailRow label="Tanggal laporan" value={formatDateTime(aduan.create_date)} />
+          <DetailRow label="Divisi" value={aduan.divisi_nama} />
+          <DetailRow label="Ruangan" value={aduan.ruangan_nama} />
+          {aduan.gedung && aduan.gedung !== '-' && <DetailRow label="Gedung" value={aduan.gedung} />}
+        </dl>
+      </DetailSection>
 
-      {/* Informasi Lokasi */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-3">
-          <MapPin size={18} className="text-indigo-500" />
-          <h3 className="text-sm font-bold text-gray-800">Informasi Lokasi</h3>
-        </div>
-        <div className="space-y-2">
-          {aduan.divisi_nama && <InfoRow icon={<Building2 size={14} />} label="Divisi" value={aduan.divisi_nama} />}
-          {aduan.ruangan_nama && <InfoRow icon={<MapPin size={14} />} label="Ruangan" value={aduan.ruangan_nama} />}
-          {aduan.gedung && <InfoRow icon={<Building2 size={14} />} label="Gedung" value={aduan.gedung} />}
-        </div>
-      </div>
-
-      {/* Teknisi Info */}
       {aduan.teknisi_nama && (
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Wrench size={18} className="text-blue-500" />
-            <h3 className="text-sm font-bold text-gray-800">Teknisi Penanggung Jawab</h3>
-          </div>
-          <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-              <User size={20} />
-            </div>
-            <div>
-              <p className="font-bold text-gray-800 text-sm">{aduan.teknisi_nama}</p>
-              <p className="text-xs text-gray-500">{aduan.divisi_nama}</p>
-            </div>
-          </div>
-        </div>
+        <DetailSection judul="Penugasan">
+          <DetailPerson nama={aduan.teknisi_nama} keterangan={aduan.divisi_nama} />
+          <dl className="mt-4 pt-4 border-t border-gray-100">
+            <DetailRow label="Waktu penugasan" value={aduan.tanggal_penugasan ? formatDateTime(aduan.tanggal_penugasan) : 'Tidak tercatat'} />
+            {parseFloat(aduan.biaya) > 0 && (
+              <DetailRow label="Biaya perbaikan">
+                <span className="text-base font-extrabold">{rupiah(aduan.biaya)}</span>
+              </DetailRow>
+            )}
+          </dl>
+        </DetailSection>
       )}
 
-      {/* Inspection Timeline */}
-      {((aduan.history && aduan.history.length > 0) || aduan.tindakan_teknisi) && (
-        <div className="space-y-4">
-          {/* TINDAKAN AWAL (First Inspection from History) */}
-          {aduan.history && aduan.history.length > 0 && aduan.history[0] && (
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <History size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-800">TINDAKAN AWAL ({aduan.history[0].status_aduan})</h3>
-              </div>
-
-              {aduan.history[0].tindakan_teknisi && (
-                <div>
-                  <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Teknisi</p>
-                  <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-100">{aduan.history[0].tindakan_teknisi}</p>
-                </div>
-              )}
-
-              {aduan.history[0].rekomendasi && (
-                <div>
-                  <p className="text-xs text-gray-500 mb-1 font-medium">Rekomendasi</p>
-                  <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-100">{aduan.history[0].rekomendasi}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                {aduan.history[0].kondisi_alat && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Kondisi Alat</p>
-                    <KondisiBadge kondisi={aduan.history[0].kondisi_alat} />
-                  </div>
-                )}
-
-                {aduan.history[0].tanggal_pemeriksaan && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Tanggal</p>
-                    <p className="text-xs text-gray-700 font-semibold">{formatDateTime(aduan.history[0].tanggal_pemeriksaan)}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Signatures for First Inspection */}
-              {(aduan.history[0].ttd_teknisi || aduan.history[0].ttd_kepala_ruang) && (
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                  {aduan.history[0].ttd_teknisi && (
-                    <SignatureCard
-                      label="TTD Teknisi"
-                      image={aduan.history[0].ttd_teknisi}
-                      onPreview={() => {
-                        setPreviewImage(aduan.history[0].ttd_teknisi);
-                        setPreviewAlt(`TTD Teknisi - ${aduan.history[0].status_aduan}`);
-                      }}
-                    />
-                  )}
-
-                  {aduan.history[0].ttd_kepala_ruang && (
-                    <SignatureCard
-                      label="TTD Kepala Ruangan"
-                      image={aduan.history[0].ttd_kepala_ruang}
-                      onPreview={() => {
-                        setPreviewImage(aduan.history[0].ttd_kepala_ruang);
-                        setPreviewAlt(`TTD Kepala Ruangan - ${aduan.history[0].status_aduan}`);
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TINDAKAN LANJUTAN (Current/Final Inspection) */}
-          {aduan.tindakan_teknisi && (
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <CheckCircle size={18} className="text-green-600" />
-                <h3 className="font-bold text-gray-800">
-                  {aduan.history && aduan.history.length > 0 ? 'TINDAKAN LANJUTAN' : 'LAPORAN PENGERJAAN'}
-                </h3>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500 mb-1 font-medium">Tindakan Teknisi</p>
-                <p className="text-sm text-gray-700 bg-green-50 p-3 rounded-lg border border-green-100">{aduan.tindakan_teknisi}</p>
-              </div>
-
-              {aduan.rekomendasi && (
-                <div>
-                  <p className="text-xs text-gray-500 mb-1 font-medium">Rekomendasi</p>
-                  <p className="text-sm text-gray-700 bg-green-50 p-3 rounded-lg border border-green-100">{aduan.rekomendasi}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                {aduan.kondisi_alat && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Kondisi Akhir</p>
-                    <KondisiBadge kondisi={aduan.kondisi_alat} />
-                  </div>
-                )}
-
-                {aduan.tanggal_pemeriksaan && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Tanggal</p>
-                    <p className="text-xs text-gray-700 font-semibold">{formatDateTime(aduan.tanggal_pemeriksaan)}</p>
-                  </div>
-                )}
-              </div>
-
-              {parseFloat(aduan.biaya) > 0 && (
-                <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                  <DollarSign size={16} className="text-blue-600" />
-                  <div>
-                    <p className="text-xs text-blue-600 font-medium">Biaya Perbaikan</p>
-                    <p className="text-sm font-bold text-blue-700">{rupiah(aduan.biaya)}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Signatures for Final Inspection */}
-              {(aduan.ttd_teknisi || aduan.ttd_kepala_ruang) && (
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                  {aduan.ttd_teknisi && (
-                    <SignatureCard
-                      label="TTD Teknisi"
-                      name={aduan.teknisi_nama}
-                      image={aduan.ttd_teknisi}
-                      onPreview={() => {
-                        setPreviewImage(aduan.ttd_teknisi);
-                        setPreviewAlt('TTD Teknisi - Penyelesaian');
-                      }}
-                    />
-                  )}
-
-                  {aduan.ttd_kepala_ruang && (
-                    <SignatureCard
-                      label="TTD Kepala Ruangan"
-                      name={aduan.nama_pengadu}
-                      image={aduan.ttd_kepala_ruang}
-                      onPreview={() => {
-                        setPreviewImage(aduan.ttd_kepala_ruang);
-                        setPreviewAlt('TTD Kepala Ruangan - Penyelesaian');
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      {riwayat.length > 0 && (
+        <DetailSection judul="Riwayat penanganan">
+          <PenangananTimeline items={riwayat} onPreview={pratinjau} />
+        </DetailSection>
       )}
 
-      {/* Laporan servis pihak ketiga (vendor) */}
-      <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+      <DetailSection>
         <ServisPihakKetigaPanel jenis="aduan" indukId={aduan.id_aduan} status={aduan.status_aduan} />
-      </div>
+      </DetailSection>
 
-      {/* Export PDF Button (Only if Selesai) */}
+      {/* Export PDF hanya bila aduan sudah selesai */}
       {aduan.status_aduan === 'Selesai' && (
-        <div className="mt-4">
-          <a
-            href={apiUrl(`/report/aduan/export/${aduan.id_aduan}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3.5 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-          >
-            <FileText size={20} />
-            Export PDF
-          </a>
-        </div>
+        <ExportButton href={apiUrl(`/report/aduan/export/${aduan.id_aduan}`)} variant="solid" full />
       )}
 
-      {/* Image Preview Modal */}
       <ImagePreviewModal
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
@@ -336,28 +148,3 @@ export default function MobileAduanDetail() {
     </div>
   );
 }
-
-
-const InfoRow = ({ icon, label, value }) => (
-  <div className="bg-white rounded-xl p-3 border border-gray-100 flex items-center gap-2">
-    <div className="text-gray-400">{icon}</div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-sm font-medium text-gray-800 truncate">{value || '-'}</p>
-    </div>
-  </div>
-);
-
-const SignatureCard = ({ label, name, image, onPreview }) => (
-  <div>
-    <p className="text-xs text-gray-500 mb-2 font-medium">{label}</p>
-    <img
-      src={image}
-      alt={label}
-      className="w-full h-20 object-contain bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-      onClick={onPreview}
-      onError={(e) => { e.target.src = noImage; }}
-    />
-    {name && <p className="text-xs text-gray-600 mt-1 text-center">{name}</p>}
-  </div>
-);

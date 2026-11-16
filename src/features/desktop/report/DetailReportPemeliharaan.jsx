@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft, FileText, Download, User, Calendar, Clock, MapPin,
-  Building2, Wrench, CheckCircle, Package
-} from 'lucide-react';
 import { useToast } from '../../../components/Alert/useToast';
 import { usePageTitle, usePemeliharaanDetail } from '../../../hooks';
 import { apiUrl } from '../../../config';
-import { formatDate } from '../../../utils/format';
+import { rupiah, formatDate } from '../../../utils/format';
+import { susunRiwayatPemeliharaan, langkahAlurPemeliharaan } from '../../../utils/detailRiwayat';
 import StatusBadge from '../../../components/StatusBadge';
-import ImagePreviewModal from '../../../components/ImagePreviewModal';
-import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailHeader from '../../../components/detail/DetailHeader';
+import DetailSection from '../../../components/detail/DetailSection';
+import DetailField from '../../../components/detail/DetailField';
+import DetailPerson from '../../../components/detail/DetailPerson';
+import ExportButton from '../../../components/detail/ExportButton';
+import AlurStatus from '../../../components/detail/AlurStatus';
+import PenangananTimeline from '../../../components/detail/PenangananTimeline';
+import DetailSkeleton from '../../../components/detail/DetailSkeleton';
+import DetailNotFound from '../../../components/detail/DetailNotFound';
+
+const BELUM = 'Belum Ditentukan';
+const ada = (v) => (v && v !== '-' ? v : null);
 
 export default function DetailReportPemeliharaan() {
   usePageTitle('Detail Laporan Pemeliharaan');
@@ -32,199 +40,94 @@ export default function DetailReportPemeliharaan() {
     if (isError) showToast('Gagal memuat detail laporan', 'error');
   }, [isError, showToast]);
 
+  const kembali = () => navigate('/report/pemeliharaan');
+
   // Tautan unduhan (rute export di server tidak memakai middleware api.auth,
   // sesi dibawa cookie), jadi autentikasi tidak diubah.
   const handleExport = () => {
     window.open(apiUrl(`/pemeliharaan/${id}/export-hasil`), '_blank');
   };
 
-  if (loading) {
-    return <DetailReportSkeleton />;
-  }
+  if (loading) return <DetailSkeleton dua />;
+  if (!data) return <DetailNotFound onBack={kembali} />;
 
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-        <FileText size={48} className="text-gray-300 mb-2" />
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Data Tidak Ditemukan</h3>
-        <p className="text-sm text-gray-500 mb-4">Laporan yang Anda cari tidak tersedia.</p>
-        <button
-          type="button"
-          onClick={() => navigate('/report/pemeliharaan')}
-          className="inline-flex items-center justify-center h-[36px] px-4 bg-brand-primary text-white text-xs font-semibold rounded-lg hover:bg-brand-primary/90 transition-colors"
-        >
-          Kembali ke Daftar
-        </button>
-      </div>
-    );
-  }
+  const pratinjau = (gambar, alt) => {
+    setPreviewImage(gambar);
+    setPreviewAlt(alt);
+  };
+  const riwayat = susunRiwayatPemeliharaan(data);
+  const teknisi = ada(data.teknisi_nama);
+  const kondisiTerakhir = data.kondisi_alat && data.kondisi_alat !== BELUM ? data.kondisi_alat : null;
 
   return (
-    <div className="space-y-4 animate-fade-in pb-8">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/report/pemeliharaan')}
-            aria-label="Kembali ke daftar laporan pemeliharaan"
-            className="p-1.5 hover:bg-white rounded-lg transition-colors hover:shadow-sm group"
-          >
-            <ArrowLeft size={20} className="text-gray-500 group-hover:text-brand-primary transition-colors" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-text-dark">Detail Laporan Pemeliharaan</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              {data.no_pemeliharaan && (
-                <>
-                  <span className="text-xs text-gray-500">No. Pemeliharaan:</span>
-                  <span className="px-2 py-0.5 bg-purple-50 text-brand-primary text-[10px] font-bold rounded border border-purple-200">
-                    {data.no_pemeliharaan}
-                  </span>
-                </>
-              )}
-              <StatusBadge status={data.status} size="sm" />
-            </div>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleExport}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-yellow-950 font-bold rounded-lg shadow-sm hover:shadow text-xs transition-all duration-300"
-        >
-          <Download size={14} />
-          Export PDF
-        </button>
-      </div>
+    <div className="space-y-5 animate-fade-in pb-10">
+      <DetailHeader
+        judul="Detail Laporan Pemeliharaan"
+        nomor={data.no_pemeliharaan}
+        status={<StatusBadge status={data.status} />}
+        onBack={kembali}
+        aksi={<ExportButton onClick={handleExport} />}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-100">
-              <Package className="text-brand-primary" size={16} />
-              <h2 className="text-sm font-bold text-gray-800">Informasi Alat</h2>
-            </div>
+      <DetailSection judul="Alur pemeliharaan">
+        <AlurStatus langkah={langkahAlurPemeliharaan(data)} />
+      </DetailSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="md:col-span-2">
-                <label className="block text-[10px] font-semibold text-gray-600 mb-1">Nama Alat</label>
-                <div className="px-3 py-2 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg text-gray-800 font-bold text-xs">
-                  {data.nama_alat_nama || '-'}
-                </div>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] gap-5 items-start">
+        <div className="space-y-5">
+          <DetailSection judul="Alat dan lokasi">
+            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+              <DetailField label="Nama alat" value={data.nama_alat_nama} />
+              <DetailField label="No. inventaris" value={data.no_inventaris} mono />
+              <DetailField label="Merk" value={ada(data.merk)} />
+              <DetailField label="Model" value={ada(data.model)} />
+              <DetailField label="No. seri" value={ada(data.seri)} mono />
+              <DetailField label="Divisi" value={data.divisi_nama} />
+              <DetailField label="Ruangan" value={data.ruangan_nama} />
+              {ada(data.gedung) && <DetailField label="Gedung" value={data.gedung} />}
+            </dl>
+          </DetailSection>
 
-              <div>
-                <label className="block text-[10px] font-semibold text-gray-600 mb-1">No Inventaris</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-mono font-medium text-[10px]">
-                  {data.no_inventaris || '-'}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold text-gray-600 mb-1">Merk</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium text-xs">
-                  {data.merk || '-'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-100">
-              <MapPin className="text-green-500" size={16} />
-              <h2 className="text-sm font-bold text-gray-800">Informasi Lokasi</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <InfoCard icon={<Building2 size={12} />} label="Divisi" value={data.divisi_nama} />
-              <InfoCard icon={<MapPin size={12} />} label="Ruangan" value={data.ruangan_nama} />
-              {data.gedung && <InfoCard icon={<Building2 size={12} />} label="Gedung" value={data.gedung} />}
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Calendar className="text-blue-600" size={16} />
-              <h2 className="text-sm font-bold text-gray-800">Jadwal & Pelaksanaan</h2>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-blue-200 shadow-sm">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white shadow-md">
-                  <Calendar size={14} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] text-gray-600 font-medium">Jadwal Pemeliharaan</p>
-                  <p className="text-xs font-bold text-gray-900">{formatDate(data.jadwal_pemeliharaan)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-blue-200 shadow-sm">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white shadow-md">
-                  <Clock size={14} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] text-gray-600 font-medium">Tanggal Pemeriksaan</p>
-                  <p className="text-xs font-bold text-gray-900">
-                    {data.tanggal_pemeriksaan ? formatDate(data.tanggal_pemeriksaan) : 'Belum Dilakukan'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-        </div>
-
-        <div className="space-y-4">
-          {data.tanggal_pemeriksaan && (
-            <InspectionCard
-              title="HASIL PEMERIKSAAN"
-              icon={<CheckCircle size={16} className="text-green-600" />}
-              bgColor="from-green-50 to-emerald-50"
-              borderColor="border-green-200"
-              data={{
-                kondisi: data.kondisi_alat,
-                tanggal: data.tanggal_pemeriksaan,
-                ttd_teknisi: data.ttd_teknisi,
-                ttd_kepala_ruang: data.ttd_kepala_ruang,
-                teknisi_nama: data.teknisi_nama,
-                kepala_ruang_nama: data.nama_kepala_ruangan
-              }}
-              onImagePreview={(img, alt) => {
-                setPreviewImage(img);
-                setPreviewAlt(alt);
-              }}
-            />
-          )}
-
-          {data.kondisi_alat && (
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <h3 className="text-xs font-bold text-gray-700 mb-2">Kondisi Alat Terakhir</h3>
-              <KondisiBadge kondisi={data.kondisi_alat} size="lg" />
-            </div>
-          )}
-
-          {data.teknisi_nama && (
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100 shadow-sm">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Wrench className="text-purple-600" size={16} />
-                <h2 className="text-sm font-bold text-gray-800">Teknisi Penanggung Jawab</h2>
-              </div>
-              <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-purple-200 shadow-sm">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white shadow-md">
-                  <User size={14} />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-xs">{data.teknisi_nama}</p>
-                  <p className="text-[10px] text-gray-600">{data.divisi_nama}</p>
-                </div>
-              </div>
-            </div>
+          {riwayat.length > 0 ? (
+            <DetailSection judul="Riwayat pemeriksaan">
+              <PenangananTimeline items={riwayat} onPreview={pratinjau} />
+            </DetailSection>
+          ) : (
+            <DetailSection judul="Riwayat pemeriksaan">
+              <p className="text-sm text-[#808191]">Belum ada pemeriksaan untuk jadwal ini.</p>
+            </DetailSection>
           )}
         </div>
-      </div>
 
-      {/* Laporan servis pihak ketiga (vendor) */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={data.id_pemeliharaan ?? id} status={data.status} />
+        <div className="space-y-5">
+          <DetailSection judul="Jadwal dan teknisi">
+            {teknisi ? (
+              <DetailPerson nama={teknisi} keterangan={data.divisi_nama} />
+            ) : (
+              <p className="text-sm text-[#808191]">Belum ada teknisi yang ditugaskan.</p>
+            )}
+            <dl className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+              <DetailField label="Jadwal" value={formatDate(data.jadwal_pemeliharaan)} />
+              <DetailField label="Diperiksa" value={data.tanggal_pemeriksaan ? formatDate(data.tanggal_pemeriksaan) : 'Belum dilakukan'} />
+            </dl>
+          </DetailSection>
+
+          <DetailSection judul="Ringkasan">
+            <dl className="space-y-4">
+              <DetailField label="Kondisi alat terakhir">
+                {kondisiTerakhir ? <KondisiBadge kondisi={kondisiTerakhir} size="md" /> : '-'}
+              </DetailField>
+              <div className="pt-4 border-t border-gray-100">
+                <dt className="text-xs font-semibold text-[#808191] mb-0.5">Biaya pemeliharaan</dt>
+                <dd className="text-2xl font-extrabold text-text-dark">{Number(data.biaya) > 0 ? rupiah(data.biaya) : '-'}</dd>
+              </div>
+            </dl>
+          </DetailSection>
+
+          <DetailSection>
+            <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={data.id_pemeliharaan ?? id} status={data.status} />
+          </DetailSection>
+        </div>
       </div>
 
       <ImagePreviewModal
@@ -236,195 +139,3 @@ export default function DetailReportPemeliharaan() {
     </div>
   );
 }
-
-const InfoCard = ({ icon, label, value }) => (
-  <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-3 border border-gray-100 hover:border-gray-200 transition-colors">
-    <div className="flex items-center gap-1 mb-0.5 text-gray-500">
-      {icon}
-      <span className="text-[10px] font-medium">{label}</span>
-    </div>
-    <p className="text-xs font-bold text-gray-800 truncate">{value || '-'}</p>
-  </div>
-);
-
-const InspectionCard = ({ title, icon, bgColor, borderColor, data, onImagePreview }) => {
-  return (
-    <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 border ${borderColor} shadow-sm`}>
-      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-gray-200">
-        {icon}
-        <h2 className="text-sm font-bold text-gray-800">{title}</h2>
-      </div>
-
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          {data.kondisi && (
-            <div>
-              <label className="block text-[10px] font-bold text-gray-600 mb-1">Kondisi Alat</label>
-              <KondisiBadge kondisi={data.kondisi} />
-            </div>
-          )}
-
-          {data.tanggal && (
-            <div>
-              <label className="block text-[10px] font-bold text-gray-600 mb-1">Tanggal Pemeriksaan</label>
-              <div className="px-2.5 py-1.5 bg-white/80 border border-gray-200 rounded-lg text-gray-700 text-[10px] font-semibold">
-                {formatDate(data.tanggal)}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {(data.ttd_teknisi || data.ttd_kepala_ruang) && (
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-            {data.ttd_teknisi && (
-              <SignatureCard
-                label="TTD Teknisi"
-                name={data.teknisi_nama}
-                image={data.ttd_teknisi}
-                onPreview={() => onImagePreview(data.ttd_teknisi, 'TTD Teknisi')}
-              />
-            )}
-
-            {data.ttd_kepala_ruang && (
-              <SignatureCard
-                label="TTD Kepala Ruangan"
-                name={data.kepala_ruang_nama}
-                image={data.ttd_kepala_ruang}
-                onPreview={() => onImagePreview(data.ttd_kepala_ruang, 'TTD Kepala Ruangan')}
-              />
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const SignatureCard = ({ label, name, image, onPreview }) => (
-  <div>
-    <label className="block text-[10px] font-bold text-gray-600 mb-1">{label}</label>
-    <div
-      className="w-full h-20 bg-white border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-brand-primary transition-colors overflow-hidden group"
-      onClick={onPreview}
-    >
-      <img
-        src={image}
-        alt={label}
-        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
-        onError={(e) => { e.target.src = noImage; }}
-      />
-    </div>
-    {name && <p className="text-[10px] text-gray-600 mt-0.5 text-center font-medium">{name}</p>}
-  </div>
-);
-
-const DetailReportSkeleton = () => {
-  return (
-    <div className="space-y-4 animate-fade-in pb-8">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-          <div>
-            <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-1"></div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-        <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="md:col-span-2">
-                <div className="h-3 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                <div className="h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-              </div>
-
-              {[1, 2].map((i) => (
-                <div key={i}>
-                  <div className="h-3 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                  <div className="h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className="w-3 h-3 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-2 w-12 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="h-3 w-24 bg-gray-300 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div className="space-y-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="flex-1">
-                    <div className="h-2 w-20 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                    <div className="h-3 w-24 bg-gray-300 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
-              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                {[1, 2].map((i) => (
-                  <div key={i}>
-                    <div className="h-2 w-16 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                    <div className="h-6 bg-gray-200 rounded-lg animate-pulse"></div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-                {[1, 2].map((i) => (
-                  <div key={i}>
-                    <div className="h-2 w-12 bg-gray-200 rounded mb-1 animate-pulse"></div>
-                    <div className="h-20 bg-gray-100 rounded-lg animate-pulse"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};

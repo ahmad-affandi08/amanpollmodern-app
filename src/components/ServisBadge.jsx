@@ -8,7 +8,7 @@ export default function ServisBadge({ jumlah }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap"
       title={`${total} laporan servis pihak ketiga`}
     >
       <Wrench size={10} />

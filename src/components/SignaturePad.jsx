@@ -46,9 +46,9 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
   return (
     <div className="space-y-2">
       {label && (
-        <label className="text-xs font-medium text-gray-700">{label}</label>
+        <label className="block text-[13px] font-bold text-text-dark">{label}</label>
       )}
-      <div ref={containerRef} className="relative border-2 border-gray-200 rounded-xl bg-white overflow-hidden" style={{ touchAction: 'none' }}>
+      <div ref={containerRef} className="relative border-[1.5px] border-dashed border-gray-300 rounded-xl bg-white overflow-hidden" style={{ touchAction: 'none' }}>
         <SignatureCanvas
           ref={sigCanvas}
           canvasProps={{
@@ -73,10 +73,10 @@ const SignaturePad = forwardRef(({ label, onClear }, ref) => {
       <button
         type="button"
         onClick={handleClear}
-        className="flex items-center gap-2 px-4 py-2 bg-danger-500 text-white rounded-full text-sm font-bold hover:bg-danger-600 transition-colors"
+        className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-danger-600 bg-danger-50 hover:bg-danger-100 transition-colors"
       >
         <Trash size={16} />
-        Hapus
+        Hapus tanda tangan
       </button>
     </div>
   );

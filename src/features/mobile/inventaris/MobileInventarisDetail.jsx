@@ -111,7 +111,7 @@ export default function MobileInventarisDetail() {
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-primary to-brand-primary-light">
+            <div className="w-full h-full flex items-center justify-center bg-brand-primary">
               <ImageIcon size={64} className="text-white/30" />
             </div>
           )}
@@ -126,7 +126,7 @@ export default function MobileInventarisDetail() {
 
           {/* Title Overlay */}
           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-text-dark via-text-dark/80 to-transparent p-6 pt-24">
-            <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-bold rounded-lg uppercase tracking-wider mb-2.5 inline-block shadow-lg shadow-brand-primary/20">
+            <span className="px-3 py-1 bg-brand-primary text-white text-xs font-bold rounded-lg mb-2.5 inline-block">
               {inventaris.kondisi_alat || 'Inventaris'}
             </span>
             <h1 className="text-white text-2xl font-bold leading-tight mb-1.5 drop-shadow-md">
@@ -176,7 +176,7 @@ export default function MobileInventarisDetail() {
               {/* Location Card & Action */}
               <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-text-dark text-lg">Lokasi Saat Ini</h3>
+                  <h3 className="font-bold text-text-dark text-[15px]">Lokasi saat ini</h3>
                   {!isNonAktif(inventaris) && <button
                     onClick={() => setLocationModalOpen(true)}
                     className="text-xs font-bold text-brand-primary bg-brand-primary/10 px-4 py-2 rounded-xl hover:bg-brand-primary/20 transition-colors"
@@ -190,7 +190,7 @@ export default function MobileInventarisDetail() {
                     <MapPin size={24} className="text-accent-orange" />
                   </div>
                   <div>
-                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Ruangan</p>
+                    <p className="text-xs font-semibold text-[#808191] mb-0.5">Ruangan</p>
                     <p className="text-text-dark font-bold text-base">
                       {inventaris.ruangan_sekarang?.nama_ruangan || inventaris.ruangan?.nama_ruangan || '-'}
                     </p>
@@ -200,8 +200,7 @@ export default function MobileInventarisDetail() {
 
               {/* Specifications */}
               <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-text-dark text-lg mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
-                  <span className="w-1 h-5 bg-brand-primary rounded-full"></span>
+                <h3 className="font-bold text-text-dark text-[15px] mb-4 pb-3 border-b border-gray-50">
                   Spesifikasi Alat
                 </h3>
 
@@ -224,8 +223,7 @@ export default function MobileInventarisDetail() {
 
               {/* Documents */}
               <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-text-dark text-lg mb-4 flex items-center gap-2 border-b border-gray-50 pb-3">
-                  <span className="w-1 h-5 bg-brand-primary rounded-full"></span>
+                <h3 className="font-bold text-text-dark text-[15px] mb-4 pb-3 border-b border-gray-50">
                   Dokumen
                 </h3>
 

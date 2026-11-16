@@ -1,48 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, ClipboardList, MapPin, Package, User, Wrench, DollarSign, FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Image as ImageIcon } from 'lucide-react';
 import { usePageTitle, usePemeliharaanDetail } from '../../../hooks';
 import { apiUrl } from '../../../config';
 import { formatDate, rupiah } from '../../../utils/format';
+import { susunRiwayatPemeliharaan } from '../../../utils/detailRiwayat';
 import StatusBadge from '../../../components/StatusBadge';
-import noImage from '../../../assets/img/no_image.png';
-import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import KondisiBadge from '../../../components/KondisiBadge';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailSection from '../../../components/detail/DetailSection';
+import { DetailRow } from '../../../components/detail/DetailField';
+import DetailPerson from '../../../components/detail/DetailPerson';
+import ExportButton from '../../../components/detail/ExportButton';
+import PenangananTimeline from '../../../components/detail/PenangananTimeline';
+import DetailSkeleton from '../../../components/detail/DetailSkeleton';
+
+const BELUM = 'Belum Ditentukan';
+const ada = (v) => (v && v !== '-' ? v : null);
 
 export default function MobilePemeliharaanDetail() {
   usePageTitle('Detail Pemeliharaan');
   const { id } = useParams();
   const navigate = useNavigate();
   const [imagePreview, setImagePreview] = useState(false);
+  const [fotoGagal, setFotoGagal] = useState(false);
+  const [ttdPreview, setTtdPreview] = useState(null);
 
   const { data: pemeliharaan, isLoading } = usePemeliharaanDetail(id);
 
   if (isLoading) {
     return (
-      <div className="max-w-md mx-auto px-4 pb-4">
-        {/* Header Skeleton */}
-        <div className="flex items-center gap-3 py-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded w-40 animate-pulse"></div>
-        </div>
-
-        {/* Hero Skeleton */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse mb-4">
-          <div className="w-full h-48 bg-gray-200 rounded-xl mb-3"></div>
-          <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-
-        {/* Cards Skeleton */}
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse">
-              <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            </div>
-          ))}
-        </div>
+      <div className="max-w-md mx-auto px-4 pt-4 pb-4">
+        <DetailSkeleton />
       </div>
     );
   }
@@ -57,330 +47,131 @@ export default function MobilePemeliharaanDetail() {
     );
   }
 
+  const riwayat = susunRiwayatPemeliharaan(pemeliharaan);
+  const kondisi = pemeliharaan.kondisi_alat && pemeliharaan.kondisi_alat !== BELUM ? pemeliharaan.kondisi_alat : null;
+  const teknisi = ada(pemeliharaan.teknisi_nama);
+  const perluForm = pemeliharaan.status === 'Belum Selesai' || pemeliharaan.status === 'Tindakan Lanjutan';
+  const bisaExport = pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan';
+
   return (
-    <div className="max-w-md mx-auto px-4 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3 py-4">
+    <div className="max-w-md mx-auto px-4 pb-24 space-y-4">
+      <div className="flex items-center gap-3 pt-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Kembali"
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-800">Detail Pemeliharaan</h1>
+        <h1 className="text-lg font-extrabold text-text-dark">Detail Pemeliharaan</h1>
       </div>
 
-      {/* Hero Card - Image + Status */}
-      <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
-        <div className="relative mb-3">
-          <img
-            src={pemeliharaan.img_alat || noImage}
-            alt={pemeliharaan.nama_alat_nama}
-            className="w-full h-48 rounded-xl object-cover bg-gray-100 cursor-pointer"
-            onClick={() => setImagePreview(true)}
-            onError={(e) => { e.target.src = noImage; }}
-          />
-          <div className="absolute top-3 right-3">
-            <StatusBadge status={pemeliharaan.status} size="lg" />
-          </div>
-        </div>
-        <h2 className="text-lg font-bold text-gray-800 mb-1">{pemeliharaan.nama_alat_nama}</h2>
-        <p className="text-sm text-gray-500 mb-2">{pemeliharaan.no_inventaris}</p>
-        <KondisiBadge kondisi={pemeliharaan.kondisi_alat} />
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <User size={16} className="mx-auto text-indigo-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Teknisi</p>
-          <p className="text-xs font-bold text-gray-800 line-clamp-1">{pemeliharaan.teknisi_nama}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <Calendar size={16} className="mx-auto text-green-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Jadwal</p>
-          <p className="text-xs font-bold text-gray-800">{formatDate(pemeliharaan.jadwal_pemeliharaan)}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-          <DollarSign size={16} className="mx-auto text-yellow-500 mb-1" />
-          <p className="text-[10px] text-gray-500 mb-0.5">Biaya</p>
-          <p className="text-xs font-bold text-gray-800">{rupiah(pemeliharaan.biaya)}</p>
-        </div>
-      </div>
-
-      {/* Informasi Alat Section */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Package size={18} className="text-indigo-500" />
-          <h3 className="text-sm font-bold text-gray-800">Informasi Alat</h3>
-        </div>
-        <div className="space-y-2">
-          <InfoRow icon={<MapPin size={14} />} label="Divisi" value={pemeliharaan.divisi_nama} />
-          <InfoRow icon={<MapPin size={14} />} label="Ruangan" value={pemeliharaan.ruangan_nama} />
-          <InfoRow icon={<MapPin size={14} />} label="Gedung" value={pemeliharaan.gedung} />
-          <InfoRow icon={<Wrench size={14} />} label="Merk" value={pemeliharaan.merk} />
-          <InfoRow icon={<Wrench size={14} />} label="Model/Tipe" value={pemeliharaan.model} />
-          <InfoRow icon={<Wrench size={14} />} label="Seri" value={pemeliharaan.seri} />
-        </div>
-      </div>
-
-      {/* Informasi Pemeliharaan Section */}
-      {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <ClipboardList size={18} className="text-green-500" />
-            <h3 className="text-sm font-bold text-gray-800">Hasil Pemeliharaan</h3>
-          </div>
-          <div className="space-y-2">
-            {pemeliharaan.tanggal_pemeriksaan && (
-              <InfoRow
-                icon={<Calendar size={14} />}
-                label="Tanggal Pemeriksaan"
-                value={formatDate(pemeliharaan.tanggal_pemeriksaan)}
-              />
-            )}
-            {pemeliharaan.keterangan_pemeliharaan && (
-              <div className="bg-white rounded-xl p-3 border border-gray-100">
-                <div className="flex items-start gap-2 mb-1">
-                  <FileText size={14} className="text-gray-400 mt-0.5" />
-                  <p className="text-xs font-medium text-gray-600">Keterangan</p>
-                </div>
-                <p className="text-sm text-gray-800 pl-5">{pemeliharaan.keterangan_pemeliharaan}</p>
-              </div>
-            )}
-            {pemeliharaan.rekomendasi && (
-              <div className="bg-white rounded-xl p-3 border border-gray-100">
-                <div className="flex items-start gap-2 mb-1">
-                  <FileText size={14} className="text-gray-400 mt-0.5" />
-                  <p className="text-xs font-medium text-gray-600">Rekomendasi</p>
-                </div>
-                <p className="text-sm text-gray-800 pl-5">{pemeliharaan.rekomendasi}</p>
-              </div>
-            )}
-            {pemeliharaan.status === 'Tindakan Lanjutan' && pemeliharaan.disposisi_nama && (
-              <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
-                <div className="flex items-start gap-2 mb-1">
-                  <User size={14} className="text-purple-500 mt-0.5" />
-                  <p className="text-xs font-medium text-purple-700">Disposisi Ke</p>
-                </div>
-                <p className="text-sm text-gray-800 pl-5">{pemeliharaan.disposisi_nama}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* History Timeline - Show if has history */}
-      {pemeliharaan.history && pemeliharaan.history.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock size={18} className="text-purple-500" />
-            <h3 className="text-sm font-bold text-gray-800">Riwayat Pemeliharaan</h3>
-          </div>
-          <div className="space-y-3">
-            {/* Historical Actions */}
-            {pemeliharaan.history.map((historyItem) => (
-              <div
-                key={historyItem.id}
-                className="rounded-2xl p-4 border-2 bg-purple-50 border-purple-200"
-              >
-                {/* Header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle size={16} className="text-purple-600" />
-                  <h4 className="text-sm font-bold text-purple-700">
-                    TINDAKAN AWAL ({historyItem.status})
-                  </h4>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-2">
-                  {historyItem.keterangan_pemeliharaan && (
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Tindakan Teknisi</p>
-                      <p className="text-sm text-gray-800">{historyItem.keterangan_pemeliharaan}</p>
-                    </div>
-                  )}
-
-                  {historyItem.rekomendasi && (
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Rekomendasi</p>
-                      <p className="text-sm text-gray-800">{historyItem.rekomendasi}</p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Kondisi Alat</p>
-                      <KondisiBadge kondisi={historyItem.kondisi_alat} />
-                    </div>
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Tanggal</p>
-                      <p className="text-xs font-bold text-gray-800">
-                        {formatDate(historyItem.tanggal_pemeriksaan)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Signatures */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Teknisi</p>
-                      {historyItem.ttd_teknisi ? (
-                        <img
-                          src={historyItem.ttd_teknisi}
-                          alt="TTD Teknisi"
-                          className="w-full h-12 object-contain"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="text-gray-400 text-xs">Belum TTD</div>
-                      )}
-                    </div>
-                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruangan</p>
-                      {historyItem.ttd_kepala_ruang ? (
-                        <img
-                          src={historyItem.ttd_kepala_ruang}
-                          alt="TTD Kepala Ruangan"
-                          className="w-full h-12 object-contain"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="text-gray-400 text-xs">Belum TTD</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Current/Final Action */}
-            {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
-              <div className="rounded-2xl p-4 border-2 bg-green-50 border-green-200">
-                {/* Header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle size={16} className="text-green-600" />
-                  <h4 className="text-sm font-bold text-green-700">
-                    {pemeliharaan.status === 'Selesai' ? 'TINDAKAN AKHIR (Selesai)' : 'TINDAKAN LANJUTAN'}
-                  </h4>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-2">
-                  {pemeliharaan.keterangan_pemeliharaan && (
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">
-                        {pemeliharaan.status === 'Selesai' ? 'Tindakan Teknisi' : 'Keterangan'}
-                      </p>
-                      <p className="text-sm text-gray-800">{pemeliharaan.keterangan_pemeliharaan}</p>
-                    </div>
-                  )}
-
-                  {pemeliharaan.rekomendasi && (
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Rekomendasi</p>
-                      <p className="text-sm text-gray-800">{pemeliharaan.rekomendasi}</p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Kondisi Akhir</p>
-                      <KondisiBadge kondisi={pemeliharaan.kondisi_alat} />
-                    </div>
-                    <div className="bg-white rounded-xl p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Tanggal</p>
-                      <p className="text-xs font-bold text-gray-800">
-                        {formatDate(pemeliharaan.tanggal_pemeriksaan)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Signatures */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Teknisi</p>
-                      {pemeliharaan.ttd_teknisi ? (
-                        <img
-                          src={pemeliharaan.ttd_teknisi}
-                          alt="TTD Teknisi"
-                          className="w-full h-12 object-contain"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="text-gray-400 text-xs">Belum TTD</div>
-                      )}
-                    </div>
-                    <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <p className="text-xs font-medium text-gray-600 mb-2">TTD Kepala Ruangan</p>
-                      {pemeliharaan.ttd_kepala_ruang ? (
-                        <img
-                          src={pemeliharaan.ttd_kepala_ruang}
-                          alt="TTD Kepala Ruangan"
-                          className="w-full h-12 object-contain"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="text-gray-400 text-xs">Belum TTD</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Laporan servis pihak ketiga (vendor) */}
-      <div className="mb-4 bg-white rounded-2xl p-4 border border-gray-100">
-        <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={id} status={pemeliharaan.status} />
-      </div>
-
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        {/* Form Pemeliharaan Button - For incomplete tasks OR Tindakan Lanjutan */}
-        {(pemeliharaan.status === 'Belum Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
+      <DetailSection>
+        {pemeliharaan.img_alat && !fotoGagal ? (
           <button
-            onClick={() => navigate(`/mobile/pemeliharaan/${id}/form`)}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3.5 rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+            type="button"
+            onClick={() => setImagePreview(true)}
+            aria-label="Perbesar foto alat"
+            className="w-full h-44 mb-4 rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
           >
-            <ClipboardList size={20} />
-            {pemeliharaan.status === 'Tindakan Lanjutan' ? 'Isi Form Pemeliharaan Lanjutan' : 'Isi Form Pemeliharaan'}
+            <img
+              src={pemeliharaan.img_alat}
+              alt={pemeliharaan.nama_alat_nama}
+              className="w-full h-full object-cover"
+              onError={() => setFotoGagal(true)}
+            />
+          </button>
+        ) : (
+          <div className="w-full h-28 mb-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center gap-2 text-xs font-semibold text-[#B0B3C7]">
+            <ImageIcon size={18} />
+            Belum ada foto alat
+          </div>
+        )}
+        <h2 className="text-xl font-extrabold text-text-dark">{pemeliharaan.nama_alat_nama}</h2>
+        <p className="font-mono text-xs text-[#808191] mt-0.5 break-all">{pemeliharaan.no_inventaris}</p>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <StatusBadge status={pemeliharaan.status} />
+          {kondisi && <KondisiBadge kondisi={kondisi} size="md" />}
+          {pemeliharaan.no_pemeliharaan && (
+            <span className="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">{pemeliharaan.no_pemeliharaan}</span>
+          )}
+        </div>
+      </DetailSection>
+
+      <DetailSection judul="Jadwal dan teknisi">
+        {teknisi ? (
+          <DetailPerson nama={teknisi} keterangan={pemeliharaan.divisi_nama} />
+        ) : (
+          <p className="text-sm text-[#808191]">Belum ada teknisi yang ditugaskan.</p>
+        )}
+        <dl className="mt-4 pt-4 border-t border-gray-100">
+          <DetailRow label="Jadwal" value={formatDate(pemeliharaan.jadwal_pemeliharaan)} />
+          <DetailRow label="Diperiksa" value={pemeliharaan.tanggal_pemeriksaan ? formatDate(pemeliharaan.tanggal_pemeriksaan) : 'Belum dilakukan'} />
+          {parseFloat(pemeliharaan.biaya) > 0 && (
+            <DetailRow label="Biaya">
+              <span className="text-base font-extrabold">{rupiah(pemeliharaan.biaya)}</span>
+            </DetailRow>
+          )}
+          {pemeliharaan.status === 'Tindakan Lanjutan' && pemeliharaan.disposisi_nama && (
+            <DetailRow label="Disposisi ke" value={pemeliharaan.disposisi_nama} />
+          )}
+        </dl>
+      </DetailSection>
+
+      <DetailSection judul="Informasi alat">
+        <dl>
+          <DetailRow label="Divisi" value={pemeliharaan.divisi_nama} />
+          <DetailRow label="Ruangan" value={pemeliharaan.ruangan_nama} />
+          <DetailRow label="Gedung" value={ada(pemeliharaan.gedung)} />
+          <DetailRow label="Merk" value={ada(pemeliharaan.merk)} />
+          <DetailRow label="Model/Tipe" value={ada(pemeliharaan.model)} />
+          <DetailRow label="Seri" value={ada(pemeliharaan.seri)} />
+        </dl>
+      </DetailSection>
+
+      {riwayat.length > 0 && (
+        <DetailSection judul="Riwayat pemeriksaan">
+          <PenangananTimeline items={riwayat} onPreview={(gambar) => setTtdPreview(gambar)} />
+        </DetailSection>
+      )}
+
+      <DetailSection>
+        <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={id} status={pemeliharaan.status} />
+      </DetailSection>
+
+      <div className="space-y-3">
+        {/* Form: untuk jadwal yang belum selesai atau perlu tindakan lanjutan */}
+        {perluForm && (
+          <button
+            type="button"
+            onClick={() => navigate(`/mobile/pemeliharaan/${id}/form`)}
+            className="w-full h-12 rounded-xl bg-brand-primary text-white text-sm font-bold shadow-lg shadow-brand-primary/25 hover:bg-brand-primary/90 transition-colors flex items-center justify-center gap-2"
+          >
+            <ClipboardList size={18} />
+            {pemeliharaan.status === 'Tindakan Lanjutan' ? 'Isi form pemeliharaan lanjutan' : 'Isi form pemeliharaan'}
           </button>
         )}
 
-        {/* Hasil Pemeliharaan Button - Only for completed tasks */}
-        {(pemeliharaan.status === 'Selesai' || pemeliharaan.status === 'Tindakan Lanjutan') && (
-          <a
+        {bisaExport && (
+          <ExportButton
             href={apiUrl(`/pemeliharaan/${id}/export-hasil`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3.5 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-          >
-            <FileText size={20} />
-            Export PDF
-          </a>
+            variant={perluForm ? 'outline' : 'solid'}
+            full
+          />
         )}
       </div>
 
-      {/* Image Preview Modal */}
       <ImagePreviewModal
         isOpen={imagePreview}
-        imageUrl={pemeliharaan.img_alat || noImage}
+        imageUrl={pemeliharaan.img_alat}
         onClose={() => setImagePreview(false)}
+      />
+      <ImagePreviewModal
+        isOpen={!!ttdPreview}
+        imageUrl={ttdPreview}
+        onClose={() => setTtdPreview(null)}
       />
     </div>
   );
 }
-
-
-const InfoRow = ({ icon, label, value }) => (
-  <div className="bg-white rounded-xl p-3 border border-gray-100 flex items-center gap-2">
-    <div className="text-gray-400">{icon}</div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-sm font-medium text-gray-800 truncate">{value || '-'}</p>
-    </div>
-  </div>
-);

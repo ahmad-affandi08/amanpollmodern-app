@@ -25,21 +25,22 @@ export default function DisposisiPage({ jenis, data, isLoading, error, token }) 
     return (
       <div className="min-h-screen bg-brand-primary-soft flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-[20px] shadow-2xl p-6 text-center">
+          <div className="bg-white rounded-[20px] shadow-[0px_10px_40px_rgba(29,22,23,0.08)] p-6 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="text-red-500" size={32} />
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">
+            <h3 className="text-lg font-bold text-text-dark mb-2">
               {forbidden ? 'Tautan Tidak Valid' : `${config.title} Tidak Ditemukan`}
             </h3>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-[#808191] mb-6">
               {forbidden
                 ? 'Tautan disposisi ini tidak valid atau tidak lengkap. Gunakan tautan terbaru dari notifikasi WhatsApp, atau login sebagai pimpinan.'
                 : `Data ${config.title.toLowerCase()} tidak dapat dimuat. Silakan coba lagi atau hubungi administrator.`}
             </p>
             <button
+              type="button"
               onClick={() => window.history.back()}
-              className="w-full py-3 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white font-bold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"
+              className="w-full h-12 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primary/90 transition-colors"
             >
               Kembali
             </button>

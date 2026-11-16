@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import NotificationApi from '../../../api/NotificationApi';
 import { queryKeys } from '../../../lib/queryKeys';
 import { usePageTitle, useMarkAsRead } from '../../../hooks';
+import DetailSection from '../../../components/detail/DetailSection';
+import DetailSkeleton from '../../../components/detail/DetailSkeleton';
 
 export default function MobileNotifikasiDetail() {
   usePageTitle('Detail Notifikasi');
@@ -35,25 +37,8 @@ export default function MobileNotifikasiDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-md mx-auto px-4 pb-4">
-        {/* Header Skeleton */}
-        <div className="flex items-center gap-3 py-4">
-          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded w-40 animate-pulse"></div>
-        </div>
-
-        {/* Content Skeleton */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse">
-          <div className="flex justify-between items-start mb-4">
-            <div className="h-5 bg-gray-200 rounded w-32"></div>
-            <div className="h-4 bg-gray-100 rounded w-24"></div>
-          </div>
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-100 rounded w-full"></div>
-            <div className="h-4 bg-gray-100 rounded w-full"></div>
-            <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-          </div>
-        </div>
+      <div className="max-w-md mx-auto px-4 pt-4 pb-4">
+        <DetailSkeleton />
       </div>
     );
   }
@@ -77,34 +62,31 @@ export default function MobileNotifikasiDetail() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 pb-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 py-4">
+    <div className="max-w-md mx-auto px-4 pb-4 space-y-4">
+      <div className="flex items-center gap-3 pt-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Kembali"
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-800">Detail Notifikasi</h1>
+        <h1 className="text-lg font-extrabold text-text-dark">Detail Notifikasi</h1>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <Bell className="text-white" size={24} />
+      <DetailSection>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-11 h-11 shrink-0 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+            <Bell size={22} />
           </div>
-          <div className="flex-1">
-            <h2 className="font-bold text-gray-800 mb-1">{notifikasi.sender_name}</h2>
-            <p className="text-xs text-gray-500">{notifikasi.created_date_relative}</p>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-text-dark truncate">{notifikasi.sender_name}</h2>
+            <p className="text-xs text-[#808191]">{notifikasi.created_date_relative}</p>
           </div>
         </div>
-
-        <div className="prose prose-sm max-w-none">
-          <p className="text-gray-700 whitespace-pre-wrap">{notifikasi.isi}</p>
-        </div>
-      </div>
+        <p className="text-sm text-text-dark whitespace-pre-wrap break-words">{notifikasi.isi}</p>
+      </DetailSection>
     </div>
   );
 }

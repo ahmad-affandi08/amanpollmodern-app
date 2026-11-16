@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Package } from 'lucide-react';
+import { ArrowLeft, Trash2, Package, Image as ImageIcon } from 'lucide-react';
 import { useAlatBaruDetail, useDeleteAlatBaru, useToast, usePageTitle } from '../../../hooks';
 import { formatDate } from '../../../utils/format';
 import ConfirmDialog from '../../../components/Alert/Alert';
-import noImage from '../../../assets/img/no_image.png';
+import DetailSection from '../../../components/detail/DetailSection';
+import { DetailRow } from '../../../components/detail/DetailField';
 
 export default function MobileAlatBaruDetail() {
   usePageTitle('Detail Alat Baru');
@@ -56,55 +57,53 @@ export default function MobileAlatBaruDetail() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 pb-20">
-      {/* Header */}
-      <div className="flex items-center justify-between py-3">
+    <div className="max-w-md mx-auto px-4 pb-24 space-y-4">
+      <div className="flex items-center justify-between gap-3 pt-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate('/mobile/alat-baru')}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Kembali"
+            className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
           >
-            <ArrowLeft size={24} className="text-text-dark" />
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold text-text-dark">Detail Alat Baru</h1>
+          <h1 className="text-lg font-extrabold text-text-dark">Detail Alat Baru</h1>
         </div>
 
         <button
+          type="button"
           onClick={() => setShowDeleteConfirm(true)}
-          className="p-2 bg-danger-50 text-danger-500 rounded-full hover:bg-danger-100 transition-colors"
+          aria-label="Hapus alat baru"
+          className="w-10 h-10 rounded-xl bg-danger-50 text-danger-600 flex items-center justify-center hover:bg-danger-100 transition-colors"
         >
-          <Trash2 size={20} />
+          <Trash2 size={18} />
         </button>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-[20px] p-4 border border-gray-100 space-y-4 mt-4">
-        {/* Image */}
-        <div className="w-full h-64 rounded-2xl overflow-hidden bg-gray-100 border-2 border-gray-200">
-          <img
-            src={alatBaru.img_alat_baru_url || noImage}
-            alt={alatBaru.nama_alat?.nama_nama_alat}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = noImage;
-            }}
-          />
+      <DetailSection>
+        <div className="w-full h-56 mb-4 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 relative flex items-center justify-center text-[#B0B3C7]">
+          <ImageIcon size={32} />
+          {alatBaru.img_alat_baru_url && (
+            <img
+              src={alatBaru.img_alat_baru_url}
+              alt={alatBaru.nama_alat?.nama_nama_alat}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
         </div>
 
-        {/* Details */}
-        <div className="space-y-3">
-          <DetailRow label="Nama Alat" value={alatBaru.nama_alat?.nama_nama_alat || '-'} />
-          <DetailRow label="Ruangan" value={alatBaru.ruangan?.nama_ruangan || '-'} />
-          <DetailRow label="Merk" value={alatBaru.merk || '-'} />
-          <DetailRow label="Model/Tipe" value={alatBaru.model || '-'} />
-          <DetailRow label="No. Seri" value={alatBaru.seri || '-'} />
-          <DetailRow label="Daya" value={alatBaru.daya ? `${alatBaru.daya} Watt` : '-'} />
-          <DetailRow
-            label="Tanggal Pengajuan"
-            value={formatDate(alatBaru.create_date)}
-          />
-        </div>
-      </div>
+        <dl>
+          <DetailRow label="Nama alat" value={alatBaru.nama_alat?.nama_nama_alat} />
+          <DetailRow label="Ruangan" value={alatBaru.ruangan?.nama_ruangan} />
+          <DetailRow label="Merk" value={alatBaru.merk} />
+          <DetailRow label="Model/Tipe" value={alatBaru.model} />
+          <DetailRow label="No. seri" value={alatBaru.seri} />
+          <DetailRow label="Daya" value={alatBaru.daya ? `${alatBaru.daya} Watt` : null} />
+          <DetailRow label="Tanggal pengajuan" value={formatDate(alatBaru.create_date)} />
+        </dl>
+      </DetailSection>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -117,15 +116,6 @@ export default function MobileAlatBaruDetail() {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-    </div>
-  );
-}
-
-function DetailRow({ label, value }) {
-  return (
-    <div className="flex justify-between items-start py-2 border-b border-gray-100 last:border-0">
-      <span className="text-sm text-text-gray font-medium">{label}</span>
-      <span className="text-sm text-text-dark font-semibold text-right">{value}</span>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle, Smartphone, Calendar, FileText, Zap } from 'lucide-react';
+import { X, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import Button from '../../../../components/Button';
-import noImage from '../../../../assets/img/no_image.png';
+import DetailField from '../../../../components/detail/DetailField';
 import { formatDate } from '../../../../utils/format';
 
 export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }) {
@@ -29,51 +29,36 @@ export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }
           <div className="flex flex-col md:flex-row gap-4">
             {/* Image */}
             <div className="w-full md:w-1/2">
-              <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 relative group">
-                <img
-                  src={data.img_alat_baru_url || noImage}
-                  alt={data.nama_alat?.nama_nama_alat || 'Foto alat'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = noImage;
-                  }}
-                />
+              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 relative flex items-center justify-center text-[#B0B3C7]">
+                <ImageIcon size={32} />
+                {data.img_alat_baru_url && (
+                  <img
+                    src={data.img_alat_baru_url}
+                    alt={data.nama_alat?.nama_nama_alat || 'Foto alat'}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                )}
               </div>
             </div>
 
             {/* Details */}
             <div className="w-full md:w-1/2 space-y-3">
               <div>
-                <h4 className="text-lg font-bold text-text-dark mb-1">
+                <h4 className="text-lg font-extrabold text-text-dark mb-1.5">
                   {data.nama_alat?.nama_nama_alat || '-'}
                 </h4>
-                <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-primary/10 text-brand-primary">
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-brand-primary/10 text-brand-primary">
                   {data.ruangan?.nama_ruangan || '-'}
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2">
-                <DetailItem
-                  icon={<Smartphone size={16} />}
-                  label="Merk / Model"
-                  value={`${data.merk || '-'} / ${data.model || '-'}`}
-                />
-                <DetailItem
-                  icon={<FileText size={16} />}
-                  label="No. Seri"
-                  value={data.seri || '-'}
-                />
-                <DetailItem
-                  icon={<Zap size={16} />}
-                  label="Daya"
-                  value={data.daya ? `${data.daya} Watt` : '-'}
-                />
-                <DetailItem
-                  icon={<Calendar size={16} />}
-                  label="Tanggal Pengajuan"
-                  value={formatDate(data.create_date)}
-                />
-              </div>
+              <dl className="space-y-3 pt-2">
+                <DetailField label="Merk / model" value={`${data.merk || '-'} / ${data.model || '-'}`} />
+                <DetailField label="No. seri" value={data.seri} />
+                <DetailField label="Daya" value={data.daya ? `${data.daya} Watt` : null} />
+                <DetailField label="Tanggal pengajuan" value={formatDate(data.create_date)} />
+              </dl>
             </div>
           </div>
         </div>
@@ -95,17 +80,5 @@ export default function AlatBaruDetailModal({ isOpen, onClose, data, onApprove }
       </div>
     </div>,
     document.body
-  );
-}
-
-function DetailItem({ icon, label, value }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0 text-gray-400">{icon}</div>
-      <div>
-        <p className="text-[10px] text-text-gray">{label}</p>
-        <p className="text-xs font-medium text-text-dark">{value}</p>
-      </div>
-    </div>
   );
 }

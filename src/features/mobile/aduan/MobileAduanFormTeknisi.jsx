@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Edit2, X, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, X } from 'lucide-react';
 import { usePageTitle, useAuth, useToast, useAduanDetail, useUpdateInspection } from '../../../hooks';
 import { formatDateTime } from '../../../utils/format';
 import StatusBadge from '../../../components/StatusBadge';
@@ -10,6 +10,15 @@ import SearchableSelect from '../../../components/SearchableSelect';
 import Input from '../../../components/Input';
 import axiosClient from '../../../api/axiosClient';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailSection from '../../../components/detail/DetailSection';
+import TeksBlok from '../../../components/detail/TeksBlok';
+import { DetailRow } from '../../../components/detail/DetailField';
+
+const FIELD =
+  'w-full px-3.5 py-2.5 rounded-xl border-[1.5px] border-gray-200 bg-white text-sm font-medium text-text-dark placeholder:text-[#B0B3C7] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10';
+const LABEL = 'block text-[13px] font-bold text-text-dark mb-1.5';
+
+
 
 export default function MobileAduanFormTeknisi() {
   usePageTitle('Form Pemeriksaan');
@@ -146,40 +155,39 @@ export default function MobileAduanFormTeknisi() {
   const displayEquipment = selectedEquipment || aduan;
 
   return (
-    <div className="max-w-md mx-auto px-4 pb-20">
-      {/* Header */}
-      <div className="flex items-center gap-3 py-4 sticky top-0  z-10">
+    <div className="max-w-md mx-auto px-4 pb-24 space-y-4">
+      <div className="flex items-center gap-3 pt-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Kembali"
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-800">Form Pemeriksaan</h1>
+        <h1 className="text-lg font-extrabold text-text-dark">Form Pemeriksaan</h1>
       </div>
 
-      {/* Equipment Info Card with Edit Feature */}
-      <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-3xl p-4 mb-4 border border-blue-100 shadow-sm">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide">Informasi Alat</h3>
-          {!isEditingEquipment && (
+      <DetailSection
+        judul="Informasi alat"
+        aksi={
+          !isEditingEquipment && (
             <button
+              type="button"
               onClick={() => setIsEditingEquipment(true)}
-              className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-100 transition-all"
+              className="text-xs font-bold text-brand-primary px-2 py-1 rounded-lg hover:bg-brand-primary/10 transition-colors"
             >
-              <Edit2 size={12} />
-              Ubah Alat
+              Ubah alat
             </button>
-          )}
-        </div>
-
+          )
+        }
+      >
         {isEditingEquipment ? (
           <div className="space-y-3">
-            {/* SearchableSelect for Equipment */}
             {isLoadingInventaris ? (
               <div className="text-center py-4">
-                <Loader2 className="animate-spin text-blue-500 mx-auto" size={20} />
-                <p className="text-xs text-gray-500 mt-2">Memuat daftar alat...</p>
+                <Loader2 className="animate-spin text-brand-primary mx-auto" size={20} />
+                <p className="text-xs text-[#808191] mt-2">Memuat daftar alat...</p>
               </div>
             ) : (
               <SearchableSelect
@@ -196,19 +204,20 @@ export default function MobileAduanFormTeknisi() {
               />
             )}
 
-            {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => setIsEditingEquipment(false)}
                 disabled={!formData.inventaris_id}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 h-11 rounded-xl bg-brand-primary text-white text-sm font-bold hover:bg-brand-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save size={16} />
                 Simpan
               </button>
               <button
+                type="button"
                 onClick={handleCancelEquipmentChange}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-sm font-medium"
+                className="flex items-center justify-center gap-2 h-11 rounded-xl bg-gray-100 text-text-dark text-sm font-semibold hover:bg-gray-200 transition-colors"
               >
                 <X size={16} />
                 Batal
@@ -216,222 +225,156 @@ export default function MobileAduanFormTeknisi() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div>
-              <p className="text-xs text-gray-600">Nama Alat</p>
-              <p className="font-bold text-gray-800">{displayEquipment.nama_alat_nama || displayEquipment.nama_alat}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <p className="text-xs text-gray-600">No. Inventaris</p>
-                <p className="text-sm font-medium text-gray-800 break-all">{displayEquipment.no_inventaris}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Ruangan</p>
-                <p className="text-sm font-medium text-gray-800">{displayEquipment.ruangan_nama}</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Keluhan</p>
-              <p className="text-sm text-gray-700">{aduan.keluhan}</p>
-            </div>
-          </div>
+          <>
+            <p className="text-lg font-extrabold text-text-dark">{displayEquipment.nama_alat_nama || displayEquipment.nama_alat}</p>
+            <p className="font-mono text-xs text-[#808191] mt-0.5 break-all">{displayEquipment.no_inventaris}</p>
+            <dl className="mt-4 pt-4 border-t border-gray-100">
+              <DetailRow label="Ruangan" value={displayEquipment.ruangan_nama} />
+              <DetailRow label="Keluhan" value={aduan.keluhan} />
+            </dl>
+          </>
         )}
-      </div>
+      </DetailSection>
 
-      {/* Previous Inspection History - Show if already inspected */}
+      {/* Pemeriksaan sebelumnya: tampil bila aduan sudah pernah diperiksa */}
       {aduan.tindakan_teknisi && (
-        <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-4 mb-4 border border-orange-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <ClipboardCheck size={16} className="text-orange-600" />
-            </div>
-            <h3 className="text-xs font-bold text-orange-700 uppercase tracking-wide">Pemeriksaan Sebelumnya</h3>
-          </div>
-
+        <DetailSection judul="Pemeriksaan sebelumnya">
           <div className="space-y-3">
-            {/* Previous Technician Action */}
-            <div className="bg-white rounded-xl p-3 border border-orange-100">
-              <p className="text-xs text-gray-600 mb-1">Tindakan Teknisi</p>
-              <p className="text-sm text-gray-800">{aduan.tindakan_teknisi}</p>
-            </div>
-
-            {/* Previous Recommendation */}
-            {aduan.rekomendasi && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100">
-                <p className="text-xs text-gray-600 mb-1">Rekomendasi</p>
-                <p className="text-sm text-gray-800">{aduan.rekomendasi}</p>
-              </div>
-            )}
-
-            {/* Previous Condition & Status */}
-            <div className="grid grid-cols-2 gap-2">
-              {aduan.kondisi_alat && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
-                  <KondisiBadge kondisi={aduan.kondisi_alat} />
-                </div>
-              )}
-
-              {aduan.status_aduan && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Status</p>
-                  <StatusBadge status={aduan.status_aduan} />
-                </div>
-              )}
-            </div>
-
-            {/* Previous Inspection Date */}
-            {aduan.tanggal_pemeriksaan && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100">
-                <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
-                <p className="text-sm font-medium text-gray-800">
-                  {formatDateTime(aduan.tanggal_pemeriksaan)}
-                </p>
-              </div>
-            )}
-
-            {/* Info Badge */}
-            <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
-              <p className="text-xs text-orange-800 font-medium">
-                Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk update status terbaru.
-              </p>
-            </div>
+            <TeksBlok label="Tindakan teknisi">{aduan.tindakan_teknisi}</TeksBlok>
+            {aduan.rekomendasi && <TeksBlok label="Rekomendasi">{aduan.rekomendasi}</TeksBlok>}
           </div>
-        </div>
+          <dl className="mt-4 pt-4 border-t border-gray-100">
+            {aduan.kondisi_alat && (
+              <DetailRow label="Kondisi alat">
+                <KondisiBadge kondisi={aduan.kondisi_alat} size="md" />
+              </DetailRow>
+            )}
+            {aduan.status_aduan && (
+              <DetailRow label="Status">
+                <StatusBadge status={aduan.status_aduan} />
+              </DetailRow>
+            )}
+            {aduan.tanggal_pemeriksaan && <DetailRow label="Tanggal" value={formatDateTime(aduan.tanggal_pemeriksaan)} />}
+          </dl>
+          <p className="mt-4 rounded-xl bg-brand-primary/10 px-3.5 py-2.5 text-xs font-semibold text-brand-primary">
+            Ini pemeriksaan lanjutan. Isi form di bawah untuk memperbarui status terbaru.
+          </p>
+        </DetailSection>
       )}
 
       {/* Laporan vendor: di luar <form> agar tidak ikut tersubmit; boleh ditambah sebelum atau sesudah pemeriksaan */}
-      <div className="mb-3 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      <DetailSection>
         <ServisPihakKetigaPanel jenis="aduan" indukId={aduan.id_aduan} status={aduan.status_aduan} />
-      </div>
+      </DetailSection>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* Tindakan Teknisi */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Tindakan Teknisi <span className='text-red-500'>*</span>
-          </label>
-          <textarea
-            name="tindakan_teknisi"
-            value={formData.tindakan_teknisi}
-            onChange={handleChange}
-            placeholder="Masukkan tindakan yang dilakukan..."
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-            required
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailSection judul="Hasil pemeriksaan">
+          <div className="space-y-4">
+            <div>
+              <label className={LABEL} htmlFor="tindakan_teknisi">
+                Tindakan teknisi <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="tindakan_teknisi"
+                name="tindakan_teknisi"
+                value={formData.tindakan_teknisi}
+                onChange={handleChange}
+                placeholder="Masukkan tindakan yang dilakukan..."
+                rows={3}
+                className={`${FIELD} resize-none`}
+                required
+              />
+            </div>
 
-        {/* Rekomendasi */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Rekomendasi <span className='text-red-500'>*</span>
-          </label>
-          <textarea
-            name="rekomendasi"
-            value={formData.rekomendasi}
-            onChange={handleChange}
-            placeholder="Masukkan rekomendasi..."
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-            required
-          />
-        </div>
+            <div>
+              <label className={LABEL} htmlFor="rekomendasi">
+                Rekomendasi <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="rekomendasi"
+                name="rekomendasi"
+                value={formData.rekomendasi}
+                onChange={handleChange}
+                placeholder="Masukkan rekomendasi..."
+                rows={3}
+                className={`${FIELD} resize-none`}
+                required
+              />
+            </div>
 
-        {/* Kondisi Alat */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Kondisi Alat <span className='text-red-500'>*</span>
-          </label>
-          <select
-            name="kondisi_alat"
-            value={formData.kondisi_alat}
-            onChange={handleChange}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
-            required
-          >
-            <option value="">Pilih kondisi alat</option>
-            <option value="Baik">Baik</option>
-            <option value="Rusak Ringan">Rusak Ringan</option>
-            <option value="Rusak Berat">Rusak Berat</option>
-          </select>
-        </div>
+            <div>
+              <label className={LABEL} htmlFor="kondisi_alat">
+                Kondisi alat <span className="text-red-500">*</span>
+              </label>
+              <select id="kondisi_alat" name="kondisi_alat" value={formData.kondisi_alat} onChange={handleChange} className={FIELD} required>
+                <option value="">Pilih kondisi alat</option>
+                <option value="Baik">Baik</option>
+                <option value="Rusak Ringan">Rusak Ringan</option>
+                <option value="Rusak Berat">Rusak Berat</option>
+              </select>
+            </div>
 
-        {/* Tanda Tangan Teknisi */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <SignaturePad
-            ref={ttdTeknisiRef}
-            label="Tanda Tangan Teknisi Pelaksana *"
-          />
-          <p className="text-xs text-gray-500 mt-2">{user?.nama_lengkap}</p>
-        </div>
+            <div>
+              <label className={LABEL} htmlFor="status_aduan">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <select id="status_aduan" name="status_aduan" value={formData.status_aduan} onChange={handleChange} className={FIELD} required>
+                <option value="">Pilih status aduan</option>
+                <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+            </div>
 
-        {/* Tanda Tangan Kepala Ruangan */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <SignaturePad
-            ref={ttdKepalaRuangRef}
-            label="Tanda Tangan Kepala Ruangan *"
-          />
-          <p className="text-xs text-gray-500 mt-2">Pelapor: {aduan.nama_pengadu}</p>
-        </div>
+            <div>
+              <label className={LABEL}>
+                {formData.status_aduan === 'Selesai' ? 'Biaya riil perbaikan (Rp)' : 'Estimasi biaya perbaikan (Rp)'}
+              </label>
+              <Input
+                currency
+                name="biaya"
+                value={formData.biaya}
+                onChange={handleChange}
+                placeholder="Contoh: 150.000"
+                inputMode="numeric"
+                required
+              />
+              <small className="text-xs text-[#808191] mt-1.5 block">
+                {formData.status_aduan === 'Selesai'
+                  ? 'Masukkan total biaya asli perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.'
+                  : 'Masukkan perkiraan biaya perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
+              </small>
+            </div>
+          </div>
+        </DetailSection>
 
-        {/* Status */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="text-xs font-bold text-gray-700 mb-2 block">
-            Status <span className='text-red-500'>*</span>
-          </label>
-          <select
-            name="status_aduan"
-            value={formData.status_aduan}
-            onChange={handleChange}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
-            required
-          >
-            <option value="">Pilih status aduan</option>
-            <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
-            <option value="Selesai">Selesai</option>
-          </select>
-        </div>
+        <DetailSection judul="Tanda tangan">
+          <div className="space-y-5">
+            <div>
+              <SignaturePad ref={ttdTeknisiRef} label="Teknisi pelaksana *" />
+              <p className="text-xs text-[#808191] mt-1.5">{user?.nama_lengkap}</p>
+            </div>
+            <div>
+              <SignaturePad ref={ttdKepalaRuangRef} label="Kepala ruangan *" />
+              <p className="text-xs text-[#808191] mt-1.5">Pelapor: {aduan.nama_pengadu}</p>
+            </div>
+          </div>
+        </DetailSection>
 
-        {/* Biaya */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="text-xs font-bold text-gray-700 mb-2 block">
-            {formData.status_aduan === 'Selesai' ? 'Biaya Riil Perbaikan (Rp)' : 'Estimasi Biaya Perbaikan (Rp)'}
-          </label>
-          <Input
-            currency
-            name="biaya"
-            value={formData.biaya}
-            onChange={handleChange}
-            placeholder="Contoh: 150.000"
-            inputMode="numeric"
-            required
-          />
-          <small className="text-xs text-gray-500 mt-1 block">
-            {formData.status_aduan === 'Selesai' 
-              ? 'Masukkan total biaya asli perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.' 
-              : 'Masukkan perkiraan biaya perbaikan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
-          </small>
-        </div>
-
-        {/* Submit Button */}
-        <div className="sticky bottom-4 pt-2">
+        <div className="sticky bottom-24 pt-1">
           <button
             type="submit"
             disabled={updateInspection.isPending}
-            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3.5 rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
+            className="w-full h-12 rounded-xl bg-brand-primary text-white text-sm font-bold shadow-lg shadow-brand-primary/25 hover:bg-brand-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {updateInspection.isPending ? (
               <>
-                <Loader2 className="animate-spin" size={20} />
+                <Loader2 className="animate-spin" size={18} />
                 Menyimpan...
               </>
             ) : (
               <>
-                <Save size={20} />
-                Simpan Pemeriksaan
+                <Save size={18} />
+                Simpan pemeriksaan
               </>
             )}
           </button>

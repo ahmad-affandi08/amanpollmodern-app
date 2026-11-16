@@ -87,12 +87,12 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
         )}
       </div>
 
-      {!aturan.boleh && aturan.alasan && <p className="text-[11px] text-gray-400">{aturan.alasan}</p>}
+      {!aturan.boleh && aturan.alasan && <p className="text-xs text-gray-400">{aturan.alasan}</p>}
 
       {isError && <p className="text-xs text-red-500">Gagal memuat laporan pihak ketiga.</p>}
 
       {!isLoading && !isError && laporan.length === 0 && (
-        <div className="bg-white rounded-[20px] p-6 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] text-center">
+        <div className="rounded-2xl p-6 border border-dashed border-gray-200 text-center">
           <Wrench className="w-10 h-10 text-gray-300 mx-auto mb-2" />
           <p className="text-gray-500 font-medium text-xs">
             {bacaSaja ? 'Alat ini belum memiliki laporan servis pihak ketiga' : 'Belum ada laporan servis dari pihak ketiga'}
@@ -108,10 +108,10 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
             const IkonBerkas = gambar ? ImageIcon : FileText;
 
             return (
-              <div key={item.id} className="bg-white rounded-[20px] p-4 shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+              <div key={item.id} className="bg-white rounded-2xl p-4 border border-gray-100">
                 <div className="flex justify-between items-start gap-2 mb-3 pb-3 border-b">
                   <div className="min-w-0">
-                    <p className="text-[10px] text-gray-400 font-medium mb-0.5 flex items-center gap-1">
+                    <p className="text-xs text-gray-400 font-medium mb-0.5 flex items-center gap-1">
                       <Building2 size={11} /> Vendor
                     </p>
                     <p className="text-sm font-bold text-brand-primary break-words">{item.nama_vendor}</p>
@@ -121,7 +121,7 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
                       <Calendar size={11} /> {formatDate(item.tanggal_servis)}
                     </span>
                     {item.susulan && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700">
                         Ditambahkan setelah selesai
                       </span>
                     )}
@@ -131,12 +131,12 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
                 {(item.nomor_laporan || bacaSaja) && (
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">No. Laporan</p>
+                      <p className="text-xs text-gray-400 font-medium mb-0.5">No. Laporan</p>
                       <p className="text-xs font-semibold text-text-dark break-words">{item.nomor_laporan || '-'}</p>
                     </div>
                     {bacaSaja && (
                       <div>
-                        <p className="text-[10px] text-gray-400 font-medium mb-0.5">Sumber</p>
+                        <p className="text-xs text-gray-400 font-medium mb-0.5">Sumber</p>
                         <p className="text-xs font-semibold text-text-dark break-words">
                           {item.induk_tipe === 'aduan' ? 'Aduan' : 'Pemeliharaan'} {item.no_induk || ''}
                         </p>
@@ -153,7 +153,7 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
 
                 {item.kondisi_setelah && (
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] text-gray-400 font-medium">Kondisi setelah servis</span>
+                    <span className="text-xs text-gray-400 font-medium">Kondisi setelah servis</span>
                     <KondisiBadge kondisi={item.kondisi_setelah} size="sm" />
                   </div>
                 )}
@@ -173,7 +173,7 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
                 </button>
 
                 <div className="flex items-center justify-between pt-3 border-t">
-                  <p className="text-[10px] text-gray-400 flex items-center gap-1 min-w-0">
+                  <p className="text-xs text-gray-400 flex items-center gap-1 min-w-0">
                     <User size={11} className="shrink-0" />
                     <span className="truncate">
                       {item.dibuat_oleh ? `Diunggah ${item.dibuat_oleh}` : 'Diunggah sistem'}

@@ -162,6 +162,7 @@ export default function ReportAduan() {
       item.tanggal_pemeriksaan ? formatTime(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
     ), meta: { cellClassName: 'text-gray-600' } },
     { id: 'teknisi', header: 'Teknisi', cell: ({ row }) => row.original.teknisi_nama || 'Belum Ditentukan', meta: { cellClassName: 'text-brand-primary font-medium' } },
+    { id: 'tanggal_penugasan', header: 'Waktu Penugasan', cell: ({ row }) => (row.original.tanggal_penugasan ? formatDateTime(row.original.tanggal_penugasan) : '-'), meta: { cellClassName: 'text-gray-600 whitespace-nowrap' } },
     { id: 'tindakan_teknisi', header: 'Tindakan Teknisi', cell: ({ row }) => row.original.tindakan_teknisi || 'Belum Ditentukan', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
     { id: 'rekomendasi', header: 'Rekomendasi', cell: ({ row }) => row.original.rekomendasi || '-', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
     { id: 'kondisi_alat', header: 'Kondisi Alat', cell: ({ row: { original: item } }) => (

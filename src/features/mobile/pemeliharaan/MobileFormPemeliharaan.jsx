@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { usePageTitle, useToast, useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks';
 import { formatDateTime, rupiah } from '../../../utils/format';
 import SignaturePad from '../../../components/SignaturePad';
@@ -8,9 +8,14 @@ import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
 import Input from '../../../components/Input';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
+import DetailSection from '../../../components/detail/DetailSection';
+import TeksBlok from '../../../components/detail/TeksBlok';
+import { DetailRow } from '../../../components/detail/DetailField';
 
-const SELECT_CLASS =
-  'w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm bg-white';
+const FIELD =
+  'w-full px-3.5 py-2.5 rounded-xl border-[1.5px] border-gray-200 bg-white text-sm font-medium text-text-dark placeholder:text-[#B0B3C7] focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10';
+const LABEL = 'block text-[13px] font-bold text-text-dark mb-1.5';
+
 
 export default function MobileFormPemeliharaan() {
   usePageTitle('Form Pemeliharaan');
@@ -140,125 +145,74 @@ function FormBody({ id, data }) {
   const isSaving = submitMutation.isPending || submitted;
 
   return (
-    <div className="max-w-md mx-auto px-4 pb-4">
-      {/* Header */}
-      <div className="py-4 flex items-center gap-3">
+    <div className="max-w-md mx-auto px-4 pb-24 space-y-4">
+      <div className="flex items-center gap-3 pt-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Kembali"
+          className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-text-dark"
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-lg font-bold text-gray-800">Form Pemeliharaan</h1>
-          <p className="text-sm text-gray-500">Isi checklist pemeliharaan</p>
+          <h1 className="text-lg font-extrabold text-text-dark leading-tight">Form Pemeliharaan</h1>
+          <p className="text-xs text-[#808191]">Isi checklist dan hasil pemeliharaan</p>
         </div>
       </div>
 
       {/* Pemeriksaan sebelumnya (bila sudah pernah diperiksa) */}
       {isFollowUp && (
-        <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-3xl p-4 mb-4 border border-orange-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <ClipboardCheck size={16} className="text-orange-600" />
-            </div>
-            <h3 className="text-xs font-bold text-orange-700 uppercase tracking-wide">Pemeriksaan Sebelumnya</h3>
-          </div>
-
+        <DetailSection judul="Pemeriksaan sebelumnya">
           <div className="space-y-3">
-            <div className="bg-white rounded-xl p-3 border border-orange-100">
-              <p className="text-xs text-gray-600 mb-1">Keterangan Pemeliharaan</p>
-              <p className="text-sm text-gray-800">{previous.keterangan_pemeliharaan}</p>
-            </div>
-
-            {previous.rekomendasi && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100">
-                <p className="text-xs text-gray-600 mb-1">Rekomendasi</p>
-                <p className="text-sm text-gray-800">{previous.rekomendasi}</p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-2">
-              {previous.kondisi_alat && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Kondisi Alat</p>
-                  <KondisiBadge kondisi={previous.kondisi_alat} />
-                </div>
-              )}
-
-              {previous.status && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Status</p>
-                  <StatusBadge status={previous.status} />
-                </div>
-              )}
-            </div>
-
-            {previous.tanggal_pemeriksaan && (
-              <div className="bg-white rounded-xl p-3 border border-orange-100">
-                <p className="text-xs text-gray-600 mb-1">Tanggal Pemeriksaan Sebelumnya</p>
-                <p className="text-sm font-medium text-gray-800">
-                  {formatDateTime(previous.tanggal_pemeriksaan)}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-2">
-              {parseFloat(previous.biaya) > 0 && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Biaya</p>
-                  <p className="text-sm font-medium text-gray-800">{rupiah(previous.biaya)}</p>
-                </div>
-              )}
-
-              {previous.nama_kepala_ruangan && (
-                <div className="bg-white rounded-xl p-3 border border-orange-100">
-                  <p className="text-xs text-gray-600 mb-1">Kepala Ruangan</p>
-                  <p className="text-sm font-medium text-gray-800">{previous.nama_kepala_ruangan}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-orange-100 border border-orange-200 rounded-xl p-3">
-              <p className="text-xs text-orange-800 font-medium">
-                Ini adalah pemeriksaan lanjutan. Silakan isi form di bawah untuk memperbarui status terbaru.
-              </p>
-            </div>
+            <TeksBlok label="Keterangan pemeliharaan">{previous.keterangan_pemeliharaan}</TeksBlok>
+            {previous.rekomendasi && <TeksBlok label="Rekomendasi">{previous.rekomendasi}</TeksBlok>}
           </div>
-        </div>
+          <dl className="mt-4 pt-4 border-t border-gray-100">
+            {previous.kondisi_alat && (
+              <DetailRow label="Kondisi alat">
+                <KondisiBadge kondisi={previous.kondisi_alat} size="md" />
+              </DetailRow>
+            )}
+            {previous.status && (
+              <DetailRow label="Status">
+                <StatusBadge status={previous.status} />
+              </DetailRow>
+            )}
+            {previous.tanggal_pemeriksaan && <DetailRow label="Tanggal" value={formatDateTime(previous.tanggal_pemeriksaan)} />}
+            {parseFloat(previous.biaya) > 0 && <DetailRow label="Biaya" value={rupiah(previous.biaya)} />}
+            {previous.nama_kepala_ruangan && <DetailRow label="Kepala ruangan" value={previous.nama_kepala_ruangan} />}
+          </dl>
+          <p className="mt-4 rounded-xl bg-brand-primary/10 px-3.5 py-2.5 text-xs font-semibold text-brand-primary">
+            Ini pemeriksaan lanjutan. Isi form di bawah untuk memperbarui status terbaru.
+          </p>
+        </DetailSection>
       )}
 
       {/* Laporan vendor: di luar <form> agar tidak ikut tersubmit */}
-      <div className="mb-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      <DetailSection>
         <ServisPihakKetigaPanel jenis="pemeliharaan" indukId={id} status={previous?.status} />
-      </div>
+      </DetailSection>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Checklist: hanya untuk pemeriksaan pertama; pengisian bersifat opsional */}
         {categories.map((category) => (
-          <div key={category.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-3">
-              {category.display_kategori}
-              <span className="ml-2 text-xs font-medium text-gray-400">(Opsional)</span>
-            </h3>
-
+          <DetailSection key={category.id} judul={`${category.display_kategori} (opsional)`}>
             {category.checklists.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">Checklist Kosong</p>
+              <p className="text-sm text-[#808191] text-center py-4">Checklist kosong</p>
             ) : category.nama_kategori === 'safety_check' ? (
               <div className="space-y-3">
-                {category.checklists.map((checklist) => {
-                  return (
-                    <div key={checklist.id} id={`checklist-${category.nama_kategori}-${checklist.id}`}>
-                      <textarea
-                        placeholder={checklist.keterangan}
-                        value={getAnswer(category.nama_kategori, checklist.id)}
-                        onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
-                        rows="3"
-                      />
-                    </div>
-                  );
-                })}
+                {category.checklists.map((checklist) => (
+                  <div key={checklist.id} id={`checklist-${category.nama_kategori}-${checklist.id}`}>
+                    <textarea
+                      placeholder={checklist.keterangan}
+                      value={getAnswer(category.nama_kategori, checklist.id)}
+                      onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
+                      className={`${FIELD} resize-none`}
+                      rows="3"
+                    />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="space-y-3">
@@ -268,9 +222,9 @@ function FormBody({ id, data }) {
                     <div
                       key={checklist.id}
                       id={`checklist-${category.nama_kategori}-${checklist.id}`}
-                      className="rounded-xl p-3 bg-gray-50"
+                      className="rounded-xl p-3.5 bg-gray-50"
                     >
-                      <p className="text-sm font-medium text-gray-700 mb-2">{checklist.keterangan}</p>
+                      <p className="text-sm font-semibold text-text-dark mb-2">{checklist.keterangan}</p>
                       <div className="flex gap-6">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -279,7 +233,7 @@ function FormBody({ id, data }) {
                             value="ok"
                             checked={answer === 'ok'}
                             onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
-                            className="w-4 h-4 text-success-600"
+                            className="w-4 h-4 accent-green-600"
                           />
                           <span className="text-sm">Ok</span>
                         </label>
@@ -290,7 +244,7 @@ function FormBody({ id, data }) {
                             value="notok"
                             checked={answer === 'notok'}
                             onChange={(e) => handleChecklistChange(category.nama_kategori, checklist.id, e.target.value)}
-                            className="w-4 h-4 text-danger-600"
+                            className="w-4 h-4 accent-red-600"
                           />
                           <span className="text-sm">Tidak Ok</span>
                         </label>
@@ -300,149 +254,138 @@ function FormBody({ id, data }) {
                 })}
               </div>
             )}
-          </div>
+          </DetailSection>
         ))}
 
-        {/* Status Pemeliharaan */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">
-            Status Pemeliharaan <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-            className={SELECT_CLASS}
-            required
+        <DetailSection judul="Hasil pemeliharaan">
+          <div className="space-y-4">
+            <div>
+              <label className={LABEL}>
+                Status pemeliharaan <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                className={FIELD}
+                required
+              >
+                <option value="">Pilih status pemeliharaan</option>
+                <option value="Selesai">Selesai</option>
+                <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
+              </select>
+              <p className="text-xs text-[#808191] mt-1.5">Pilih "Tindakan Lanjutan" jika alat membutuhkan penanganan lebih lanjut.</p>
+            </div>
+
+            <div>
+              <label className={LABEL}>
+                Kondisi alat <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.kondisi_alat}
+                onChange={(e) => setFormData(prev => ({ ...prev, kondisi_alat: e.target.value }))}
+                className={FIELD}
+                required
+              >
+                <option value="">Pilih kondisi alat</option>
+                <option value="Baik">Baik</option>
+                <option value="Rusak Ringan">Rusak Ringan</option>
+                <option value="Rusak Berat">Rusak Berat</option>
+              </select>
+              <p className="text-xs text-[#808191] mt-1.5">Jika "Rusak Berat", notifikasi akan dikirim ke pimpinan.</p>
+            </div>
+
+            <div>
+              <label className={LABEL}>
+                Rekomendasi <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={formData.rekomendasi}
+                onChange={(e) => setFormData(prev => ({ ...prev, rekomendasi: e.target.value }))}
+                placeholder="Masukkan rekomendasi"
+                className={`${FIELD} resize-none`}
+                rows="3"
+                required
+              />
+            </div>
+
+            <div>
+              <label className={LABEL}>
+                Keterangan pemeliharaan <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={formData.keterangan_pemeliharaan}
+                onChange={(e) => setFormData(prev => ({ ...prev, keterangan_pemeliharaan: e.target.value }))}
+                placeholder="Masukkan keterangan pemeliharaan"
+                className={`${FIELD} resize-none`}
+                rows="3"
+                required
+              />
+            </div>
+
+            <div>
+              <label className={LABEL}>
+                {formData.status === 'Selesai' ? 'Biaya riil pemeliharaan (Rp)' : 'Estimasi biaya pemeliharaan (Rp)'}
+              </label>
+              <Input
+                currency
+                name="biaya"
+                value={formData.biaya}
+                onChange={(e) => setFormData(prev => ({ ...prev, biaya: parseFloat(e.target.value) || 0 }))}
+                placeholder="Contoh: 75.000"
+                inputMode="numeric"
+                required
+              />
+              <p className="text-xs text-[#808191] mt-1.5">
+                {formData.status === 'Selesai'
+                  ? 'Masukkan total biaya asli pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.'
+                  : 'Masukkan perkiraan biaya pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
+              </p>
+            </div>
+          </div>
+        </DetailSection>
+
+        <DetailSection judul="Tanda tangan">
+          <div className="space-y-5">
+            <SignaturePad ref={signatureTeknisiRef} label="Teknisi pelaksana *" />
+
+            <div>
+              <SignaturePad ref={signatureKepalaRuangRef} label="Kepala ruangan (opsional)" />
+              <p className="text-xs text-[#808191] mt-1.5">Tanda tangan kepala ruangan dapat diisi nanti.</p>
+            </div>
+
+            <div>
+              <label className={LABEL}>Nama kepala ruangan (opsional)</label>
+              <input
+                type="text"
+                value={formData.nama_kepala_ruangan}
+                onChange={(e) => setFormData(prev => ({ ...prev, nama_kepala_ruangan: e.target.value }))}
+                placeholder="Masukkan nama kepala ruangan"
+                className={FIELD}
+              />
+              <p className="text-xs text-[#808191] mt-1.5">Nama dapat diisi nanti saat tanda tangan.</p>
+            </div>
+          </div>
+        </DetailSection>
+
+        <div className="sticky bottom-24 pt-1">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="w-full h-12 rounded-xl bg-brand-primary text-white text-sm font-bold shadow-lg shadow-brand-primary/25 hover:bg-brand-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <option value="">Pilih status pemeliharaan</option>
-            <option value="Selesai">Selesai</option>
-            <option value="Tindakan Lanjutan">Tindakan Lanjutan</option>
-          </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Pilih "Tindakan Lanjutan" jika alat membutuhkan penanganan lebih lanjut.
-          </p>
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Simpan
+              </>
+            )}
+          </button>
         </div>
-
-        {/* Kondisi Alat */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">
-            Kondisi Alat <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.kondisi_alat}
-            onChange={(e) => setFormData(prev => ({ ...prev, kondisi_alat: e.target.value }))}
-            className={SELECT_CLASS}
-            required
-          >
-            <option value="">Pilih kondisi alat</option>
-            <option value="Baik">Baik</option>
-            <option value="Rusak Ringan">Rusak Ringan</option>
-            <option value="Rusak Berat">Rusak Berat</option>
-          </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Jika "Rusak Berat", notifikasi akan dikirim ke pimpinan.
-          </p>
-        </div>
-
-        {/* Rekomendasi */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">
-            Rekomendasi <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.rekomendasi}
-            onChange={(e) => setFormData(prev => ({ ...prev, rekomendasi: e.target.value }))}
-            placeholder="Masukkan rekomendasi"
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
-            rows="3"
-            required
-          />
-        </div>
-
-        {/* Keterangan Pemeliharaan */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">
-            Keterangan Pemeliharaan <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.keterangan_pemeliharaan}
-            onChange={(e) => setFormData(prev => ({ ...prev, keterangan_pemeliharaan: e.target.value }))}
-            placeholder="Masukkan keterangan pemeliharaan"
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm resize-none"
-            rows="3"
-            required
-          />
-        </div>
-
-        {/* Tanda Tangan Teknisi */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <SignaturePad
-            ref={signatureTeknisiRef}
-            label="Tanda Tangan Teknisi Pelaksana *"
-          />
-        </div>
-
-        {/* Tanda Tangan Kepala Ruangan */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <SignaturePad
-            ref={signatureKepalaRuangRef}
-            label="Tanda Tangan Kepala Ruangan (Opsional)"
-          />
-          <p className="text-xs text-gray-500 mt-2">Tanda tangan Kepala Ruangan dapat diisi nanti</p>
-        </div>
-
-        {/* Nama Kepala Ruangan */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">Nama Kepala Ruangan (Opsional)</label>
-          <input
-            type="text"
-            value={formData.nama_kepala_ruangan}
-            onChange={(e) => setFormData(prev => ({ ...prev, nama_kepala_ruangan: e.target.value }))}
-            placeholder="Masukkan nama Kepala Ruangan"
-            className="w-full px-3 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:border-indigo-500 text-sm"
-          />
-          <p className="text-xs text-gray-500 mt-1">Nama dapat diisi nanti saat tanda tangan</p>
-        </div>
-
-        {/* Biaya */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <label className="block text-sm font-bold text-gray-800 mb-2">
-            {formData.status === 'Selesai' ? 'Biaya Riil Pemeliharaan (Rp)' : 'Estimasi Biaya Pemeliharaan (Rp)'}
-          </label>
-          <Input
-            currency
-            name="biaya"
-            value={formData.biaya}
-            onChange={(e) => setFormData(prev => ({ ...prev, biaya: parseFloat(e.target.value) || 0 }))}
-            placeholder="Contoh: 75.000"
-            inputMode="numeric"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.status === 'Selesai'
-              ? 'Masukkan total biaya asli pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.'
-              : 'Masukkan perkiraan biaya pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
-          </p>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSaving ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Menyimpan...
-            </>
-          ) : (
-            <>
-              <Save size={20} />
-              Simpan
-            </>
-          )}
-        </button>
       </form>
     </div>
   );

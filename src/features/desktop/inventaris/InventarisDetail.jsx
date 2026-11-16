@@ -228,12 +228,12 @@ export default function InventarisDetail() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 bg-[#F8F9FB] rounded-xl hover:bg-gray-100 transition-colors"
                 >
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <FileText size={20} className="text-red-600" />
+                  <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+                    <FileText size={20} className="text-brand-primary" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-text-dark text-sm">Lihat File SOP</p>
-                    <p className="text-[10px] text-gray-500">File SOP</p>
+                    <p className="text-xs text-[#808191]">File SOP</p>
                   </div>
                   <Download size={20} className="text-gray-400" />
                 </a>
@@ -255,12 +255,12 @@ export default function InventarisDetail() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 bg-[#F8F9FB] rounded-xl hover:bg-gray-100 transition-colors"
                 >
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Award size={20} className="text-blue-600" />
+                  <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+                    <Award size={20} className="text-brand-primary" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-text-dark text-sm">Lihat Sertifikat</p>
-                    <p className="text-[10px] text-gray-500">File Sertifikat</p>
+                    <p className="text-xs text-[#808191]">File Sertifikat</p>
                   </div>
                   <Download size={18} className="text-gray-400" />
                 </a>
@@ -287,7 +287,7 @@ export default function InventarisDetail() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3 pb-3 border-b">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">No. Aduan</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">No. Aduan</p>
                       <p className="text-base font-bold text-brand-primary">{aduan.no_aduan}</p>
                     </div>
                     <StatusBadge status={aduan.status_aduan} size="sm" />
@@ -295,7 +295,7 @@ export default function InventarisDetail() {
 
                   {/* Keluhan */}
                   <div className="mb-3">
-                    <p className="text-[10px] text-gray-400 font-medium mb-1">Keluhan</p>
+                    <p className="text-xs text-[#808191] font-semibold mb-1">Keluhan</p>
                     <p className="text-xs text-text-dark leading-relaxed bg-gray-50 p-2.5 rounded-lg">
                       "{aduan.keluhan || '-'}"
                     </p>
@@ -304,11 +304,11 @@ export default function InventarisDetail() {
                   {/* Info Grid */}
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Pelapor</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Pelapor</p>
                       <p className="text-xs font-semibold text-text-dark">{aduan.nama_pengadu || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tanggal</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Tanggal</p>
                       <p className="text-xs font-semibold text-text-dark">{formatDate(aduan.create_date)}</p>
                     </div>
                   </div>
@@ -318,33 +318,33 @@ export default function InventarisDetail() {
                     <div className="border-t pt-3 mt-3 space-y-2">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Teknisi</p>
+                          <p className="text-xs text-[#808191] font-semibold mb-0.5">Teknisi</p>
                           <p className="text-xs font-semibold text-text-dark">{aduan.teknisi_nama}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Kondisi Alat</p>
+                          <p className="text-xs text-[#808191] font-semibold mb-0.5">Kondisi Alat</p>
                           <KondisiBadge kondisi={aduan.kondisi_alat} size="sm" />
                         </div>
                       </div>
 
                       {aduan.tindakan_teknisi && (
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tindakan Teknisi</p>
-                          <p className="text-xs text-text-dark bg-blue-50 p-2.5 rounded-lg">{aduan.tindakan_teknisi}</p>
+                          <p className="text-xs text-[#808191] font-semibold mb-0.5">Tindakan Teknisi</p>
+                          <p className="text-sm text-text-dark bg-gray-50 p-2.5 rounded-lg">{aduan.tindakan_teknisi}</p>
                         </div>
                       )}
 
                       {aduan.rekomendasi && (
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Rekomendasi</p>
-                          <p className="text-xs text-text-dark bg-yellow-50 p-2.5 rounded-lg border border-yellow-200">{aduan.rekomendasi}</p>
+                          <p className="text-xs text-[#808191] font-semibold mb-0.5">Rekomendasi</p>
+                          <p className="text-sm text-text-dark bg-gray-50 p-2.5 rounded-lg">{aduan.rekomendasi}</p>
                         </div>
                       )}
 
                       {parseFloat(aduan.biaya) > 0 && (
                         <div>
-                          <p className="text-[10px] text-gray-400 font-medium mb-0.5">Biaya</p>
-                          <p className="text-lg font-bold text-green-600">{rupiah(aduan.biaya)}</p>
+                          <p className="text-xs text-[#808191] font-semibold mb-0.5">Biaya</p>
+                          <p className="text-lg font-bold text-text-dark">{rupiah(aduan.biaya)}</p>
                         </div>
                       )}
                     </div>
@@ -371,7 +371,7 @@ export default function InventarisDetail() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3 pb-3 border-b">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Jadwal Pemeliharaan</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Jadwal Pemeliharaan</p>
                       <p className="text-base font-bold text-brand-primary">{formatDate(mt.jadwal_pemeliharaan)}</p>
                     </div>
                     <StatusBadge status={mt.status} size="sm" />
@@ -380,25 +380,25 @@ export default function InventarisDetail() {
                   {/* Info Grid */}
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Teknisi</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Teknisi</p>
                       <p className="text-xs font-semibold text-text-dark">{mt.teknisi_nama || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Tgl Pemeriksaan</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Tgl Pemeriksaan</p>
                       <p className="text-xs font-semibold text-text-dark">{formatDate(mt.tanggal_pemeriksaan)}</p>
                     </div>
                   </div>
 
                   {/* Kondisi Alat */}
                   <div className="mb-3">
-                    <p className="text-[10px] text-gray-400 font-medium mb-1">Kondisi Alat</p>
+                    <p className="text-xs text-[#808191] font-semibold mb-1">Kondisi Alat</p>
                     <KondisiBadge kondisi={mt.kondisi_alat} size="md" />
                   </div>
 
                   {/* Keterangan */}
                   {mt.keterangan_pemeliharaan && (
                     <div className="mb-3">
-                      <p className="text-[10px] text-gray-400 font-medium mb-1">Keterangan</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-1">Keterangan</p>
                       <p className="text-xs text-text-dark leading-relaxed bg-gray-50 p-2.5 rounded-lg">
                         {mt.keterangan_pemeliharaan}
                       </p>
@@ -408,8 +408,8 @@ export default function InventarisDetail() {
                   {/* Rekomendasi */}
                   {mt.rekomendasi && (
                     <div className="mb-3">
-                      <p className="text-[10px] text-gray-400 font-medium mb-1">Rekomendasi</p>
-                      <p className="text-xs text-text-dark bg-yellow-50 p-2.5 rounded-lg border border-yellow-200">
+                      <p className="text-xs text-[#808191] font-semibold mb-1">Rekomendasi</p>
+                      <p className="text-sm text-text-dark bg-gray-50 p-2.5 rounded-lg">
                         {mt.rekomendasi}
                       </p>
                     </div>
@@ -418,17 +418,17 @@ export default function InventarisDetail() {
                   {/* Biaya */}
                   {parseFloat(mt.biaya) > 0 && (
                     <div className="border-t pt-3 mt-3">
-                      <p className="text-[10px] text-gray-400 font-medium mb-0.5">Biaya Pemeliharaan</p>
-                      <p className="text-lg font-bold text-green-600">{rupiah(mt.biaya)}</p>
+                      <p className="text-xs text-[#808191] font-semibold mb-0.5">Biaya Pemeliharaan</p>
+                      <p className="text-lg font-bold text-text-dark">{rupiah(mt.biaya)}</p>
                     </div>
                   )}
 
                   {/* TTD Status */}
                   <div className="flex gap-2 mt-3 pt-3 border-t">
-                    <div className={`flex-1 text-center py-1.5 rounded-lg text-[10px] font-medium ${mt.status_ttd_teknisi === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <div className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold ${mt.status_ttd_teknisi === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       TTD Teknisi: {mt.status_ttd_teknisi}
                     </div>
-                    <div className={`flex-1 text-center py-1.5 rounded-lg text-[10px] font-medium ${mt.status_ttd_karu === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <div className={`flex-1 text-center py-1.5 rounded-lg text-xs font-semibold ${mt.status_ttd_karu === 'Sudah TTD' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       TTD Kepala Ruangan: {mt.status_ttd_karu}
                     </div>
                   </div>
