@@ -29,7 +29,7 @@ export default function FilterBar({
       </div>
       {/* [&>*]:mb-0 — SearchableSelect membawa mb-4 sendiri; di grid, jarak diatur gap agar seragam. */}
       {React.Children.toArray(children).length > 0 && (
-        <div className={`grid gap-3 [&>*]:!mb-0 ${gridClassName}`}>{children}</div>
+        <div className={`grid gap-3 [&>*]:!mb-0 [&_select]:!bg-white [&_input]:!bg-white [&_button[aria-haspopup]]:!bg-white ${gridClassName}`}>{children}</div>
       )}
     </div>
   );

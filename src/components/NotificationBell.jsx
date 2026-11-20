@@ -6,6 +6,7 @@ import { id as idLocale } from 'date-fns/locale';
 import ConfirmDialog from './Alert/Alert';
 import { parseDate } from '../utils/format';
 import notificationIcon from '../assets/img/notification.png';
+import EmptyState from './EmptyState';
 import {
   useUnreadNotifications,
   useUnreadCount,
@@ -122,10 +123,7 @@ const NotificationBell = () => {
                 <p className="mt-2 text-sm text-gray-600">Memuat...</p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center">
-                <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">Tidak ada notifikasi baru</p>
-              </div>
+              <EmptyState compact title="Tidak ada notifikasi baru" />
             ) : (
               notifications.slice(0, 5).map((notif) => (
                 <div

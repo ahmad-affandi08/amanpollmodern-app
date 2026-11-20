@@ -127,6 +127,9 @@ export default function DetailReportAduan() {
                 <DetailPerson nama={data.teknisi_nama} keterangan={data.divisi_nama} />
                 <dl className="mt-4 pt-4 border-t border-gray-100">
                   <DetailField label="Waktu penugasan" value={data.tanggal_penugasan ? formatDateTime(data.tanggal_penugasan) : 'Tidak tercatat'} />
+                  <div className="mt-4">
+                    <DetailField label="Respons pertama teknisi" value={data.tanggal_respon ? formatDateTime(data.tanggal_respon) : 'Tidak tercatat'} />
+                  </div>
                 </dl>
               </>
             ) : (
@@ -139,6 +142,7 @@ export default function DetailReportAduan() {
               <DetailField label="Kondisi alat terakhir">
                 {kondisiTerakhir ? <KondisiBadge kondisi={kondisiTerakhir} size="md" /> : '-'}
               </DetailField>
+              <DetailField label="Tingkat kerusakan" value={data.tingkat_kerusakan} />
               <div className="pt-4 border-t border-gray-100">
                 <dt className="text-xs font-semibold text-[#808191] mb-0.5">Biaya perbaikan</dt>
                 <dd className="text-2xl font-extrabold text-text-dark">{Number(data.biaya) > 0 ? rupiah(data.biaya) : '-'}</dd>

@@ -7,8 +7,8 @@ import noImage from '../../assets/img/no_image.png';
  * Riwayat penanganan (aduan/pemeliharaan) sebagai garis waktu vertikal. Satu bentuk untuk desktop dan mobile:
  * kolom teks otomatis satu atau dua menurut lebar wadah.
  *
- * item: { key, judul, status, tanggal, bagian: [{ label, teks }], kondisi, ttd: [{ label, nama, gambar }] }
- * onPreview(gambar, alt): dipanggil saat tanda tangan diklik.
+ * item: { key, judul, status, tanggal, bagian: [{ label, teks }], kondisi, foto?: [{ label, src }], ttd: [{ label, nama, gambar }] }
+ * onPreview(gambar, alt): dipanggil saat foto atau tanda tangan diklik.
  */
 export default function PenangananTimeline({ items, onPreview }) {
   return (
@@ -38,6 +38,30 @@ export default function PenangananTimeline({ items, onPreview }) {
             <div className="flex items-center gap-2 mt-3">
               <span className="text-xs font-semibold text-[#808191]">Kondisi alat</span>
               <KondisiBadge kondisi={item.kondisi} size="md" />
+            </div>
+          )}
+
+          {item.foto?.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 mt-4 max-w-md">
+              {item.foto.map((f) => (
+                <div key={f.label}>
+                  <p className="text-xs font-semibold text-[#808191] mb-1">{f.label}</p>
+                  <button
+                    type="button"
+                    onClick={() => onPreview?.(f.src, f.label)}
+                    aria-label={`Perbesar ${f.label.toLowerCase()}`}
+                    className="block w-full h-28 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden cursor-zoom-in hover:border-brand-primary transition-colors"
+                  >
+                    <img
+                      src={f.src}
+                      alt={f.label}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.src = noImage; }}
+                    />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 

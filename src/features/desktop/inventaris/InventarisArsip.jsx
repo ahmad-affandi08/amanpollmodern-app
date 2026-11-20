@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Archive, Download, Eye, RotateCcw, Search } from 'lucide-react';
+import { Download, Eye, RotateCcw, Search } from 'lucide-react';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import DateRangePicker from '../../../components/DateRangePicker';
@@ -201,7 +201,7 @@ export default function InventarisArsip() {
           skeletonRows={8}
           rowClassName={() => 'align-top'}
           tableClassName="min-w-[1100px]"
-          empty={{ icon: Archive, title: 'Belum ada alat yang digudangkan atau dihapus', description: 'Riwayat tercatat sejak fitur ini digunakan' }}
+          empty={{ title: 'Belum ada alat yang digudangkan atau dihapus', description: 'Riwayat tercatat sejak fitur ini digunakan' }}
         />
       </div>
 

@@ -13,6 +13,7 @@ import ServisBadge from '../../../components/ServisBadge';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 // Tugas aktif teknisi = Sedang Dikerjakan + Tindakan Lanjutan (sama dengan /aduan/assignments).
 const ACTIVE_STATUSES = ['Sedang Dikerjakan', 'Tindakan Lanjutan'];
@@ -185,14 +186,10 @@ export default function MobileAduanListTeknisi() {
             </button>
           </div>
         ) : aduanList.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <AlertCircle className="mx-auto mb-2" size={48} />
-            <p>
-              {search
-                ? `Tidak ada hasil untuk "${search}"`
-                : 'Tidak ada tugas aduan'}
-            </p>
-          </div>
+          <EmptyState
+            variant={search ? 'cari' : 'kosong'}
+            title={search ? `Tidak ada hasil untuk "${search}"` : 'Tidak ada tugas aduan'}
+          />
         ) : (
           aduanList.map((item) => (
             <div

@@ -4,6 +4,7 @@ import { Plus, PackagePlus } from 'lucide-react';
 import { useAlatBaruInfinite, usePageTitle } from '../../../hooks';
 import AlatBaruCard from './components/AlatBaruCard';
 import Button from '../../../components/Button';
+import EmptyState from '../../../components/EmptyState';
 
 export default function MobileAlatBaru() {
   usePageTitle('Alat Baru');
@@ -96,12 +97,8 @@ export default function MobileAlatBaru() {
           </>
         ) : (
 
-          <div className="bg-white rounded-[20px] p-8 text-center border border-gray-100 mt-8">
-            <PackagePlus className="mx-auto text-gray-300 mb-4" size={64} />
-            <h3 className="text-lg font-bold text-text-dark mb-2">Belum Ada Alat Baru</h3>
-            <p className="text-sm text-text-gray mb-4">
-              Klik tombol "Tambah" untuk mengajukan alat baru
-            </p>
+          <div className="bg-white rounded-[20px] border border-gray-100 mt-8">
+            <EmptyState title="Belum Ada Alat Baru" description='Klik tombol "Tambah" untuk mengajukan alat baru' />
           </div>
         )}
       </div>

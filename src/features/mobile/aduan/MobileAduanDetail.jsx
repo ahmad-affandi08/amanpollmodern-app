@@ -89,6 +89,9 @@ export default function MobileAduanDetail() {
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <StatusBadge status={aduan.status_aduan} />
           {kondisi && <KondisiBadge kondisi={kondisi} size="md" />}
+          {aduan.tingkat_kerusakan && (
+            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-text-dark text-xs font-bold">Kerusakan {aduan.tingkat_kerusakan}</span>
+          )}
           <span className="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">{aduan.no_aduan || '-'}</span>
         </div>
         {aduan.tingkat_risiko === 'Tinggi' && (

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 214 214" fill="none">
+  <!-- gumpalan latar, sama seperti ikon menu lain -->
+  <path d="M38 152C24 104 56 60 108 52c52-8 98 18 105 70 7 50-34 86-84 90-48 4-80-18-91-60Z" fill="#E3EDF4"/>
+  <circle cx="214" cy="170" r="3" fill="#fff"/><circle cx="30" cy="196" r="2.5" fill="#fff"/><circle cx="196" cy="62" r="2" fill="#fff"/>
+
+  <!-- papan klip (bingkai biru) -->
+  <rect x="66" y="48" width="112" height="152" rx="10" fill="#2F5FAE" stroke="#1F3C6E" stroke-width="5"/>
+  <!-- kertas -->
+  <rect x="76" y="66" width="92" height="124" rx="6" fill="#fff" stroke="#1F3C6E" stroke-width="5"/>
+  <!-- penjepit -->
+  <rect x="98" y="38" width="48" height="24" rx="9" fill="#A9C2E6" stroke="#1F3C6E" stroke-width="5"/>
+  <circle cx="122" cy="50" r="4" fill="#fff" stroke="#1F3C6E" stroke-width="2.5"/>
+
+  <!-- baris daftar centang -->
+  <circle cx="90" cy="88" r="5.5" fill="#FFC832"/><rect x="101" y="84" width="54" height="8" rx="4" fill="#FFC832"/>
+  <circle cx="90" cy="108" r="5.5" fill="#FFC832"/><rect x="101" y="104" width="38" height="8" rx="4" fill="#FFC832"/>
+
+  <!-- grafik batang kecil: realisasi -->
+  <path d="M86 176h72" stroke="#1F3C6E" stroke-width="4" stroke-linecap="round"/>
+  <rect x="90" y="152" width="14" height="24" rx="3" fill="#3B7BD6" stroke="#1F3C6E" stroke-width="3"/>
+  <rect x="110" y="138" width="14" height="38" rx="3" fill="#FFC832" stroke="#1F3C6E" stroke-width="3"/>
+  <rect x="130" y="122" width="14" height="54" rx="3" fill="#8EC3F7" stroke="#1F3C6E" stroke-width="3"/>
+
+  <!-- balon kuning berisi centang (seperti balon pada ikon pemeliharaan) -->
+  <rect x="16" y="64" width="56" height="34" rx="17" fill="#FFC832" stroke="#1F3C6E" stroke-width="4"/>
+  <path d="M56 97l9 12-17-7Z" fill="#FFC832" stroke="#1F3C6E" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M33 81l8 8 15-16" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- label merah berisi panah naik -->
+  <rect x="152" y="22" width="62" height="28" rx="10" fill="#E5484D" stroke="#1F3C6E" stroke-width="4"/>
+  <path d="M158 50l-8 12 18-8Z" fill="#E5484D" stroke="#1F3C6E" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M170 41l8-8 8 8M178 34v10" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(5 0)"/>
+</svg>

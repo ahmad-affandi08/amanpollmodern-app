@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, Eye, Trash2, AlertCircle, FileText, Edit, Wrench } from 'lucide-react';
+import { Search, Download, Eye, Trash2, AlertCircle, Edit, Wrench, ChevronDown } from 'lucide-react';
 import {
   useReportPemeliharaan,
   useDeletePemeliharaan,
@@ -17,14 +17,16 @@ import DateRangePicker from '../../../components/DateRangePicker';
 import DataTable from '../../../components/DataTable';
 import FilterBar from '../../../components/FilterBar';
 import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
-import { indexColumn } from '../../../utils/tableColumns';
+import useExpandedRow from '../../../hooks/utils/useExpandedRow';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import { useToast } from '../../../components/Alert/useToast';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusBadge from '../../../components/StatusBadge';
 import ServisBadge from '../../../components/ServisBadge';
+import KetepatanJadwal from '../../../components/KetepatanJadwal';
+import StackedCell from '../../../components/StackedCell';
+import ReportPemeliharaanRowDetail from './ReportPemeliharaanRowDetail';
 import { apiUrl } from '../../../config';
-import { formatDateShort } from '../../../utils/format';
 import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
 import useConfirmAction from '../master-data/useConfirmAction';
 import useTeknisiOptions from './useTeknisiOptions';
@@ -50,6 +52,8 @@ export default function ReportPemeliharaan() {
   const isPimpinan = isReadOnlyRole(user);
 
   const { askConfirm, dialogProps } = useConfirmAction();
+
+  const { expandedId, closing, toggleRow } = useExpandedRow();
 
   const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
   const { filters, params } = tableState;
@@ -112,26 +116,47 @@ export default function ReportPemeliharaan() {
   };
 
   const columns = [
-    indexColumn(),
-    { id: 'no_pemeliharaan', header: 'No. Pemeliharaan', cell: ({ row }) => (
-      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 text-brand-primary">
+    { id: 'expand', header: '', meta: { cellClassName: '!pr-0 w-10' }, cell: ({ row: { original: item } }) => {
+      const open = expandedId === item.id_pemeliharaan && !closing;
+      return (
+        <button
+          type="button"
+          onClick={() => toggleRow(item.id_pemeliharaan)}
+          aria-expanded={open}
+          aria-label={open ? 'Tutup detail' : 'Buka detail'}
+          className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${open ? 'border-brand-primary/30 bg-brand-primary-soft text-brand-primary' : 'border-gray-200 text-text-gray hover:bg-gray-50'}`}
+        >
+          <ChevronDown size={14} className={`transition-transform duration-300 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} />
+        </button>
+      );
+    } },
+    { id: 'no_pemeliharaan', header: 'Pemeliharaan', cell: ({ row }) => (
+      <span className="inline-block rounded-md bg-brand-primary-50 px-2 py-0.5 text-[11px] font-bold text-brand-primary">
         {row.original.no_pemeliharaan || '-'}
       </span>
     ) },
-    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi_nama || '-', meta: { cellClassName: 'text-gray-600' } },
-    { id: 'ruangan', header: 'Ruangan', cell: ({ row }) => row.original.ruangan_nama || '-', meta: { cellClassName: 'text-gray-600 font-medium' } },
-    { id: 'alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat_nama || '-', meta: { cellClassName: 'text-text-dark font-medium' } },
-    { id: 'no_inventaris', header: 'No. Inv', cell: ({ row }) => row.original.no_inventaris || '-', meta: { cellClassName: 'text-gray-600 font-mono text-[10px]' } },
-    { id: 'merk', header: 'Merk', cell: ({ row }) => row.original.merk || '-', meta: { cellClassName: 'text-gray-600' } },
-    { id: 'jadwal', header: 'Jadwal', cell: ({ row: { original: item } }) => (
-      item.jadwal_pemeliharaan ? formatDateShort(item.jadwal_pemeliharaan) : 'Belum Ditentukan'
-    ), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'teknisi', header: 'Teknisi', cell: ({ row }) => row.original.teknisi_nama || '-', meta: { cellClassName: 'text-brand-primary font-medium' } },
-    { id: 'tanggal', header: 'Tanggal', cell: ({ row: { original: item } }) => (
-      item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
-    ), meta: { cellClassName: 'text-gray-600' } },
+    { id: 'alat', header: 'Alat & Lokasi', cell: ({ row: { original: item } }) => (
+      <div className="max-w-[13rem]">
+        <p className="truncate text-[13px] font-semibold leading-tight text-text-dark" title={item.nama_alat_nama}>
+          {item.nama_alat_nama || '-'}
+          <span className="ml-1.5 font-mono text-[10px] font-normal text-text-gray">{item.no_inventaris}</span>
+        </p>
+        <p className="mt-0.5 truncate text-[11px] leading-tight text-text-gray">
+          {[item.ruangan_nama, item.divisi_nama, item.merk].filter((v) => v && v !== '-').join(' · ') || '\u00A0'}
+        </p>
+      </div>
+    ) },
+    { id: 'jadwal', header: 'Jadwal vs Realisasi', cell: ({ row: { original: item } }) => (
+      <KetepatanJadwal jadwal={item.jadwal_pemeliharaan} diperiksa={item.tanggal_pemeriksaan} status={item.status} />
+    ) },
+    { id: 'teknisi', header: 'Teknisi', cell: ({ row: { original: item } }) => (
+      <StackedCell
+        main={item.teknisi_nama && item.teknisi_nama !== '-' ? item.teknisi_nama : 'Belum ada'}
+        mainClassName={item.teknisi_nama && item.teknisi_nama !== '-' ? '!text-brand-primary' : '!font-normal !italic !text-gray-400'}
+      />
+    ) },
     { id: 'kondisi_alat', header: 'Kondisi', cell: ({ row: { original: item } }) => (
-      item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">Belum Ditentukan</span>
+      item.kondisi_alat && item.kondisi_alat !== 'Belum Ditentukan' ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>
     ) },
     { id: 'status', header: 'Status', cell: ({ row }) => (
       <div className="flex flex-col items-start gap-1">
@@ -298,7 +323,17 @@ export default function ReportPemeliharaan() {
           table={table}
           isLoading={isLoading}
           skeletonRows={10}
-          empty={{ icon: FileText, title: 'Tidak ada data pemeliharaan', description: 'Silakan sesuaikan filter pencarian' }}
+          tableClassName="[&_th]:!px-3 [&_td]:!px-3"
+          containerClassName="@container"
+          empty={{ variant: 'cari', title: 'Tidak ada data pemeliharaan', description: 'Silakan sesuaikan filter pencarian' }}
+          rowClassName={(item) => (expandedId === item.id_pemeliharaan ? '!border-b-0' : '')}
+          renderSubRow={(item, colCount) => (expandedId === item.id_pemeliharaan ? (
+            <tr key={`detail-${item.id_pemeliharaan}`}>
+              <td colSpan={colCount} className="px-4 !py-0">
+                <ReportPemeliharaanRowDetail item={item} closing={closing} />
+              </td>
+            </tr>
+          ) : null)}
         />
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Activity, Wrench, ShieldCheck, Archive, Building2 } from 'lucide-react';
+import { ArrowLeft, FileText, Award, Image as ImageIcon, Download, AlertCircle, Wrench, ShieldCheck, Archive, Building2 } from 'lucide-react';
 import InventarisApi from '../../../api/InventarisApi';
 import Button from '../../../components/Button';
 import { useToast } from '../../../components/Alert/useToast';
@@ -18,6 +18,7 @@ import { canManageInventaris } from '../../auth/constants';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
+import EmptyState from '../../../components/EmptyState';
 
 export default function InventarisDetail() {
   usePageTitle('Detail Inventaris');
@@ -276,9 +277,8 @@ export default function InventarisDetail() {
       {activeTab === 'aduan' && (
         <div className="animate-fade-in">
           {(!data.aduan || data.aduan.length === 0) ? (
-            <div className="bg-white rounded-[20px] p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] text-center">
-              <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium text-sm">Belum ada riwayat aduan untuk alat ini</p>
+            <div className="bg-white rounded-[20px] shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+              <EmptyState compact title="Belum ada riwayat aduan untuk alat ini" />
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -360,9 +360,8 @@ export default function InventarisDetail() {
       {activeTab === 'pemeliharaan' && (
         <div className="animate-fade-in">
           {(!data.pemeliharaan || data.pemeliharaan.length === 0) ? (
-            <div className="bg-white rounded-[20px] p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] text-center">
-              <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium text-sm">Belum ada riwayat pemeliharaan untuk alat ini</p>
+            <div className="bg-white rounded-[20px] shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+              <EmptyState compact title="Belum ada riwayat pemeliharaan untuk alat ini" />
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -443,9 +442,7 @@ export default function InventarisDetail() {
       {activeTab === 'status' && (
         <div className="bg-white rounded-[20px] p-5 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] space-y-3 animate-fade-in">
           {(data.status_log || []).length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">
-              Belum ada riwayat. Alat ini belum pernah digudangkan atau dihapus dari daftar aset.
-            </p>
+            <EmptyState compact title="Belum ada riwayat" description="Alat ini belum pernah digudangkan atau dihapus dari daftar aset." />
           ) : (
             data.status_log.map((log) => (
               <div key={log.id} className="border border-gray-100 rounded-xl p-4 space-y-1">

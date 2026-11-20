@@ -43,12 +43,8 @@ export default function Login() {
     setError(null);
 
     try {
-      const isEmail = form.identifier.includes('@');
-      const payload = isEmail
-        ? { email: form.identifier, password: form.password }
-        : { username: form.identifier, password: form.password };
-
-      const response = await login(payload);
+      // Server hanya mengenal username; mengirim `email` membuatnya menjawab "Username dan password wajib diisi".
+      const response = await login({ username: form.identifier.trim(), password: form.password });
 
 
       if (response.user) {

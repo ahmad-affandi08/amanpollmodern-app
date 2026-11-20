@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { refreshAllData } from '../../../../lib/queryClient';
 import { ROLES } from '../../../auth/constants';
-import { Edit2, Trash2, Plus, Search, Users } from 'lucide-react';
+import { Edit2, Trash2, Plus, Search } from 'lucide-react';
 import {
   useMasterUsers,
   useCreateUser,
@@ -295,7 +295,7 @@ export default function MasterUser() {
         <DataTable
           table={table}
           isLoading={isLoading}
-          empty={{ icon: Users, title: 'Belum ada data user' }}
+          empty={{ title: 'Belum ada data user' }}
         />
       </div>
 

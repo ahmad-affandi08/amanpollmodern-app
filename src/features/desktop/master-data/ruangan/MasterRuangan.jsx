@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Plus, Search, DoorOpen } from 'lucide-react';
+import { Edit2, Trash2, Plus, Search } from 'lucide-react';
 import {
   useMasterRuangan,
   useCreateRuangan,
@@ -162,7 +162,7 @@ export default function MasterRuangan() {
         <DataTable
           table={table}
           isLoading={isLoading}
-          empty={{ icon: DoorOpen, title: 'Belum ada data ruangan' }}
+          empty={{ title: 'Belum ada data ruangan' }}
         />
       </div>
 

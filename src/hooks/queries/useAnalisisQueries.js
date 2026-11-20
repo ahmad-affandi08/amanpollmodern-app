@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import AnalisisApi from '../../api/AnalisisApi';
 
 /**
@@ -12,44 +12,31 @@ const ANALISIS_KEY = ['analisis'];
 /** Ambil isi `data` dari respons axios. */
 const unwrap = (response) => response.data?.data ?? null;
 
-export const useAnalisisKeandalan = () => {
+/**
+ * Satu hook per halaman ringkasan. `filter` = { periode, divisiId }; data lama tetap tampil
+ * (redup) selama data periode/divisi baru dimuat, jadi halaman tidak berkedip.
+ */
+const buatHook = (nama, ambil) => function useRingkasan(filter = {}) {
   return useQuery({
-    queryKey: [...ANALISIS_KEY, 'keandalan'],
-    queryFn: async () => unwrap(await AnalisisApi.getKeandalanAlat()),
+    queryKey: [...ANALISIS_KEY, nama, { periode: filter.periode || null, divisiId: filter.divisiId || null, kategoriId: filter.kategoriId || null }],
+    queryFn: async () => unwrap(await ambil({ periode: filter.periode || undefined, divisi_id: filter.divisiId || undefined, kategori_id: filter.kategoriId || undefined })),
+    placeholderData: keepPreviousData,
   });
 };
 
-export const useAnalisisKinerja = () => {
-  return useQuery({
-    queryKey: [...ANALISIS_KEY, 'kinerja'],
-    queryFn: async () => unwrap(await AnalisisApi.getKinerjaTeknisi()),
-  });
-};
+export const useAnalisisKeandalan = buatHook('keandalan', AnalisisApi.getKeandalanAlat);
+export const useAnalisisKinerja = buatHook('kinerja', AnalisisApi.getKinerjaTeknisi);
+export const useAnalisisRuangan = buatHook('ruangan', AnalisisApi.getSebaranRuangan);
+export const useAnalisisBiaya = buatHook('biaya', AnalisisApi.getBiaya);
+export const useAnalisisKalibrasi = buatHook('kalibrasi', AnalisisApi.getKalibrasi);
+export const useAnalisisRisiko = buatHook('risiko', AnalisisApi.getRisiko);
 
-export const useAnalisisRuangan = () => {
+/** Realisasi SKI satu teknisi untuk satu bulan. Dimuat hanya bila `enabled` (mis. teknisi sudah dipilih). */
+export const useAnalisisRealisasiSki = ({ teknisiId, bulan, tahun }, { enabled = true } = {}) => {
   return useQuery({
-    queryKey: [...ANALISIS_KEY, 'ruangan'],
-    queryFn: async () => unwrap(await AnalisisApi.getSebaranRuangan()),
-  });
-};
-
-export const useAnalisisBiaya = () => {
-  return useQuery({
-    queryKey: [...ANALISIS_KEY, 'biaya'],
-    queryFn: async () => unwrap(await AnalisisApi.getBiaya()),
-  });
-};
-
-export const useAnalisisKalibrasi = () => {
-  return useQuery({
-    queryKey: [...ANALISIS_KEY, 'kalibrasi'],
-    queryFn: async () => unwrap(await AnalisisApi.getKalibrasi()),
-  });
-};
-
-export const useAnalisisRisiko = () => {
-  return useQuery({
-    queryKey: [...ANALISIS_KEY, 'risiko'],
-    queryFn: async () => unwrap(await AnalisisApi.getRisiko()),
+    queryKey: [...ANALISIS_KEY, 'ski', { teknisiId: teknisiId || null, bulan, tahun }],
+    queryFn: async () => unwrap(await AnalisisApi.getRealisasiSki({ teknisi_id: teknisiId || undefined, bulan, tahun })),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 };

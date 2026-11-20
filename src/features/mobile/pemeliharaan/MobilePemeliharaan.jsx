@@ -16,6 +16,7 @@ import StatusBadge from '../../../components/StatusBadge';
 import ServisBadge from '../../../components/ServisBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 export default function MobilePemeliharaan() {
   usePageTitle('Daftar Pemeliharaan');
@@ -192,16 +193,14 @@ export default function MobilePemeliharaan() {
             </div>
           ))
         ) : pemeliharaanList.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
-            <p className="text-gray-500 text-sm">
-              {search
-                ? `Tidak ada hasil untuk "${search}"`
-                : hasActiveFilter
-                  ? 'Tidak ada pemeliharaan yang sesuai dengan filter'
-                  : 'Tidak ada pemeliharaan yang ditugaskan'}
-            </p>
-          </div>
+          <EmptyState
+            variant={search || hasActiveFilter ? 'cari' : 'kosong'}
+            title={search
+              ? `Tidak ada hasil untuk "${search}"`
+              : hasActiveFilter
+                ? 'Tidak ada pemeliharaan yang sesuai dengan filter'
+                : 'Tidak ada pemeliharaan yang ditugaskan'}
+          />
         ) : (
           pemeliharaanList.map((item) => (
             <div

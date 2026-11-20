@@ -9,7 +9,7 @@ import { useTableState, useDataTable, getTableFilters } from '../../../hooks/uti
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import RisikoBadge from '../../../components/RisikoBadge';
-import { CheckCircle, Trash2, Eye, Construction, Search } from 'lucide-react';
+import { CheckCircle, Trash2, Eye, Search } from 'lucide-react';
 import AlatBaruDetailModal from './components/AlatBaruDetailModal';
 import noImage from '../../../assets/img/no_image.png';
 import { formatDateShort } from '../../../utils/format';
@@ -193,7 +193,7 @@ export default function AlatBaruList() {
           error={isError ? { title: 'Gagal memuat data pengajuan', description: 'Periksa koneksi Anda lalu muat ulang halaman' } : undefined}
           skeletonRows={5}
           containerClassName={`transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}
-          empty={{ icon: Construction, title: 'Tidak ada pengajuan alat baru', description: 'Belum ada data yang masuk / ditemukan' }}
+          empty={{ title: 'Tidak ada pengajuan alat baru', description: 'Belum ada data yang masuk / ditemukan' }}
         />
       </div>
 

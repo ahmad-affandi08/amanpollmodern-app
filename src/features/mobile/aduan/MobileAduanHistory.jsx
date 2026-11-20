@@ -10,6 +10,7 @@ import DateRangePicker from '../../../components/DateRangePicker';
 import noImage from '../../../assets/img/no_image.png';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 const STATUS_FILTERS = [
   { label: 'Semua', value: '' },
@@ -171,16 +172,14 @@ export default function MobileAduanHistory() {
             </button>
           </div>
         ) : aduanList.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <AlertCircle className="mx-auto mb-3 text-gray-300" size={48} />
-            <p>
-              {search
-                ? `Tidak ada hasil untuk "${search}"`
-                : hasActiveFilter
-                  ? 'Tidak ada aduan yang sesuai dengan filter'
-                  : 'Belum ada riwayat aduan'}
-            </p>
-          </div>
+          <EmptyState
+            variant={search || hasActiveFilter ? 'cari' : 'kosong'}
+            title={search
+              ? `Tidak ada hasil untuk "${search}"`
+              : hasActiveFilter
+                ? 'Tidak ada aduan yang sesuai dengan filter'
+                : 'Belum ada riwayat aduan'}
+          />
         ) : (
           aduanList.map(item => (
             <div

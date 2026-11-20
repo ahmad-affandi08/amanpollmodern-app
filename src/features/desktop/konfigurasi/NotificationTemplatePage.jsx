@@ -9,6 +9,7 @@ import { usePageTitle } from '../../../hooks';
 import { queryKeys } from '../../../lib/queryKeys';
 import Modal from '../../../components/Modal';
 import amanpollLogo from '../../../assets/img/icon-logo-3d-amanpoll.png';
+import EmptyState from '../../../components/EmptyState';
 
 /** variabel_tersedia berupa string JSON dari server; terima juga array, dan jangan crash bila rusak. */
 const parseVariables = (raw) => {
@@ -31,7 +32,7 @@ export default function NotificationTemplatePage() {
   const [activeTab, setActiveTab] = useState('Aduan');
   const { showToast } = useToast();
 
-  const { data: templates = [], isLoading: loading, isFetching, isError, refetch } = useQuery({
+  const { data: templates = [], isLoading: loading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.konfigurasi.all, 'notification-templates'],
     queryFn: async () => {
       const response = await KonfigurasiApi.getNotificationTemplates();
@@ -166,9 +167,6 @@ export default function NotificationTemplatePage() {
             Pilih kategori, lalu klik tombol Edit untuk mengubah isi pesan otomatis.
           </p>
         </div>
-        <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="flex items-center gap-2 bg-white w-full sm:w-auto justify-center">
-          <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} /> Segarkan Data
-        </Button>
       </div>
 
       <div className="flex flex-1 flex-col md:flex-row min-h-0">
@@ -234,13 +232,16 @@ export default function NotificationTemplatePage() {
             ))}
 
             {getFilteredTemplates().length === 0 && (
-              <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+              <div className="col-span-full">
                 {isError ? (
-                  <>
-                    <p className="mb-2 text-red-500">Gagal memuat template notifikasi.</p>
-                    <button type="button" onClick={() => refetch()} className="text-brand-primary font-semibold hover:underline">Coba lagi</button>
-                  </>
-                ) : 'Belum ada template di kategori ini.'}
+                  <EmptyState
+                    variant="galat"
+                    title="Gagal memuat template notifikasi."
+                    action={<button type="button" onClick={() => refetch()} className="text-brand-primary text-xs font-semibold hover:underline">Coba lagi</button>}
+                  />
+                ) : (
+                  <EmptyState title="Belum ada template di kategori ini." />
+                )}
               </div>
             )}
           </div>

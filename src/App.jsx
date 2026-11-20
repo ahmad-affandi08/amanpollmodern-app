@@ -48,6 +48,7 @@ import MobileAduanFormTeknisi from './features/mobile/aduan/MobileAduanFormTekni
 import MobilePemeliharaan from './features/mobile/pemeliharaan/MobilePemeliharaan';
 import MobilePemeliharaanDetail from './features/mobile/pemeliharaan/MobilePemeliharaanDetail';
 import MobilePemeliharaanHistory from './features/mobile/pemeliharaan/MobilePemeliharaanHistory';
+import MobileRealisasiSki from './features/mobile/realisasi-ski/MobileRealisasiSki';
 import MobileFormPemeliharaan from './features/mobile/pemeliharaan/MobileFormPemeliharaan';
 import MobileNotifikasi from './features/mobile/notifikasi/MobileNotifikasi';
 import MobileNotifikasiDetail from './features/mobile/notifikasi/MobileNotifikasiDetail';
@@ -72,6 +73,7 @@ import SebaranRuanganPage from './features/desktop/analisis/SebaranRuanganPage';
 import BiayaPemeliharaanPage from './features/desktop/analisis/BiayaPemeliharaanPage';
 import KepatuhanKalibrasiPage from './features/desktop/analisis/KepatuhanKalibrasiPage';
 import KepatuhanRisikoPage from './features/desktop/analisis/KepatuhanRisikoPage';
+import RealisasiSkiPage from './features/desktop/analisis/RealisasiSkiPage';
 import RegisterRisiko from './features/desktop/risiko/RegisterRisiko';
 /** Halaman desktop: butuh login, dibatasi peran (jika ada), dan dibungkus layout dashboard. */
 const desktopPage = (element, roles = []) => (
@@ -145,6 +147,7 @@ const routes = [
   { path: '/analisis/biaya', element: desktopPage(<BiayaPemeliharaanPage />, ACCESS.analisis) },
   { path: '/analisis/kalibrasi', element: desktopPage(<KepatuhanKalibrasiPage />, ACCESS.analisis) },
   { path: '/analisis/risiko', element: desktopPage(<KepatuhanRisikoPage />, ACCESS.analisis) },
+  { path: '/analisis/realisasi-ski', element: desktopPage(<RealisasiSkiPage />, ACCESS.analisis) },
   { path: '/risiko', element: desktopPage(<RegisterRisiko />, ACCESS.risiko) },
 
   {
@@ -171,6 +174,7 @@ const routes = [
       { path: 'pemeliharaan/history', element: mobilePage(<MobilePemeliharaanHistory />, ACCESS.mobileTeknisi) },
       { path: 'pemeliharaan/:id', element: mobilePage(<MobilePemeliharaanDetail />, ACCESS.mobileTeknisi) },
       { path: 'pemeliharaan/:id/form', element: mobilePage(<MobileFormPemeliharaan />, ACCESS.mobileTeknisi) },
+      { path: 'realisasi-ski', element: mobilePage(<MobileRealisasiSki />, ACCESS.mobileTeknisi) },
       { path: 'notifikasi', element: mobilePage(<MobileNotifikasi />) },
       { path: 'notifikasi/:id', element: mobilePage(<MobileNotifikasiDetail />) },
       { path: 'profile', element: mobilePage(<MobileProfile />) },

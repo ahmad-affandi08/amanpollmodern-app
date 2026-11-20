@@ -19,6 +19,7 @@ import ConfirmDialog from '../../../components/Alert/Alert';
 import { parseDate } from '../../../utils/format';
 import { formatDistanceToNow } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import EmptyState from '../../../components/EmptyState';
 
 const FILTER_OPTIONS = [
   { value: '', label: 'Semua' },
@@ -190,14 +191,13 @@ const NotificationCenter = () => {
               <p className="mt-2 text-sm text-gray-600">Memuat notifikasi...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="p-8 text-center">
-              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600">
-                {isClientFiltering && notifications.length > 0
-                  ? 'Tidak ada notifikasi yang cocok di halaman ini'
-                  : 'Tidak ada notifikasi'}
-              </p>
-            </div>
+            <EmptyState
+              compact
+              variant={isClientFiltering && notifications.length > 0 ? 'cari' : 'kosong'}
+              title={isClientFiltering && notifications.length > 0
+                ? 'Tidak ada notifikasi yang cocok di halaman ini'
+                : 'Tidak ada notifikasi'}
+            />
           ) : (
             filteredNotifications.map((notif) => (
               <div

@@ -7,6 +7,7 @@ import { useToast } from './Alert/useToast';
 import { useDeleteKalibrasi } from '../hooks/queries/useInventarisQueries';
 import { formatDate } from '../utils/format';
 import { getKalibrasiStatus } from '../utils/kalibrasi';
+import EmptyState from './EmptyState';
 
 /**
  * Daftar riwayat kalibrasi sebuah alat (terbaru di atas) beserta aksi
@@ -47,9 +48,8 @@ export default function KalibrasiHistoryList({ inventarisId, items = [], canMana
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-white rounded-[20px] p-8 shadow-[0px_10px_40px_rgba(29,22,23,0.03)] text-center">
-          <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium text-sm">Belum ada riwayat kalibrasi untuk alat ini</p>
+        <div className="bg-white rounded-[20px] shadow-[0px_10px_40px_rgba(29,22,23,0.03)]">
+          <EmptyState compact title="Belum ada riwayat kalibrasi untuk alat ini" />
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

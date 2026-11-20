@@ -13,6 +13,7 @@ import {
 } from '../../../hooks';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 const PER_PAGE = 20;
 
@@ -145,11 +146,7 @@ export default function MobileNotifikasi() {
           ))
         ) : notifikasiList.length === 0 ? (
 
-          <div className="text-center py-16">
-            <Bell className="mx-auto text-gray-300 mb-4" size={64} />
-            <p className="text-gray-500 text-sm font-medium">Tidak ada notifikasi</p>
-            <p className="text-gray-400 text-xs mt-1">Notifikasi baru akan muncul di sini</p>
-          </div>
+          <EmptyState title="Tidak ada notifikasi" description="Notifikasi baru akan muncul di sini" />
         ) : (
           notifikasiList.map((item) => (
             <button

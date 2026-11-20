@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, AlertCircle, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2, UserPlus, ChevronDown } from 'lucide-react';
 import {
   useAduan,
   useDeleteAduan,
@@ -11,16 +11,18 @@ import {
 } from '../../../hooks';
 import DataTable from '../../../components/DataTable';
 import FilterBar from '../../../components/FilterBar';
-import { indexColumn } from '../../../utils/tableColumns';
 import SearchableSelect from '../../../components/SearchableSelect';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
+import useExpandedRow from '../../../hooks/utils/useExpandedRow';
 import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import Input from '../../../components/Input';
 import DateRangePicker from '../../../components/DateRangePicker';
 import Button from '../../../components/Button';
 import AddAduanModal from './AddAduanModal';
 import AssignTeknisiModal from './AssignTeknisiModal';
+import AduanRowDetail from './AduanRowDetail';
+import StackedCell from '../../../components/StackedCell';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import StatusBadge from '../../../components/StatusBadge';
@@ -32,21 +34,17 @@ import useTeknisiList from '../pemeliharaan/useTeknisiList';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
-import technicianIcon from '../../../assets/img/technician.png';
 
 
+// Tabel ringkas: kolom yang berkaitan digabung dalam satu sel; selengkapnya ada di panel yang terbuka lewat
+// tombol panah di tiap baris. Kolom panah tidak masuk daftar: selalu tampil.
 const COLUMN_DEFS = [
-  { key: 'no_pendaftaran', label: 'No.', defaultVisible: true },
-  { key: 'no_aduan', label: 'No. Aduan', defaultVisible: true },
-  { key: 'tanggal', label: 'Tanggal Aduan', defaultVisible: true },
-  { key: 'divisi_ruang', label: 'Divisi/Ruang', defaultVisible: true },
-  { key: 'gedung', label: 'Gedung', defaultVisible: false },
-  { key: 'alat', label: 'Alat', defaultVisible: true },
-  { key: 'no_inventaris', label: 'No. Inventaris', defaultVisible: false },
-  { key: 'keluhan', label: 'Keluhan', defaultVisible: true },
+  { key: 'aduan', label: 'No. Aduan / Tanggal', defaultVisible: true },
   { key: 'foto', label: 'Foto', defaultVisible: true },
-  { key: 'pelapor', label: 'Pelapor', defaultVisible: true },
-  { key: 'teknisi', label: 'Teknisi', defaultVisible: true },
+  { key: 'alat', label: 'Alat / No. Inventaris', defaultVisible: true, alwaysVisible: true },
+  { key: 'lokasi', label: 'Lokasi', defaultVisible: true },
+  { key: 'keluhan', label: 'Keluhan', defaultVisible: true },
+  { key: 'teknisi', label: 'Teknisi / Pelapor', defaultVisible: true },
   { key: 'status', label: 'Status', defaultVisible: true },
   { key: 'actions', label: 'Aksi', defaultVisible: true, alwaysVisible: true }
 ];
@@ -71,7 +69,7 @@ export default function AduanList() {
 
   const { visibleColumns, toggleColumn, showAll, hideAll } = useColumnToggle(
     COLUMN_DEFS,
-    'aduan_columns'
+    'aduan_columns_v2'
   );
 
 
@@ -84,6 +82,7 @@ export default function AduanList() {
   const imagePreviewModal = useModal();
   const [deleteTarget, setDeleteTarget] = useState(null);
 
+  const { expandedId, closing, toggleRow } = useExpandedRow();
 
   const { data: aduanData, isLoading, refetch } = useAduan(params);
 
@@ -119,69 +118,76 @@ export default function AduanList() {
     }
   };
 
+  const previewFoto = (item) => imagePreviewModal.open({ url: item.img_keluhan, alt: `Foto Keluhan - ${item.no_aduan || ''}` });
+
   // id kolom = key di COLUMN_DEFS, supaya ColumnToggle tetap mengendalikan visibilitas.
   const columns = [
-    indexColumn({ id: 'no_pendaftaran' }),
-    { id: 'no_aduan', header: 'No. Aduan', cell: ({ row: { original: item } }) => (
-      <span className="px-2 py-1 text-xs font-bold rounded-md bg-brand-primary-50 text-brand-primary">
-        {item.no_aduan || '-'}
-      </span>
-    ) },
-    { id: 'tanggal', header: 'Tanggal', cell: ({ row }) => formatDateTime(row.original.create_date), meta: { cellClassName: 'text-text-dark' } },
-    { id: 'divisi_ruang', header: 'Divisi/Ruang', cell: ({ row: { original: item } }) => (
-      <div className="flex flex-col">
-        <span className="font-medium text-text-dark">{item.ruangan_nama || '-'}</span>
-        <span className="text-[10px] text-gray-400">{item.divisi_nama}</span>
+    { id: 'expand', header: '', meta: { cellClassName: '!pr-0 w-10' }, cell: ({ row: { original: item } }) => {
+      const open = expandedId === item.id_aduan && !closing;
+      return (
+        <button
+          type="button"
+          onClick={() => toggleRow(item.id_aduan)}
+          aria-expanded={open}
+          aria-label={open ? 'Tutup detail' : 'Buka detail'}
+          className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${open ? 'border-brand-primary/30 bg-brand-primary-soft text-brand-primary' : 'border-gray-200 text-text-gray hover:bg-gray-50'}`}
+        >
+          <ChevronDown size={14} className={`transition-transform duration-300 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} />
+        </button>
+      );
+    } },
+    { id: 'aduan', header: 'Aduan', cell: ({ row: { original: item } }) => (
+      <div>
+        <span className="inline-block rounded-md bg-brand-primary-50 px-2 py-0.5 text-xs font-bold text-brand-primary">{item.no_aduan || '-'}</span>
+        <p className="mt-1 text-[11px] leading-tight text-text-gray">{formatDateTime(item.create_date)}</p>
       </div>
-    ), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'gedung', header: 'Gedung', cell: ({ row }) => row.original.gedung || '-', meta: { cellClassName: 'text-gray-600' } },
+    ) },
+    // Di area tabel yang sempit kolom foto disembunyikan supaya tabel tidak perlu digeser; fotonya ada di panel detail.
+    { id: 'foto', header: 'Foto', meta: { headerClassName: 'hidden @[1180px]:table-cell', cellClassName: 'hidden @[1180px]:table-cell' }, cell: ({ row: { original: item } }) => (
+      item.img_keluhan ? (
+        <div className="h-11 w-11 cursor-pointer overflow-hidden rounded-lg border border-gray-100 transition-all duration-300 hover:scale-105 hover:border-brand-primary hover:shadow-lg">
+          <LazyLoadImage
+            src={item.img_keluhan}
+            alt="Foto Keluhan"
+            effect="blur"
+            className="object-cover"
+            style={{ width: '44px', height: '44px', display: 'block' }}
+            placeholderSrc={noImage}
+            onError={(e) => { e.target.src = noImage; }}
+            onClick={() => previewFoto(item)}
+          />
+        </div>
+      ) : (
+        <div className="h-11 w-11 overflow-hidden rounded-lg border border-gray-200">
+          <img src={noImage} alt="Tidak ada foto" className="h-full w-full object-cover opacity-50" />
+        </div>
+      )
+    ) },
     { id: 'alat', header: 'Alat', cell: ({ row: { original: item } }) => (
-      <div className="flex flex-col">
-        <span className="font-medium text-text-dark">{item.nama_alat_nama || '-'}</span>
+      <div>
+        <StackedCell main={item.nama_alat_nama || '-'} sub={item.no_inventaris} subClassName="font-mono" />
         {item.tingkat_risiko === 'Tinggi' && (
-          <span className="mt-1 w-fit" title="Alat risiko tinggi: prioritaskan penanganan">
+          <span className="mt-1 block w-fit" title="Alat risiko tinggi: prioritaskan penanganan">
             <RisikoBadge tingkat="Tinggi" size="sm" />
           </span>
         )}
       </div>
-    ), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'no_inventaris', header: 'No. Inventaris', cell: ({ row }) => (
-      <span className="text-[10px] text-brand-primary bg-purple-50 px-1.5 py-0.5 rounded w-fit">{row.original.no_inventaris}</span>
+    ) },
+    { id: 'lokasi', header: 'Lokasi', cell: ({ row: { original: item } }) => (
+      <StackedCell
+        main={item.ruangan_nama || '-'}
+        sub={[item.divisi_nama, item.gedung].filter((v) => v && v !== '-').join(' · ')}
+      />
     ) },
     { id: 'keluhan', header: 'Keluhan', cell: ({ row: { original: item } }) => (
-      <span title={item.keluhan}>{item.keluhan}</span>
-    ), meta: { cellClassName: 'text-gray-600 max-w-[150px] truncate text-xs' } },
-    { id: 'foto', header: 'Foto', cell: ({ row: { original: item } }) => (
-      <div className="flex items-center justify-center">
-        {item.img_keluhan ? (
-          <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-brand-primary" style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}>
-            <LazyLoadImage
-              src={item.img_keluhan}
-              alt="Foto Keluhan"
-              effect="blur"
-              className="object-cover"
-              style={{ width: '48px', height: '48px', display: 'block' }}
-              placeholderSrc={noImage}
-              onError={(e) => { e.target.src = noImage; }}
-              onClick={() => imagePreviewModal.open({ url: item.img_keluhan, alt: `Foto Keluhan - ${item.no_aduan || ''}` })}
-            />
-          </div>
-        ) : (
-          <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200" style={{ minWidth: '48px', minHeight: '48px' }}>
-            <img
-              src={noImage}
-              alt="Tidak ada foto"
-              className="w-full h-full object-cover opacity-50"
-            />
-          </div>
-        )}
-      </div>
+      <p className="line-clamp-2 min-w-32 max-w-64 whitespace-normal text-xs text-gray-600" title={item.keluhan}>{item.keluhan}</p>
     ) },
-    { id: 'pelapor', header: 'Pelapor', cell: ({ row }) => row.original.nama_pengadu || '-', meta: { cellClassName: 'text-gray-600' } },
     { id: 'teknisi', header: 'Teknisi', cell: ({ row: { original: item } }) => (
-      item.teknisi_nama
-        ? <span className="font-medium text-brand-primary">{item.teknisi_nama}</span>
-        : <span className="text-gray-400 text-[10px] italic">Belum ada</span>
+      <StackedCell
+        main={item.teknisi_nama || 'Belum ada'}
+        mainClassName={item.teknisi_nama ? '!text-brand-primary' : '!font-normal !italic !text-gray-400'}
+        sub={`Pelapor: ${item.nama_pengadu || '-'}`}
+      />
     ) },
     { id: 'status', header: 'Status', cell: ({ row }) => (
       <div className="flex flex-col items-start gap-1">
@@ -194,14 +200,11 @@ export default function AduanList() {
         {canWrite && !item.teknisi_id && (
           <button
             onClick={() => assignModal.open(item)}
-            className="group w-12 h-12 p-1 bg-white rounded-xl shadow-lg hover:-translate-y-1 transition-all overflow-hidden flex items-center justify-center border border-gray-100"
+            className="p-2 bg-brand-primary text-white rounded-xl shadow-lg hover:-translate-y-1 transition-all"
             title="Tugaskan Teknisi"
+            aria-label="Tugaskan Teknisi"
           >
-            <img
-              src={technicianIcon}
-              alt="Tugaskan Teknisi"
-              className="w-full h-full object-cover mix-blend-multiply"
-            />
+            <UserPlus size={16} />
           </button>
         )}
         {/* Sama dengan laporan aduan: hanya aduan yang belum ditugaskan yang boleh dihapus. */}
@@ -335,7 +338,17 @@ export default function AduanList() {
           table={table}
           isLoading={isLoading}
           skeletonRows={10}
-          empty={{ icon: AlertCircle, title: 'Tidak ada data aduan', description: 'Belum ada aduan yang masuk' }}
+          tableClassName="[&_th]:!px-3 [&_td]:!px-3"
+          containerClassName="@container"
+          empty={{ title: 'Tidak ada data aduan', description: 'Belum ada aduan yang masuk' }}
+          rowClassName={(item) => (expandedId === item.id_aduan ? '!border-b-0' : '')}
+          renderSubRow={(item, colCount) => (expandedId === item.id_aduan ? (
+            <tr key={`detail-${item.id_aduan}`}>
+              <td colSpan={colCount} className="px-4 !py-0">
+                <AduanRowDetail item={item} closing={closing} onPreviewImage={previewFoto} />
+              </td>
+            </tr>
+          ) : null)}
         />
       </div>
 

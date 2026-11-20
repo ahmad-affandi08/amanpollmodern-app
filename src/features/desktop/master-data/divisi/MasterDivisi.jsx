@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Plus, Search, Building2 } from 'lucide-react';
+import { Edit2, Trash2, Plus, Search } from 'lucide-react';
 import {
   useMasterDivisi,
   useCreateDivisi,
@@ -28,7 +28,7 @@ export default function MasterDivisi() {
   // Pencarian & pagination ada di state TanStack; `params` (search, page, per_page) dikirim ke server.
   const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP, searchDelay: 500 });
   const modal = useModal();
-  const [formData, setFormData] = useState({ nama_divisi: '' });
+  const [formData, setFormData] = useState({ nama_divisi: '', nama_resmi: '' });
 
   const { askConfirm, dialogProps } = useConfirmAction();
 
@@ -59,12 +59,12 @@ export default function MasterDivisi() {
   };
 
   const openAddModal = () => {
-    setFormData({ nama_divisi: '' });
+    setFormData({ nama_divisi: '', nama_resmi: '' });
     modal.open();
   };
 
   const openEditModal = (item) => {
-    setFormData({ nama_divisi: item.nama_divisi });
+    setFormData({ nama_divisi: item.nama_divisi, nama_resmi: item.nama_resmi || '' });
     modal.open(item);
   };
 
@@ -141,13 +141,14 @@ export default function MasterDivisi() {
         <DataTable
           table={table}
           isLoading={isLoading}
-          empty={{ icon: Building2, title: 'Belum ada data divisi' }}
+          empty={{ title: 'Belum ada data divisi' }}
         />
       </div>
 
       <Modal isOpen={modal.isOpen} onClose={modal.close} title={modal.data ? "Edit Divisi" : "Tambah Divisi Baru"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label="Nama Divisi" placeholder="Contoh: IT, Keuangan, IGD" value={formData.nama_divisi} onChange={(e) => setFormData({ ...formData, nama_divisi: e.target.value })} required />
+          <Input label="Nama Resmi Unit Kerja (opsional)" placeholder="Contoh: Instalasi Pemeliharaan Sarana Rumah Sakit" maxLength={255} value={formData.nama_resmi} onChange={(e) => setFormData({ ...formData, nama_resmi: e.target.value })} />
           <div className="flex justify-end pt-3">
             <Button type="submit" loading={createMutation.isPending || updateMutation.isPending} className="w-full">
               {modal.data ? 'Simpan Perubahan' : 'Simpan Divisi'}

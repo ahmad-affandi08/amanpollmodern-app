@@ -372,7 +372,7 @@ export default function RegisterRisiko() {
               table={table}
               isLoading={isLoading}
               skeletonRows={8}
-              empty={{ title: 'Tidak ada alat yang cocok dengan filter.' }}
+              empty={{ variant: 'cari', title: 'Tidak ada alat yang cocok dengan filter.' }}
             />
           </>
         )}

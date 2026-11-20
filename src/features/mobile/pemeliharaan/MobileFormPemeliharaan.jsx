@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { usePageTitle, useToast, useFormPemeliharaan, useSubmitPemeliharaan } from '../../../hooks';
 import { formatDateTime, rupiah } from '../../../utils/format';
+import { fotoKeDataUrl } from '../../../utils/foto';
+import ImageUploadPreview from '../aduan/components/ImageUploadPreview';
 import SignaturePad from '../../../components/SignaturePad';
 import StatusBadge from '../../../components/StatusBadge';
 import KondisiBadge from '../../../components/KondisiBadge';
@@ -81,6 +83,8 @@ function FormBody({ id, data }) {
     kondisi_alat: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  // Foto bukti (opsional): berkas mentah; diperkecil saat dikirim.
+  const [foto, setFoto] = useState({ sebelum: null, sesudah: null });
 
   const getAnswer = (category, checklistId) =>
     formData[category]?.find(item => item.id === checklistId)?.hasil || '';
@@ -120,8 +124,20 @@ function FormBody({ id, data }) {
       return;
     }
 
+    let fotoData;
+    try {
+      fotoData = {
+        foto_sebelum: foto.sebelum ? await fotoKeDataUrl(foto.sebelum) : undefined,
+        foto_sesudah: foto.sesudah ? await fotoKeDataUrl(foto.sesudah) : undefined,
+      };
+    } catch {
+      showToast('Foto tidak dapat diproses. Pilih foto lain atau hapus foto.', 'error');
+      return;
+    }
+
     const submitData = {
       ...formData,
+      ...fotoData,
       safety_check: answeredOnly(formData.safety_check),
       maintenance: answeredOnly(formData.maintenance),
       p_fungsi: answeredOnly(formData.p_fungsi),
@@ -340,6 +356,19 @@ function FormBody({ id, data }) {
                   ? 'Masukkan total biaya asli pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada biaya.'
                   : 'Masukkan perkiraan biaya pemeliharaan, termasuk biaya vendor bila dikerjakan pihak ketiga. Isi 0 jika tidak ada estimasi.'}
               </p>
+            </div>
+          </div>
+        </DetailSection>
+
+        <DetailSection judul="Foto pemeliharaan (opsional)">
+          <div className="space-y-5">
+            <div>
+              <label className={LABEL}>Foto sebelum</label>
+              <ImageUploadPreview onChange={(file) => setFoto((prev) => ({ ...prev, sebelum: file }))} />
+            </div>
+            <div>
+              <label className={LABEL}>Foto sesudah</label>
+              <ImageUploadPreview onChange={(file) => setFoto((prev) => ({ ...prev, sesudah: file }))} />
             </div>
           </div>
         </DetailSection>

@@ -8,6 +8,7 @@ import { toInputDate } from '../../../utils/format';
 import InventarisFilters from './components/InventarisFilters';
 import InventarisCard from './components/InventarisCard';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 const PER_PAGE = 10;
 
@@ -186,18 +187,16 @@ export default function MobileInventaris() {
             </>
           ) : (
 
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-[20px] p-8 text-center border border-gray-200">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <Package size={40} className="text-gray-400" />
-              </div>
-              <h3 className="text-lg font-bold text-text-dark mb-2">Tidak Ada Data</h3>
-              <p className="text-sm text-gray-500">
-                {search
+            <div className="bg-white rounded-[20px] border border-gray-100">
+              <EmptyState
+                variant={search || hasActiveFilter ? 'cari' : 'kosong'}
+                title="Tidak Ada Data"
+                description={search
                   ? `Tidak ada hasil untuk "${search}"`
                   : hasActiveFilter
                     ? 'Tidak ada inventaris yang sesuai dengan filter'
                     : 'Belum ada data inventaris'}
-              </p>
+              />
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Download, Layers, Edit2, Trash2, Eye, Archive, ChevronDown } from 'lucide-react';
+import { Plus, Search, Download, Edit2, Trash2, Eye, Archive, ChevronDown } from 'lucide-react';
 import PrintLabelDropdown from '../../../components/PrintLabelDropdown';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusAsetModal from '../../../components/StatusAsetModal';
@@ -23,12 +23,14 @@ import FilterBar from '../../../components/FilterBar';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ColumnToggle from '../../../components/ColumnToggle';
 import useColumnToggle from '../../../hooks/utils/useColumnToggle';
+import useExpandedRow from '../../../hooks/utils/useExpandedRow';
 import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import noImage from '../../../assets/img/no_image.png';
 import InventarisRowDetail from './components/InventarisRowDetail';
+import StackedCell from '../../../components/StackedCell';
 import InventarisApi from '../../../api/InventarisApi';
 import { ROLES, isRole, canManageInventaris } from '../../auth/constants';
 import { rupiah } from '../../../utils/format';
@@ -60,17 +62,6 @@ const FILTER_MAP = {
   tahun_pengadaan: ['tahun_awal', 'tahun_akhir'],
 };
 
-/** Sel dua baris: teks utama + keterangan kecil di bawahnya (dipotong bila terlalu panjang). */
-function Stacked({ main, sub, right = false, subClassName = '' }) {
-  return (
-    <div className={`max-w-[15rem] ${right ? 'ml-auto' : ''}`}>
-      <p className="truncate text-[13px] font-semibold leading-tight text-text-dark" title={main}>{main}</p>
-      {/* &nbsp; menjaga tinggi baris sama saat tidak ada keterangan */}
-      <p className={`mt-0.5 truncate text-[11px] leading-tight text-text-gray ${subClassName}`} title={sub || undefined}>{sub || '\u00A0'}</p>
-    </div>
-  );
-}
-
 export default function InventarisList() {
   usePageTitle('Daftar Inventaris');
   const navigate = useNavigate();
@@ -100,21 +91,7 @@ export default function InventarisList() {
 
 
   const [imagePreview, setImagePreview] = useState({ isOpen: false, imageUrl: '', altText: '' });
-  // Hanya satu baris yang terbuka pada satu waktu agar tabel tidak memanjang.
-  const [expandedId, setExpandedId] = useState(null);
-  const [closing, setClosing] = useState(false);
-  const closeTimer = useRef(null);
-  // Menutup: jalankan animasi dulu, baru lepas panelnya (durasi sama dengan transisi di InventarisRowDetail).
-  const toggleRow = (id) => {
-    clearTimeout(closeTimer.current);
-    if (expandedId === id && !closing) {
-      setClosing(true);
-      closeTimer.current = setTimeout(() => { setExpandedId(null); setClosing(false); }, 300);
-    } else {
-      setClosing(false);
-      setExpandedId(id);
-    }
-  };
+  const { expandedId, closing, toggleRow } = useExpandedRow();
 
 
   const { data: inventarisData, isLoading } = useInventaris(params);
@@ -238,7 +215,7 @@ export default function InventarisList() {
       </div>
     ) },
     { id: 'alat', header: 'Alat', cell: ({ row: { original: item } }) => (
-      <Stacked
+      <StackedCell
         main={item.nama_alat?.nama_nama_alat || '-'}
         sub={item.no_inventaris}
         subClassName="font-mono"
@@ -246,26 +223,26 @@ export default function InventarisList() {
     ) },
     // Di bawah 1400px kolom ini disembunyikan supaya tabel tidak perlu digeser; merk & model tetap ada di panel detail.
     { id: 'merk_model', header: 'Merk / Model', meta: { headerClassName: 'hidden min-[1400px]:table-cell', cellClassName: 'hidden min-[1400px]:table-cell' }, cell: ({ row: { original: item } }) => (
-      <Stacked main={item.merk || '-'} sub={item.model} />
+      <StackedCell main={item.merk || '-'} sub={item.model} />
     ) },
     { id: 'lokasi', header: 'Lokasi', cell: ({ row: { original: item } }) => {
       const ruangan = item.ruangan?.nama_ruangan;
       const letak = item.ruangan_sekarang?.nama_ruangan;
       // Letak saat ini hanya ditulis bila berbeda dari ruangan asal; selengkapnya ada di panel detail.
       const sub = [item.gedung && `Gedung ${item.gedung}`, letak && letak !== ruangan && letak].filter(Boolean).join(' · ');
-      return <Stacked main={ruangan || '-'} sub={sub} />;
+      return <StackedCell main={ruangan || '-'} sub={sub} />;
     } },
     { id: 'kategori_alat', header: 'Kategori', cell: ({ row: { original: item } }) => {
       const alkes = item.alat_kesehatan === 1 || item.alat_kesehatan === true;
       return (
-        <Stacked
+        <StackedCell
           main={item.nama_alat?.kategori_alat?.nama_kategori || '-'}
           sub={alkes ? (item.kategori_alkes ? `Alkes · ${item.kategori_alkes}` : 'Alkes') : ''}
         />
       );
     } },
     { id: 'harga', header: 'Harga', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
-      <Stacked
+      <StackedCell
         right
         main={parseFloat(item.harga) > 0 ? rupiah(item.harga) : '-'}
         sub={item.tahun_pengadaan ? `Pengadaan ${item.tahun_pengadaan}` : ''}
@@ -516,7 +493,7 @@ export default function InventarisList() {
           skeletonRows={10}
           tableClassName="[&_th]:!px-3 [&_td]:!px-3"
           containerClassName="@container"
-          empty={{ icon: Layers, title: 'Tidak ada data inventaris', description: 'Coba ubah filter pencarian Anda' }}
+          empty={{ variant: 'cari', title: 'Tidak ada data inventaris', description: 'Coba ubah filter pencarian Anda' }}
           rowClassName={(item) => (expandedId === item.id ? '!border-b-0' : '')}
           renderSubRow={(item, colCount) => (expandedId === item.id ? (
             <tr key={`detail-${item.id}`}>

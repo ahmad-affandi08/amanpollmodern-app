@@ -8,6 +8,7 @@ import IconInventaris from '../../../../assets/img/icon-inventaris.png';
 import IconAlatBaru from '../../../../assets/img/icon-tambah-alat-baru.png';
 import IconPemeliharaan from '../../../../assets/img/icon-pemeliharaan.png';
 import IconRiwayatPemeliharaan from '../../../../assets/img/icon-riwayat-pemeliharaan.png';
+import IconRealisasiSki from '../../../../assets/img/icon-realisasi-ski.svg';
 
 export default function MenuGrid() {
   const navigate = useNavigate();
@@ -74,6 +75,14 @@ export default function MenuGrid() {
       path: '/mobile/pemeliharaan/history',
       gradient: 'from-emerald-50/80 via-emerald-100/50 to-emerald-50/80',
       iconGradient: 'from-emerald-50 via-emerald-100 to-emerald-300',
+    },
+    {
+      icon: IconRealisasiSki,
+      label: 'Realisasi SKI',
+      path: '/mobile/realisasi-ski',
+      gradient: 'from-amber-50/80 via-amber-100/50 to-amber-50/80',
+      iconGradient: 'from-amber-50 via-amber-100 to-amber-300',
+      wide: true,
     }
   ];
 
@@ -86,7 +95,7 @@ export default function MenuGrid() {
         <button
           key={item.path}
           onClick={() => navigate(item.path)}
-          className={`bg-gradient-to-br ${item.gradient} cursor-pointer rounded-[20px] p-6 shadow-lg shadow-gray-200/50 border border-white/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group`}
+          className={`${item.wide ? 'col-span-2' : ''} bg-gradient-to-br ${item.gradient} cursor-pointer rounded-[20px] p-6 shadow-lg shadow-gray-200/50 border border-white/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group`}
           style={{ animationDelay: `${index * 50}ms` }}
         >
           <div className="flex flex-col items-center space-y-3">

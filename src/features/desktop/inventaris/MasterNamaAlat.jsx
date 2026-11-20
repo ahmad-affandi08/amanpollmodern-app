@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, Tag, Users, ClipboardList } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Tag, Users, ClipboardList } from 'lucide-react';
 import {
   useMasterNamaAlat,
   useCreateNamaAlat,
@@ -233,7 +233,7 @@ export default function MasterNamaAlat() {
         <DataTable
           table={table}
           isLoading={isLoading}
-          empty={{ icon: Package, title: 'Belum ada data', description: 'Silakan tambahkan nama alat baru' }}
+          empty={{ title: 'Belum ada data', description: 'Silakan tambahkan nama alat baru' }}
         />
       </div>
 

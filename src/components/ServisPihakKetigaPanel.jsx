@@ -11,6 +11,7 @@ import {
   useHapusServisPihakKetiga,
 } from '../hooks/queries/useServisPihakKetigaQueries';
 import { formatDate } from '../utils/format';
+import EmptyState from './EmptyState';
 import {
   aturanTambahServis,
   bolehHapusServis,
@@ -92,12 +93,10 @@ export default function ServisPihakKetigaPanel({ jenis, indukId, status, tanpaJu
       {isError && <p className="text-xs text-red-500">Gagal memuat laporan pihak ketiga.</p>}
 
       {!isLoading && !isError && laporan.length === 0 && (
-        <div className="rounded-2xl p-6 border border-dashed border-gray-200 text-center">
-          <Wrench className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-500 font-medium text-xs">
-            {bacaSaja ? 'Alat ini belum memiliki laporan servis pihak ketiga' : 'Belum ada laporan servis dari pihak ketiga'}
-          </p>
-        </div>
+        <EmptyState
+          compact
+          title={bacaSaja ? 'Alat ini belum memiliki laporan servis pihak ketiga' : 'Belum ada laporan servis dari pihak ketiga'}
+        />
       )}
 
       {laporan.length > 0 && (

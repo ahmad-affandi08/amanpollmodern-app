@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Trash2, Edit2, Calendar } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2 } from 'lucide-react';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusBadge from '../../../components/StatusBadge';
 import ServisBadge from '../../../components/ServisBadge';
@@ -276,7 +276,7 @@ export default function PemeliharaanList() {
           table={table}
           isLoading={isLoading}
           skeletonRows={10}
-          empty={{ icon: Calendar, title: 'Tidak ada data pemeliharaan', description: 'Belum ada jadwal pemeliharaan' }}
+          empty={{ title: 'Tidak ada data pemeliharaan', description: 'Belum ada jadwal pemeliharaan' }}
         />
       </div>
 

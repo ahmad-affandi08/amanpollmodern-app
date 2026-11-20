@@ -1,6 +1,6 @@
 import React from 'react';
 import { useActivities } from '../../../hooks/queries/useDashboardQueries';
-import { Calendar, MapPin, Package } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
 import { usePageTitle } from '../../../hooks';
 import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
 import FilterBar from '../../../components/FilterBar';
@@ -9,6 +9,7 @@ import TablePagination from '../../../components/TablePagination';
 import StatusBadge from '../../../components/StatusBadge';
 import { formatDateTime } from '../../../utils/format';
 import { getActivityIcon, getActivityColor, getActivityLabel } from './activityMeta';
+import EmptyState from '../../../components/EmptyState';
 
 const ACTIVITY_FILTERS = [
   { value: 'all', label: 'Semua' },
@@ -117,9 +118,8 @@ const ActivitiesPage = () => {
           ))}
 
           {activities.length === 0 && (
-            <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Tidak ada aktivitas ditemukan</p>
+            <div className="bg-white rounded-xl shadow-sm">
+              <EmptyState title="Tidak ada aktivitas ditemukan" />
             </div>
           )}
         </div>

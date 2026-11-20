@@ -1,9 +1,9 @@
 import React from 'react';
 import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
-import { Inbox, AlertCircle } from 'lucide-react';
 import TableSkeleton from './TableSkeleton';
 import Pagination from './Pagination';
 import TablePagination from './TablePagination';
+import EmptyState from './EmptyState';
 
 const ALIGN = { right: 'text-right', center: 'text-center' };
 
@@ -34,7 +34,6 @@ function DataTableView({
 }) {
   const colCount = Math.max(1, table.getVisibleLeafColumns().length);
   const rows = table.getRowModel().rows;
-  const EmptyIcon = empty?.icon ?? Inbox;
 
   // Pagination: dari prop `pagination` (usePagination, mode lama) atau dari state TanStack (mode server/klien).
   const tablePaginated = !pagination && table.options.meta?.paginated;
@@ -66,23 +65,29 @@ function DataTableView({
               <TableSkeleton rows={skeletonRows} columns={colCount} />
             ) : error ? (
               <tr>
-                <td colSpan={colCount} className="py-10 text-center">
-                  <AlertCircle size={28} className="mx-auto text-red-400 mb-2" />
-                  <p className="font-bold text-red-500 text-sm">{error.title ?? 'Gagal memuat data'}</p>
-                  {error.description && <p className="text-xs text-gray-400 mt-1">{error.description}</p>}
-                  {error.onRetry && (
-                    <button type="button" onClick={error.onRetry} className="mt-2 text-brand-primary font-semibold hover:underline">
-                      Coba lagi
-                    </button>
-                  )}
+                <td colSpan={colCount}>
+                  <EmptyState
+                    compact
+                    variant="galat"
+                    title={error.title ?? 'Gagal memuat data'}
+                    description={error.description}
+                    action={error.onRetry && (
+                      <button type="button" onClick={error.onRetry} className="text-brand-primary text-xs font-semibold hover:underline">
+                        Coba lagi
+                      </button>
+                    )}
+                  />
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={colCount} className="py-10 text-center">
-                  <EmptyIcon size={28} className="mx-auto text-gray-400 mb-2" />
-                  <p className="font-bold text-gray-600 text-sm">{empty?.title ?? 'Tidak ada data'}</p>
-                  {empty?.description && <p className="text-xs text-gray-400 mt-1">{empty.description}</p>}
+                <td colSpan={colCount}>
+                  <EmptyState
+                    compact
+                    variant={empty?.variant ?? 'kosong'}
+                    title={empty?.title ?? 'Tidak ada data'}
+                    description={empty?.description}
+                  />
                 </td>
               </tr>
             ) : (
@@ -166,7 +171,7 @@ function SelfContainedTable({ columns, data, columnVisibility, rowOffset = 0, ge
  * @param {Function} getRowId         mode 2: (row) => string, default indeks baris
  * @param {boolean}  isLoading        tampilkan skeleton sebanyak kolom yang terlihat
  * @param {number}   skeletonRows
- * @param {{icon?, title?, description?}} empty  tampilan data kosong
+ * @param {{variant?: 'kosong'|'cari', title?, description?}} empty  tampilan data kosong (cari = hasil filter/pencarian kosong)
  * @param {{title?, description?, onRetry?}} error  tampilan gagal memuat (isi tabel diganti, header tetap); isi bila query isError
  * @param {Function} rowClassName     (row) => string tambahan untuk <tr>
  * @param {Function} onRowClick       (row) => void, baris jadi clickable

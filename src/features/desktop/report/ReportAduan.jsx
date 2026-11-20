@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, Eye, Trash2, FileText, AlertCircle, Edit, Wrench } from 'lucide-react';
+import { Search, Download, Eye, Trash2, AlertCircle, Edit, Wrench, ChevronDown } from 'lucide-react';
 import {
   useReportAduan,
   useDeleteAduan,
@@ -19,17 +19,17 @@ import DateRangePicker from '../../../components/DateRangePicker';
 import DataTable from '../../../components/DataTable';
 import FilterBar from '../../../components/FilterBar';
 import { useTableState, useDataTable, getTableFilters } from '../../../hooks/utils/useServerTable';
-import { indexColumn } from '../../../utils/tableColumns';
+import useExpandedRow from '../../../hooks/utils/useExpandedRow';
 import ConfirmDialog from '../../../components/Alert/Alert';
 import ImagePreviewModal from '../../../components/ImagePreviewModal';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
-import noImage from '../../../assets/img/no_image.png';
 import KondisiBadge from '../../../components/KondisiBadge';
 import StatusBadge from '../../../components/StatusBadge';
 import ServisBadge from '../../../components/ServisBadge';
+import ProgresAduan from '../../../components/ProgresAduan';
+import StackedCell from '../../../components/StackedCell';
+import ReportAduanRowDetail from './ReportAduanRowDetail';
 import { apiUrl } from '../../../config';
-import { formatDateTime, formatDateShort, formatTime } from '../../../utils/format';
+import { formatDateTime } from '../../../utils/format';
 import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
 import useConfirmAction from '../master-data/useConfirmAction';
 import useTeknisiOptions from './useTeknisiOptions';
@@ -45,6 +45,13 @@ const FILTER_MAP = {
   periode: ['start_date', 'end_date'],
 };
 
+const adaKondisi = (item) => !!item.kondisi_alat && item.kondisi_alat !== 'Belum Ditentukan';
+
+/** Kondisi akhir alat; strip bila belum ditentukan. */
+function Kondisi({ item }) {
+  return adaKondisi(item) ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>;
+}
+
 export default function ReportAduan() {
   usePageTitle('Laporan Aduan');
   const navigate = useNavigate();
@@ -57,6 +64,8 @@ export default function ReportAduan() {
   const { askConfirm, dialogProps } = useConfirmAction();
   const [selectedImage, setSelectedImage] = useState(null);
   const imagePreviewModal = useModal();
+  const { expandedId, closing, toggleRow } = useExpandedRow();
+  const previewFoto = (item) => { setSelectedImage(item.img_keluhan); imagePreviewModal.open(); };
 
   const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
   const { filters, params } = tableState;
@@ -107,71 +116,55 @@ export default function ReportAduan() {
   };
 
   const columns = [
-    indexColumn(),
-    { id: 'no_aduan', header: 'No. Aduan', cell: ({ row }) => (
-      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-brand-primary-50 text-brand-primary">
-        {row.original.no_aduan || '-'}
-      </span>
-    ) },
-    { id: 'tanggal_aduan', header: 'Tanggal Aduan', cell: ({ row }) => formatDateTime(row.original.create_date), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'divisi', header: 'Divisi', cell: ({ row }) => row.original.divisi_nama || '-', meta: { cellClassName: 'text-gray-600' } },
-    { id: 'ruangan', header: 'Nama Ruangan', cell: ({ row }) => row.original.ruangan_nama || '-', meta: { cellClassName: 'text-gray-600 font-medium' } },
-    { id: 'gedung', header: 'Gedung', cell: ({ row }) => row.original.gedung || '-', meta: { cellClassName: 'text-gray-600' } },
-    { id: 'no_inventaris', header: 'No Inventaris', cell: ({ row }) => row.original.no_inventaris || '-', meta: { cellClassName: 'text-gray-600 font-mono text-[10px]' } },
-    { id: 'alat', header: 'Nama Alat', cell: ({ row }) => row.original.nama_alat_nama || '-', meta: { cellClassName: 'text-text-dark font-medium' } },
-    { id: 'keluhan', header: 'Keluhan Kerusakan', cell: ({ row: { original: item } }) => (
-      <span title={item.keluhan}>{item.keluhan}</span>
-    ), meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
-    { id: 'foto', header: 'Foto', cell: ({ row: { original: item } }) => (
-      <div className="flex items-center justify-center">
-        {item.img_keluhan ? (
-          <div
-            className="w-16 h-16 rounded-xl overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-brand-primary"
-            style={{ minWidth: '64px', minHeight: '64px', width: '64px', height: '64px' }}
-          >
-            <LazyLoadImage
-              src={item.img_keluhan}
-              alt="Foto Keluhan"
-              effect="blur"
-              className="object-cover"
-              style={{ width: '64px', height: '64px', display: 'block' }}
-              placeholderSrc={noImage}
-              onError={(e) => { e.target.src = noImage; }}
-              onClick={() => {
-                setSelectedImage(item.img_keluhan);
-                imagePreviewModal.open();
-              }}
-            />
-          </div>
-        ) : (
-          <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-200" style={{ minWidth: '64px', minHeight: '64px' }}>
-            <img
-              src={noImage}
-              alt="No Image"
-              className="w-full h-full object-cover opacity-50"
-            />
-          </div>
-        )}
+    { id: 'expand', header: '', meta: { cellClassName: '!pr-0 w-10' }, cell: ({ row: { original: item } }) => {
+      const open = expandedId === item.id_aduan && !closing;
+      return (
+        <button
+          type="button"
+          onClick={() => toggleRow(item.id_aduan)}
+          aria-expanded={open}
+          aria-label={open ? 'Tutup detail' : 'Buka detail'}
+          className={`flex h-7 w-7 items-center justify-center rounded-lg border transition-colors ${open ? 'border-brand-primary/30 bg-brand-primary-soft text-brand-primary' : 'border-gray-200 text-text-gray hover:bg-gray-50'}`}
+        >
+          <ChevronDown size={14} className={`transition-transform duration-300 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`} />
+        </button>
+      );
+    } },
+    { id: 'aduan', header: 'Aduan', cell: ({ row: { original: item } }) => (
+      <div>
+        <span className="inline-block rounded-md bg-brand-primary-50 px-2 py-0.5 text-[11px] font-bold text-brand-primary">{item.no_aduan || '-'}</span>
+        <p className="mt-1 text-[11px] leading-tight text-text-gray">{formatDateTime(item.create_date)}</p>
       </div>
     ) },
-    { id: 'pelapor', header: 'Nama Pelapor', cell: ({ row }) => row.original.nama_pengadu || '-', meta: { cellClassName: 'text-gray-600' } },
-    { id: 'tanggal_pemeriksaan', header: 'Tanggal Pemeriksaan', cell: ({ row: { original: item } }) => (
-      item.tanggal_pemeriksaan ? formatDateShort(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
-    ), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'jam_pemeriksaan', header: 'Jam Pemeriksaan', cell: ({ row: { original: item } }) => (
-      item.tanggal_pemeriksaan ? formatTime(item.tanggal_pemeriksaan) : 'Belum Ditentukan'
-    ), meta: { cellClassName: 'text-gray-600' } },
-    { id: 'teknisi', header: 'Teknisi', cell: ({ row }) => row.original.teknisi_nama || 'Belum Ditentukan', meta: { cellClassName: 'text-brand-primary font-medium' } },
-    { id: 'tanggal_penugasan', header: 'Waktu Penugasan', cell: ({ row }) => (row.original.tanggal_penugasan ? formatDateTime(row.original.tanggal_penugasan) : '-'), meta: { cellClassName: 'text-gray-600 whitespace-nowrap' } },
-    { id: 'tindakan_teknisi', header: 'Tindakan Teknisi', cell: ({ row }) => row.original.tindakan_teknisi || 'Belum Ditentukan', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
-    { id: 'rekomendasi', header: 'Rekomendasi', cell: ({ row }) => row.original.rekomendasi || '-', meta: { cellClassName: 'text-gray-600 max-w-[200px] truncate' } },
-    { id: 'kondisi_alat', header: 'Kondisi Alat', cell: ({ row: { original: item } }) => (
-      item.kondisi_alat ? <KondisiBadge kondisi={item.kondisi_alat} size="sm" /> : <span className="text-gray-400 text-xs">-</span>
+    { id: 'alat', header: 'Alat & Lokasi', cell: ({ row: { original: item } }) => (
+      <div className="max-w-[13rem]">
+        <p className="truncate text-[13px] font-semibold leading-tight text-text-dark" title={item.nama_alat_nama}>
+          {item.nama_alat_nama || '-'}
+          <span className="ml-1.5 font-mono text-[10px] font-normal text-text-gray">{item.no_inventaris}</span>
+        </p>
+        <p className="mt-0.5 truncate text-[11px] leading-tight text-text-gray">
+          {[item.ruangan_nama, item.divisi_nama].filter((v) => v && v !== '-').join(' · ') || '\u00A0'}
+        </p>
+      </div>
     ) },
-    { id: 'status', header: 'Status', cell: ({ row }) => (
+    { id: 'keluhan', header: 'Keluhan', cell: ({ row: { original: item } }) => (
+      <p className="line-clamp-2 min-w-32 max-w-60 whitespace-normal text-xs text-gray-600" title={item.keluhan}>{item.keluhan}</p>
+    ) },
+    { id: 'progres', header: 'Progres', cell: ({ row }) => <ProgresAduan aduan={row.original} /> },
+    { id: 'teknisi', header: 'Teknisi', cell: ({ row: { original: item } }) => (
+      <StackedCell
+        main={item.teknisi_nama || 'Belum ada'}
+        mainClassName={item.teknisi_nama ? '!text-brand-primary' : '!font-normal !italic !text-gray-400'}
+        sub={item.nama_pengadu}
+      />
+    ) },
+    // Di area tabel yang sempit kolom ini disembunyikan dan kondisinya pindah ke bawah status, supaya tabel tidak perlu digeser.
+    { id: 'kondisi_alat', header: 'Kondisi', meta: { headerClassName: 'hidden @[1200px]:table-cell', cellClassName: 'hidden @[1200px]:table-cell' }, cell: ({ row: { original: item } }) => <Kondisi item={item} /> },
+    { id: 'status', header: 'Status', cell: ({ row: { original: item } }) => (
       <div className="flex flex-col items-start gap-1">
-        <StatusBadge status={row.original.status_aduan} size="sm" />
-        <ServisBadge jumlah={row.original.jumlah_servis} />
+        <StatusBadge status={item.status_aduan} size="sm" />
+        <ServisBadge jumlah={item.jumlah_servis} />
+        {adaKondisi(item) && <span className="@[1200px]:hidden"><Kondisi item={item} /></span>}
       </div>
     ) },
     { id: 'actions', header: 'Aksi', meta: { align: 'right' }, cell: ({ row: { original: item } }) => (
@@ -338,7 +331,17 @@ export default function ReportAduan() {
           table={table}
           isLoading={isLoading}
           skeletonRows={10}
-          empty={{ icon: FileText, title: 'Tidak ada data laporan', description: 'Silakan sesuaikan filter pencarian' }}
+          tableClassName="[&_th]:!px-3 [&_td]:!px-3"
+          containerClassName="@container"
+          empty={{ variant: 'cari', title: 'Tidak ada data laporan', description: 'Silakan sesuaikan filter pencarian' }}
+          rowClassName={(item) => (expandedId === item.id_aduan ? '!border-b-0' : '')}
+          renderSubRow={(item, colCount) => (expandedId === item.id_aduan ? (
+            <tr key={`detail-${item.id_aduan}`}>
+              <td colSpan={colCount} className="px-4 !py-0">
+                <ReportAduanRowDetail item={item} closing={closing} onPreviewImage={previewFoto} />
+              </td>
+            </tr>
+          ) : null)}
         />
       </div>
 

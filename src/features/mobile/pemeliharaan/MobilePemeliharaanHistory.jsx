@@ -8,6 +8,7 @@ import noImage from '../../../assets/img/no_image.png';
 import StatusBadge from '../../../components/StatusBadge';
 import DateRangePicker from '../../../components/DateRangePicker';
 import useInfiniteScroll from '../useInfiniteScroll';
+import EmptyState from '../../../components/EmptyState';
 
 export default function MobilePemeliharaanHistory() {
   usePageTitle('Riwayat Pemeliharaan');
@@ -139,12 +140,10 @@ export default function MobilePemeliharaanHistory() {
           ))
         ) : pemeliharaanList.length === 0 ? (
 
-          <div className="text-center py-12">
-            <Calendar className="mx-auto text-gray-300 mb-3" size={64} />
-            <p className="text-gray-500 text-sm">
-              {hasActiveFilter ? 'Tidak ada hasil yang sesuai dengan filter' : 'Tidak ada riwayat pemeliharaan'}
-            </p>
-          </div>
+          <EmptyState
+            variant={hasActiveFilter ? 'cari' : 'kosong'}
+            title={hasActiveFilter ? 'Tidak ada hasil yang sesuai dengan filter' : 'Tidak ada riwayat pemeliharaan'}
+          />
         ) : (
           pemeliharaanList.map((item) => (
             <div

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, AlertCircle, Wrench, FileText,
   Wallet, Users, QrCode, LogOut, Menu, X, ChevronDown, ChevronRight,
   User as UserIcon, Layers, Tag, Server, PlusCircle, Settings, Phone,
-  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck, ShieldAlert, Archive
+  Building2, Search, Bell, AlignLeft, Hammer, BarChart2, Activity, Map, DollarSign, ShieldCheck, ShieldAlert, Archive, ClipboardList
 } from 'lucide-react';
 import useAuth from '../hooks/utils/useAuth';
 import { ACCESS, getRoleId } from '../features/auth/constants';
@@ -141,6 +141,20 @@ export default function DashboardLayout({ children }) {
       ].filter(child => hasAccess(child.roles))
     },
     {
+      icon: BarChart2,
+      label: 'Analisis',
+      roles: ACCESS.analisis,
+      children: [
+        { icon: Activity, label: 'Keandalan Alat', path: '/analisis/keandalan' },
+        { icon: UserIcon, label: 'Kinerja Teknisi', path: '/analisis/kinerja' },
+        { icon: Map, label: 'Sebaran Ruangan', path: '/analisis/ruangan' },
+        { icon: DollarSign, label: 'Biaya Pemeliharaan', path: '/analisis/biaya' },
+        { icon: ShieldCheck, label: 'Kepatuhan Kalibrasi', path: '/analisis/kalibrasi' },
+        { icon: ShieldAlert, label: 'Kepatuhan PM per Risiko', path: '/analisis/risiko' },
+        { icon: ClipboardList, label: 'Realisasi SKI', path: '/analisis/realisasi-ski' },
+      ]
+    },
+    {
       icon: Users,
       label: 'Pengguna',
       roles: ACCESS.users,
@@ -159,19 +173,6 @@ export default function DashboardLayout({ children }) {
         { icon: Phone, label: 'Integrasi WhatsApp', path: '/konfigurasi/integrasi' },
         { icon: Settings, label: 'Sistem', path: '/konfigurasi/sistem' },
         { icon: FileText, label: 'Template Notifikasi', path: '/konfigurasi/template-notifikasi' },
-      ]
-    },
-    {
-      icon: BarChart2,
-      label: 'Analisis',
-      roles: ACCESS.analisis,
-      children: [
-        { icon: Activity, label: 'Keandalan Alat', path: '/analisis/keandalan' },
-        { icon: UserIcon, label: 'Kinerja Teknisi', path: '/analisis/kinerja' },
-        { icon: Map, label: 'Sebaran Ruangan', path: '/analisis/ruangan' },
-        { icon: DollarSign, label: 'Biaya Pemeliharaan', path: '/analisis/biaya' },
-        { icon: ShieldCheck, label: 'Kepatuhan Kalibrasi', path: '/analisis/kalibrasi' },
-        { icon: ShieldAlert, label: 'Kepatuhan PM per Risiko', path: '/analisis/risiko' },
       ]
     },
     {

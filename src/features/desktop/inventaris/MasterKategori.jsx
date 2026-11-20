@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Layers } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import {
   useMasterKategori,
   useCreateKategori,
@@ -160,7 +160,7 @@ export default function MasterKategori() {
         <DataTable
           table={table}
           isLoading={isLoading}
-          empty={{ icon: Layers, title: 'Belum ada data kategori', description: 'Silakan tambahkan kategori baru' }}
+          empty={{ title: 'Belum ada data kategori', description: 'Silakan tambahkan kategori baru' }}
         />
       </div>
 

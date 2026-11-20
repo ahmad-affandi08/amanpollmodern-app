@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { refreshAllData } from '../../../../lib/queryClient';
 import ReactDOM from 'react-dom';
-import { X, Plus, CheckCircle } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import KategoriChecklistApi from '../../../../api/KategoriChecklistApi';
 import ChecklistMaintenanceApi from '../../../../api/ChecklistMaintenanceApi';
 import ConfirmDialog from '../../../../components/Alert/Alert';
 import { useToast } from '../../../../hooks';
+import EmptyState from '../../../../components/EmptyState';
 
 // Respons daftar dan respons tambah sama-sama berasal dari ChecklistMaintenanceResource
 // (`kategori_checklist_id`). Nama kolom database ikut dibaca sebagai cadangan.
@@ -167,11 +168,7 @@ export default function ChecklistMaintenanceModal({ isOpen, onClose, toolData })
           ) : (
             <div className="space-y-3">
               {filteredItems.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
-                  <CheckCircle className="mx-auto h-10 w-10 text-gray-300 mb-3" />
-                  <p className="text-gray-500 font-medium">Belum ada item checklist</p>
-                  <p className="text-xs text-gray-400">Tambahkan pertanyaan baru di bawah</p>
-                </div>
+                <EmptyState compact title="Belum ada item checklist" description="Tambahkan pertanyaan baru di bawah" />
               ) : (
                 filteredItems.map(item => (
                   <div key={item.id} className="group flex items-center justify-between p-3 bg-[#F0F9FA] rounded-xl border border-transparent hover:border-brand-primary/20 transition-all">

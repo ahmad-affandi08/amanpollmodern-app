@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft, MapPin, Calendar, Activity, Tag, Info, AlertCircle, Phone, FileText,
-  ChevronLeft, MoreVertical, Share2, ImageIcon, Zap, DollarSign
-} from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Tag, Info, Phone, FileText, ChevronLeft, MoreVertical, Share2, ImageIcon, Zap, DollarSign } from 'lucide-react';
 import { useInventarisDetail, useAuth, usePageTitle } from '../../../hooks';
 import { rupiah, formatDate } from '../../../utils/format';
 import UpdateLocationModal from './components/UpdateLocationModal';
@@ -13,6 +10,7 @@ import KondisiBadge from '../../../components/KondisiBadge';
 import ServisPihakKetigaPanel from '../../../components/ServisPihakKetigaPanel';
 import { canManageKalibrasi } from '../../../utils/kalibrasi';
 import { isNonAktif } from '../../../utils/statusAset';
+import EmptyState from '../../../components/EmptyState';
 
 
 const InfoRow = ({ label, value, icon: Icon, isLink = false }) => (
@@ -79,16 +77,11 @@ export default function MobileInventarisDetail() {
     return (
       <div className="min-h-screen bg-bg-light flex justify-center">
         <div className="w-full max-w-md bg-bg-light min-h-screen flex items-center justify-center p-4 shadow-xl">
-          <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Inventaris tidak ditemukan</p>
-            <button
-              onClick={() => navigate(-1)}
-              className="text-brand-primary font-bold"
-            >
-              Kembali
-            </button>
-          </div>
+          <EmptyState
+            variant="cari"
+            title="Inventaris tidak ditemukan"
+            action={<button onClick={() => navigate(-1)} className="text-brand-primary font-bold">Kembali</button>}
+          />
         </div>
       </div>
     );
@@ -239,9 +232,8 @@ export default function MobileInventarisDetail() {
           {activeTab === 'aduan' && (
             <div className="animate-fade-in space-y-4">
               {(!inventaris.aduan || inventaris.aduan.length === 0) ? (
-                <div className="text-center py-12 bg-white rounded-[24px] shadow-sm border border-gray-100">
-                  <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">Belum ada riwayat aduan</p>
+                <div className="bg-white rounded-[24px] shadow-sm border border-gray-100">
+                  <EmptyState compact title="Belum ada riwayat aduan" />
                 </div>
               ) : (
                 inventaris.aduan.map((aduan) => (
@@ -321,9 +313,8 @@ export default function MobileInventarisDetail() {
           {activeTab === 'pemeliharaan' && (
             <div className="animate-fade-in space-y-4">
               {(!inventaris.pemeliharaan || inventaris.pemeliharaan.length === 0) ? (
-                <div className="text-center py-12 bg-white rounded-[24px] shadow-sm border border-gray-100">
-                  <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">Belum ada riwayat pemeliharaan</p>
+                <div className="bg-white rounded-[24px] shadow-sm border border-gray-100">
+                  <EmptyState compact title="Belum ada riwayat pemeliharaan" />
                 </div>
               ) : (
                 inventaris.pemeliharaan.map((mt) => (

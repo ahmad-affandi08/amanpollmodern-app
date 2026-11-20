@@ -1,24 +1,9 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { rupiah, formatDateShort } from '../../../../utils/format';
+import RowDetailSection from '../../../../components/RowDetailSection';
 
 const EMPTY = '-';
-
-function Section({ title, rows }) {
-  return (
-    <section>
-      <h4 className="mb-1 text-xs font-bold text-brand-primary">{title}</h4>
-      <dl>
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex h-9 items-center justify-between gap-3 border-b border-gray-100 text-xs text-text-dark last:border-b-0">
-            <dt>{label}</dt>
-            <dd className="text-right">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-}
 
 const FileLink = ({ url }) =>
   url ? (
@@ -45,7 +30,7 @@ export default function InventarisRowDetail({ item, closing = false, onPreviewQr
       <div className="pb-4 pl-2 pt-1 lg:pl-11">
       {/* Jumlah kolom mengikuti lebar panel (bukan lebar layar), karena sidebar ikut memakan ruang */}
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <Section
+        <RowDetailSection
           title="Identitas"
           rows={[
             ['Divisi', item.nama_alat?.divisi?.nama_divisi || item.divisi?.nama_divisi || EMPTY],
@@ -56,7 +41,7 @@ export default function InventarisRowDetail({ item, closing = false, onPreviewQr
             ['Tingkat risiko', risiko ? `${risiko}${skor ? ` (${skor})` : ''}` : 'Belum dinilai'],
           ]}
         />
-        <Section
+        <RowDetailSection
           title="Lokasi"
           rows={[
             ['Bagian/Ruangan', item.ruangan?.nama_ruangan || EMPTY],
@@ -64,7 +49,7 @@ export default function InventarisRowDetail({ item, closing = false, onPreviewQr
             ['Gedung', item.gedung || EMPTY],
           ]}
         />
-        <Section
+        <RowDetailSection
           title="Pengadaan"
           rows={[
             ['Tahun', item.tahun_pengadaan || EMPTY],
@@ -73,7 +58,7 @@ export default function InventarisRowDetail({ item, closing = false, onPreviewQr
             ['Interval maintenance', item.interval_maintenance > 0 ? `${item.interval_maintenance}x / tahun` : EMPTY],
           ]}
         />
-        <Section
+        <RowDetailSection
           title="Kalibrasi & Dokumen"
           rows={[
             ['Berlaku hingga', formatDateShort(item.kadaluwarsa)],

@@ -37,6 +37,7 @@ export default function MobileAduanFormTeknisi() {
     tindakan_teknisi: '',
     rekomendasi: '',
     kondisi_alat: '',
+    tingkat_kerusakan: '',
     status_aduan: '',
     biaya: '0',
     inventaris_id: null,
@@ -120,6 +121,8 @@ export default function MobileAduanFormTeknisi() {
     try {
       const inspectionData = {
         ...formData,
+        // Pemeriksaan lanjutan memakai tingkat yang sudah tercatat bila belum diubah; kosong dikirim null.
+        tingkat_kerusakan: formData.tingkat_kerusakan || aduan.tingkat_kerusakan || null,
         ttd_teknisi: ttdTeknisiRef.current.toDataURL(),
         ttd_kepala_ruang: ttdKepalaRuangRef.current.toDataURL(),
       };
@@ -312,6 +315,28 @@ export default function MobileAduanFormTeknisi() {
                 <option value="Rusak Ringan">Rusak Ringan</option>
                 <option value="Rusak Berat">Rusak Berat</option>
               </select>
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor="tingkat_kerusakan">
+                Tingkat kerusakan {formData.status_aduan === 'Selesai' && <span className="text-red-500">*</span>}
+              </label>
+              <select
+                id="tingkat_kerusakan"
+                name="tingkat_kerusakan"
+                value={formData.tingkat_kerusakan || aduan.tingkat_kerusakan || ''}
+                onChange={handleChange}
+                className={FIELD}
+                required={formData.status_aduan === 'Selesai'}
+                aria-describedby="tingkat_kerusakan_hint"
+              >
+                <option value="">Pilih tingkat kerusakan</option>
+                <option value="Ringan">Ringan</option>
+                <option value="Berat">Berat</option>
+              </select>
+              <p id="tingkat_kerusakan_hint" className="mt-1 text-[11px] text-[#808191]">
+                Dipakai untuk rekap realisasi SKI (korektif ringan atau berat). Wajib diisi saat status Selesai.
+              </p>
             </div>
 
             <div>

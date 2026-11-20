@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { SearchX } from 'lucide-react';
+
 import usePageTitle from '../../hooks/utils/usePageTitle';
 import useAuth from '../../hooks/utils/useAuth';
 import { isMobileRole } from '../auth/constants';
+import EmptyStateArt from '../../components/EmptyStateArt';
 
 export default function NotFound() {
   usePageTitle('Halaman Tidak Ditemukan');
@@ -16,7 +17,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-bg-light flex items-center justify-center p-6">
       <div className="bg-white rounded-[24px] shadow-sm p-10 max-w-md w-full text-center">
-        <SearchX className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <EmptyStateArt variant="cari" className="w-36 h-36 mx-auto mb-2" />
         <h1 className="text-2xl font-bold text-text-dark mb-2">Halaman Tidak Ditemukan</h1>
         <p className="text-sm text-gray-500 mb-6">
           Alamat yang Anda buka tidak tersedia atau sudah dipindahkan.

@@ -5,6 +5,8 @@ const ada = (v) => (v && v !== BELUM ? v : null);
 
 /** Bagian teks (label + isi) yang terisi saja. */
 const bagian = (...pasangan) => pasangan.filter(([, teks]) => teks).map(([label, teks]) => ({ label, teks }));
+/** Foto bukti (sebelum/sesudah) yang ada saja. */
+const foto = (sebelum, sesudah) => [['Foto sebelum', sebelum], ['Foto sesudah', sesudah]].filter(([, src]) => src).map(([label, src]) => ({ label, src }));
 /** Tanda tangan yang ada saja. */
 const ttd = (...daftar) => daftar.filter(([, , gambar]) => gambar).map(([label, nama, gambar]) => ({ label, nama, gambar }));
 
@@ -71,6 +73,7 @@ export const susunRiwayatPemeliharaan = (p) => {
     tanggal: h.tanggal_pemeriksaan ? formatDate(h.tanggal_pemeriksaan) : null,
     bagian: bagian(['Keterangan', h.keterangan_pemeliharaan], ['Rekomendasi', h.rekomendasi]),
     kondisi: ada(h.kondisi_alat),
+    foto: foto(h.foto_sebelum, h.foto_sesudah),
     ttd: ttd(['TTD teknisi', p.teknisi_nama, h.ttd_teknisi], ['TTD kepala ruangan', null, h.ttd_kepala_ruang]),
   }));
 
@@ -82,6 +85,7 @@ export const susunRiwayatPemeliharaan = (p) => {
       tanggal: p.tanggal_pemeriksaan ? formatDate(p.tanggal_pemeriksaan) : null,
       bagian: bagian(['Keterangan', p.keterangan_pemeliharaan], ['Rekomendasi', p.rekomendasi]),
       kondisi: ada(p.kondisi_alat),
+      foto: foto(p.foto_sebelum, p.foto_sesudah),
       ttd: ttd(['TTD teknisi', p.teknisi_nama, p.ttd_teknisi], ['TTD kepala ruangan', p.nama_kepala_ruangan, p.ttd_kepala_ruang]),
     });
   }
