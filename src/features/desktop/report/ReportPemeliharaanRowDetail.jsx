@@ -8,9 +8,12 @@ const teks = (value) => (value && value !== '-' ? value : EMPTY);
 
 /**
  * Isi baris laporan pemeliharaan yang dibuka: hasil pemeriksaan, rekomendasi, dan kolom yang tidak muat di tabel
- * ringkas (merk, gedung, biaya, tanda tangan). Bentuk dan animasi sama dengan daftar inventaris.
+ * ringkas (merk, gedung, biaya, tanda tangan), serta foto sebelum/sesudah bila ada.
+ * Bentuk dan animasi sama dengan daftar inventaris.
  */
-export default function ReportPemeliharaanRowDetail({ item, closing = false }) {
+export default function ReportPemeliharaanRowDetail({ item, closing = false, onPreviewImage }) {
+  const foto = [['Sebelum', item.foto_sebelum], ['Sesudah', item.foto_sesudah]].filter(([, src]) => src);
+
   return (
     <div className={`@container sticky left-4 grid w-[calc(100cqw-2rem)] whitespace-normal animate-row-expand transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${closing ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
       <div className="min-h-0 overflow-hidden">
@@ -23,6 +26,26 @@ export default function ReportPemeliharaanRowDetail({ item, closing = false }) {
                   <p className="text-xs leading-relaxed text-text-dark">{teks(isi)}</p>
                 </section>
               ))}
+              {foto.length > 0 && (
+                <section>
+                  <h4 className="mb-1 text-xs font-bold text-brand-primary">Foto pemeliharaan</h4>
+                  <div className="flex gap-3">
+                    {foto.map(([label, src]) => (
+                      <div key={label}>
+                        <button
+                          type="button"
+                          onClick={() => onPreviewImage?.(src, `Foto ${label.toLowerCase()} - ${item.no_pemeliharaan || ''}`)}
+                          aria-label={`Perbesar foto ${label.toLowerCase()}`}
+                          className="block h-20 w-28 cursor-zoom-in overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+                        >
+                          <img src={src} alt={`Foto ${label.toLowerCase()}`} loading="lazy" className="h-full w-full object-cover" />
+                        </button>
+                        <p className="mt-1 text-[11px] text-text-gray">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             <RowDetailSection

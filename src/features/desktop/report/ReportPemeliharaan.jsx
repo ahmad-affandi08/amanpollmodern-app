@@ -26,6 +26,7 @@ import ServisBadge from '../../../components/ServisBadge';
 import KetepatanJadwal from '../../../components/KetepatanJadwal';
 import StackedCell from '../../../components/StackedCell';
 import ReportPemeliharaanRowDetail from './ReportPemeliharaanRowDetail';
+import ImagePreviewModal from '../../../components/ImagePreviewModal';
 import { apiUrl } from '../../../config';
 import { ROLES, isRole, isReadOnlyRole } from '../../auth/constants';
 import useConfirmAction from '../master-data/useConfirmAction';
@@ -54,6 +55,7 @@ export default function ReportPemeliharaan() {
   const { askConfirm, dialogProps } = useConfirmAction();
 
   const { expandedId, closing, toggleRow } = useExpandedRow();
+  const [fotoPratinjau, setFotoPratinjau] = React.useState(null);
 
   const tableState = useTableState({ pageSize: 10, filterMap: FILTER_MAP });
   const { filters, params } = tableState;
@@ -330,7 +332,7 @@ export default function ReportPemeliharaan() {
           renderSubRow={(item, colCount) => (expandedId === item.id_pemeliharaan ? (
             <tr key={`detail-${item.id_pemeliharaan}`}>
               <td colSpan={colCount} className="px-4 !py-0">
-                <ReportPemeliharaanRowDetail item={item} closing={closing} />
+                <ReportPemeliharaanRowDetail item={item} closing={closing} onPreviewImage={(url, alt) => setFotoPratinjau({ url, alt })} />
               </td>
             </tr>
           ) : null)}
@@ -338,6 +340,13 @@ export default function ReportPemeliharaan() {
       </div>
 
       <ConfirmDialog {...dialogProps} />
+
+      <ImagePreviewModal
+        isOpen={!!fotoPratinjau}
+        onClose={() => setFotoPratinjau(null)}
+        imageUrl={fotoPratinjau?.url}
+        altText={fotoPratinjau?.alt}
+      />
     </div>
   );
 }
