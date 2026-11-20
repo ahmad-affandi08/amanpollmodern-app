@@ -144,6 +144,19 @@ export const useDeleteAduan = () => {
 };
 
 
+export const useMulaiRespon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id) => AduanApi.mulaiRespon(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['aduan'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.aduan.detail(id) });
+    },
+  });
+};
+
+
 export const useUpdateInspection = () => {
   const queryClient = useQueryClient();
 

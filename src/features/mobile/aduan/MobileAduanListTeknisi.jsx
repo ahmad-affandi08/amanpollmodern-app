@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, AlertCircle, ChevronRight, Search } from 'lucide-react';
+import { Clock, AlertCircle, ChevronRight, Search, Play, Check, ClipboardCheck } from 'lucide-react';
 import {
   useAduanListInfinite,
+  useMulaiRespon,
   useMobileDashboard,
+  useToast,
   useDebounce,
   usePageTitle,
 } from '../../../hooks';
@@ -27,6 +29,17 @@ const STATUS_FILTERS = [
 export default function MobileAduanListTeknisi() {
   usePageTitle('Daftar Tugas Aduan');
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const mulaiRespon = useMulaiRespon();
+
+  const mulaiKerjakan = async (id) => {
+    try {
+      await mulaiRespon.mutateAsync(id);
+      showToast('Waktu respons tercatat', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || error.response?.data?.errors?.status_aduan?.[0] || 'Gagal mencatat respons', 'error');
+    }
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [previewImage, setPreviewImage] = useState(null);
@@ -237,14 +250,48 @@ export default function MobileAduanListTeknisi() {
                 <p className="text-xs text-gray-600 line-clamp-2">{item.keluhan}</p>
               </div>
 
-              <div className="flex justify-end">
+              {item.tanggal_respon && (
+                <div className="mb-3 flex items-center gap-2 rounded-xl border border-success-100 bg-success-50 px-2.5 py-2 text-xs font-semibold text-success-700">
+                  <Check size={14} className="shrink-0" />
+                  Direspons {formatDateTime(item.tanggal_respon)}
+                </div>
+              )}
+
+              {/* Belum direspons dan belum pernah diperiksa: tombol mulai. Selebihnya langsung ke form pemeriksaan. */}
+              {!item.tanggal_respon && !item.tanggal_pemeriksaan ? (
+                <>
+                  <p className="mb-2 text-[11px] text-gray-500">Tekan saat mulai menangani, supaya waktu respons tercatat.</p>
+                  <button
+                    type="button"
+                    onClick={() => mulaiKerjakan(item.id_aduan)}
+                    disabled={mulaiRespon.isPending}
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-primary text-sm font-bold text-white shadow-lg shadow-brand-primary/25 transition-colors hover:bg-brand-primary/90 active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {mulaiRespon.isPending && mulaiRespon.variables === item.id_aduan ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Play size={16} />
+                    )}
+                    Mulai kerjakan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/mobile/aduan/${item.id_aduan}`)}
+                    className="mx-auto mt-2 flex items-center gap-1 text-xs font-bold text-brand-primary"
+                  >
+                    Langsung isi pemeriksaan <ChevronRight size={14} />
+                  </button>
+                </>
+              ) : (
                 <button
+                  type="button"
                   onClick={() => navigate(`/mobile/aduan/${item.id_aduan}`)}
-                  className="flex items-center gap-1 text-xs font-bold text-brand-primary "
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-brand-primary text-sm font-bold text-brand-primary transition-colors hover:bg-brand-primary/5 active:scale-[0.98]"
                 >
-                  Proses <ChevronRight size={14} />
+                  <ClipboardCheck size={16} />
+                  Isi pemeriksaan
                 </button>
-              </div>
+              )}
             </div>
           ))
         )}

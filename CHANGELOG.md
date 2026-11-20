@@ -2,6 +2,13 @@
 
 Aturan penomoran dan langkah rilis ada di [VERSIONING.md](VERSIONING.md). Entri terbaru di atas.
 
+## [1.3.1] - 2026-11-21
+
+### Baru
+- **Tombol "Mulai kerjakan"** di kartu Tugas Saya (mobile teknisi): mencatat waktu respons saat teknisi mulai menangani aduan,
+  sekali saja. Setelah ditekan, kartu menampilkan "Direspons …" dan tombol "Isi pemeriksaan". Teknisi tetap bisa langsung mengisi
+  pemeriksaan; waktu respons lalu terisi saat penyimpanan pertama (cara lama). Tidak ada migrasi baru.
+
 ## [1.3.0] - 2026-11-21
 
 ### Baru

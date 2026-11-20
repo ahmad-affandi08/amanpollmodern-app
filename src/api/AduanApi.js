@@ -47,6 +47,12 @@ const AduanApi = {
     return response.data;
   },
 
+  /** Teknisi mulai menangani aduan: server mengisi waktu respons (sekali saja). */
+  mulaiRespon: async (id) => {
+    const response = await axiosClient.post(`/aduan/${id}/respon`);
+    return response.data;
+  },
+
   updateInspection: async (id, data) => {
     const response = await axiosClient.put(`/aduan/${id}/inspection`, data);
     return response.data;
