@@ -2,6 +2,16 @@
 
 Aturan penomoran dan langkah rilis ada di [VERSIONING.md](VERSIONING.md). Entri terbaru di atas.
 
+## [1.3.2] - 2026-11-21
+
+### Diperbaiki
+- Daftar **Tugas Saya** (mobile teknisi) kini hanya memuat tugas aktif (Sedang Dikerjakan dan Tindakan Lanjutan). Sebelumnya aduan yang
+  sudah Selesai ikut tampil karena server mengabaikan filter beberapa status. Kartu aduan Selesai tidak lagi menampilkan tombol
+  pemeriksaan.
+
+### Diubah
+- Tautan "Langsung isi pemeriksaan" dihapus dari kartu tugas: pemeriksaan dibuka lewat tombol "Isi pemeriksaan" setelah "Mulai kerjakan" ditekan.
+
 ## [1.3.1] - 2026-11-21
 
 ### Baru

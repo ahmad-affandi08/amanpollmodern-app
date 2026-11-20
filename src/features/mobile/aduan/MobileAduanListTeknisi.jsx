@@ -257,8 +257,16 @@ export default function MobileAduanListTeknisi() {
                 </div>
               )}
 
-              {/* Belum direspons dan belum pernah diperiksa: tombol mulai. Selebihnya langsung ke form pemeriksaan. */}
-              {!item.tanggal_respon && !item.tanggal_pemeriksaan ? (
+              {/* Selesai: tidak ada yang perlu dikerjakan lagi. Belum direspons dan belum diperiksa: tombol mulai. Selebihnya ke form pemeriksaan. */}
+              {item.status_aduan === 'Selesai' ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/mobile/riwayat-aduan/${item.id_aduan}`)}
+                  className="mx-auto flex items-center gap-1 text-xs font-bold text-brand-primary"
+                >
+                  Lihat detail <ChevronRight size={14} />
+                </button>
+              ) : !item.tanggal_respon && !item.tanggal_pemeriksaan ? (
                 <>
                   <p className="mb-2 text-[11px] text-gray-500">Tekan saat mulai menangani, supaya waktu respons tercatat.</p>
                   <button
@@ -273,13 +281,6 @@ export default function MobileAduanListTeknisi() {
                       <Play size={16} />
                     )}
                     Mulai kerjakan
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/mobile/aduan/${item.id_aduan}`)}
-                    className="mx-auto mt-2 flex items-center gap-1 text-xs font-bold text-brand-primary"
-                  >
-                    Langsung isi pemeriksaan <ChevronRight size={14} />
                   </button>
                 </>
               ) : (
