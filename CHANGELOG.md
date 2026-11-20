@@ -2,6 +2,32 @@
 
 Aturan penomoran dan langkah rilis ada di [VERSIONING.md](VERSIONING.md). Entri terbaru di atas.
 
+## [1.3.0] - 2026-11-21
+
+### Baru
+- **Realisasi SKI** (menu Analisis di desktop, dan halaman teknisi di mobile): angka realisasi bulanan per teknisi dari data AmanPoll
+  (9 indikator: Kuantitas dan Kualitas) dalam format form IKI, tombol salin per angka, dan **export Excel**. Hanya indikator yang datanya
+  tercatat di AmanPoll yang tampil. Target, bobot, dan nilai belum termasuk.
+- **Tingkat kerusakan** (Ringan/Berat) dan **waktu respons** pada aduan, dipakai untuk indikator SKI dan analisis keandalan.
+  Aduan lama tampil "Belum dinilai" karena datanya tidak pernah tersimpan.
+- **Foto sebelum dan sesudah (opsional)** pada form pemeliharaan teknisi. Tampil di riwayat pemeriksaan (desktop dan mobile)
+  dan di PDF hasil pemeliharaan. Foto diperkecil di HP sebelum dikirim (maks 5 MB).
+- **Analisis:** filter **Kategori Alat** di Keandalan Alat, grafik **Pemeliharaan yang Masih Aktif** dan pemisahan aduan/pemeliharaan
+  pada Top Performer di Kinerja Teknisi, tombol **Export Excel** di tiap halaman analisis, dan grafik yang kini berwarna.
+- **Nama resmi unit kerja** pada Master Divisi (dipakai di lembar SKI).
+
+### Diubah
+- Menu **Analisis** dipindah tepat di bawah Anggaran & Biaya.
+- Daftar Aduan, Pemeliharaan, dan laporan memakai **detail baris yang bisa dilipat**; keadaan kosong dan dialog memakai ilustrasi SVG.
+- Rentang tanggal memakai satu komponen **DateRangePicker**; tombol dan kontrol filter diseragamkan (tinggi 36px, latar putih).
+- Favicon memakai logo transparan.
+
+### Catatan deploy
+- Jalankan migrasi (semuanya hanya menambah kolom): `2026_11_20_000001_add_tingkat_kerusakan_dan_tanggal_respon_to_aduan`,
+  `2026_11_20_000002_add_nama_resmi_to_divisi`, `2026_11_21_000001_add_foto_sebelum_sesudah_to_pemeliharaan`,
+  dan `2026_11_21_000002_add_foto_to_pemeliharaan_history`. **Backup database lebih dulu.**
+- Pastikan `php artisan storage:link` sudah ada dan folder `storage/app/public/pemeliharaan/foto` bisa ditulis web server.
+
 ## [1.2.1] - 2026-11-20
 
 ### Diperbaiki
