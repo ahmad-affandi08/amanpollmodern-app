@@ -222,7 +222,7 @@ export default function PemeliharaanList() {
               />
             </>
           }
-          gridClassName="grid-cols-2 md:grid-cols-3"
+          gridClassName="grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
         >
           <SearchableSelect
             size="sm"

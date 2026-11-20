@@ -2,6 +2,12 @@
 
 Aturan penomoran dan langkah rilis ada di [VERSIONING.md](VERSIONING.md). Entri terbaru di atas.
 
+## [1.2.1] - 2026-11-20
+
+### Diperbaiki
+- Filter di Daftar Aduan dan Daftar Pemeliharaan tampil dalam satu baris di layar lebar (sebelumnya filter tanggal turun ke baris kedua
+  setelah filter "Semua Servis" ditambahkan).
+
 ## [1.2.0] - 2026-11-16
 
 ### Baru
